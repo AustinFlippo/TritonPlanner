@@ -1,11 +1,9 @@
-import { Outlet } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import FourYearCoursePlanner from "./components/Planner";
 
 const App = () => {
   return (
-    <div className="w-full p-6">
-      <Navbar />
-      <Outlet />
+    <div className="w-full">
+      <FourYearCoursePlanner />
     </div>
   );
 };
