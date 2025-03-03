@@ -1,31 +1,14 @@
+import { useState, useEffect } from "react";
+
 // Check if a term has at least one empty slot
 const hasEmptySlot = (termCourses) => {
   return termCourses.some((course) => course === null);
-}; // Add a new course slot to a term
-const addCourseSlot = (yearIndex, term) => {
-  const newSchedule = [...schedule];
-  newSchedule[yearIndex][term].push(null);
-  setSchedule(newSchedule);
 };
 
-// Remove an empty course slot from a term
-const removeCourseSlot = (yearIndex, term) => {
-  const newSchedule = [...schedule];
-  const termCourses = newSchedule[yearIndex][term];
-
-  // Find the last empty slot
-  for (let i = termCourses.length - 1; i >= 0; i--) {
-    if (termCourses[i] === null) {
-      termCourses.splice(i, 1);
-      setSchedule(newSchedule);
-      return;
-    }
-  }
-}; // Check if course is offered in the specified term
+// Check if course is offered in the specified term
 const isCourseOfferedInTerm = (course, term) => {
   return course.offeredIn && course.offeredIn.includes(term);
 };
-import React, { useState, useEffect } from "react";
 
 const FourYearCoursePlanner = () => {
   // Sample course data - in a real app this would come from an API
