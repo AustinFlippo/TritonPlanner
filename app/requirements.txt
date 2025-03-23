@@ -1,0 +1,12 @@
+langgraph
+langchain_openai
+langchain_community
+pinecone-client
+langchain-pinecone
+pypdf
+langchain-text-splitters
+langchain-core
+fastapi
+pydantic
+agents
+uvicorn
