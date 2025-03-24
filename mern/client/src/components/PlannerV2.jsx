@@ -155,8 +155,7 @@ const FourYearCoursePlannerV2 = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isChatMinimized, setIsChatMinimized] = useState(false);
-  const [chatHeight, setChatHeight] = useState(300); // Default height in pixels
+  const [chatWidth, setChatWidth] = useState(250); // Default width in pixels
   const [isResizing, setIsResizing] = useState(false);
   const chatEndRef = useRef(null);
   const dragHandleRef = useRef(null);
@@ -283,21 +282,6 @@ const FourYearCoursePlannerV2 = () => {
     const newCollapsedYears = [...collapsedYears];
     newCollapsedYears[yearIndex] = !newCollapsedYears[yearIndex];
     setCollapsedYears(newCollapsedYears);
-  };
-
-  // Toggle chat minimize/maximize
-  const toggleChatMinimize = () => {
-    setIsChatMinimized(!isChatMinimized);
-  };
-
-  // Simple function to increase chat height
-  const increaseHeight = () => {
-    setChatHeight((prev) => Math.min(prev + 50, 800));
-  };
-
-  // Simple function to decrease chat height
-  const decreaseHeight = () => {
-    setChatHeight((prev) => Math.max(prev - 50, 100));
   };
 
   // Handle drag start for a course from the sidebar or within planner
@@ -640,468 +624,434 @@ const FourYearCoursePlannerV2 = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
+      {/* Main content area - Flexible layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Main content area */}
-        <div className="flex flex-col md:flex-row w-full flex-1 overflow-hidden">
-          {/* Course Schedule */}
-          <div className="w-full md:w-3/4 p-4 bg-white rounded-lg shadow overflow-y-auto h-full">
-            <h2 className="text-xl font-bold mb-4">
-              Four Year Course Schedule
-            </h2>
-
-            {schedule.map((year, yearIndex) => (
+        {/* Course Search Sidebar - Left Column */}
+        <div className="w-64 p-4 bg-white rounded-lg shadow overflow-y-auto">
+          <h2 className="text-xl font-bold mb-4">Course Search</h2>
+          <input
+            type="text"
+            placeholder="Search courses..."
+            className="w-full p-2 mb-4 border border-gray-300 rounded"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="space-y-2">
+            {filteredCourses.map((course) => (
               <div
-                key={yearIndex}
-                className="mb-6 border rounded-lg overflow-hidden"
+                key={course.id}
+                className="p-2 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100"
+                draggable
+                onDragStart={(e) => handleDragStart(e, course, true)}
+                onDragEnd={handleDragEnd}
               >
-                {/* Year header with annual units */}
-                <div
-                  className="bg-blue-500 text-white p-3 flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleYearCollapse(yearIndex)}
-                >
-                  <div className="flex items-center">
-                    <span className="mr-2">
-                      {collapsedYears[yearIndex] ? "▶" : "▼"}
-                    </span>
-                    <span className="font-bold">{yearLabels[yearIndex]}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2">annual units</span>
-                    <span className="bg-white text-blue-500 rounded-full px-3 py-1 font-bold">
-                      {calculateAnnualUnits(yearIndex).toFixed(1)}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-sm">{course.name}</span>
+                  <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
+                    {course.units.toFixed(1)}
+                  </span>
                 </div>
-
-                {/* Terms container */}
-                {!collapsedYears[yearIndex] && (
-                  <div className="flex flex-col md:flex-row">
-                    {/* Fall Term */}
-                    <div className="flex-1 p-2">
-                      {/* Term header with units */}
-                      <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
-                        <span className="font-semibold">Fall</span>
-                        <div className="flex items-center">
-                          <span className="text-sm mr-2">term units</span>
-                          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
-                            {calculateTermUnits(year.fall).toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Course slots */}
-                      {year.fall.map((course, courseIndex) => (
-                        <div
-                          key={courseIndex}
-                          className={getSlotClassName(
-                            yearIndex,
-                            "fall",
-                            courseIndex
-                          )}
-                          onDragOver={(e) =>
-                            handleDragOver(e, yearIndex, "fall", courseIndex)
-                          }
-                          onDrop={(e) =>
-                            handleDrop(e, yearIndex, "fall", courseIndex)
-                          }
-                        >
-                          {course ? (
-                            <div
-                              className="flex justify-between items-center cursor-move"
-                              draggable
-                              onDragStart={(e) =>
-                                handleDragStart(
-                                  e,
-                                  course,
-                                  false,
-                                  yearIndex,
-                                  "fall",
-                                  courseIndex
-                                )
-                              }
-                              onDragEnd={handleDragEnd}
-                            >
-                              <span>
-                                {course.name}
-                                {previewState &&
-                                  previewState.sourceYearIndex === yearIndex &&
-                                  previewState.sourceTerm === "fall" &&
-                                  previewState.sourceCourseIndex ===
-                                    courseIndex && (
-                                    <span className="ml-2 text-yellow-600 text-xs">
-                                      (Moving)
-                                    </span>
-                                  )}
-                              </span>
-                              <div className="flex items-center">
-                                <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
-                                  {course.units.toFixed(1)}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    handleRemoveCourse(
-                                      yearIndex,
-                                      "fall",
-                                      courseIndex
-                                    )
-                                  }
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-gray-400 text-center py-1">
-                              {invalidDrop &&
-                              dragTarget.yearIndex === yearIndex &&
-                              dragTarget.term === "fall" &&
-                              dragTarget.courseIndex === courseIndex ? (
-                                <div className="text-red-600">
-                                  Course not offered in Fall
-                                </div>
-                              ) : previewState &&
-                                previewState.targetYearIndex === yearIndex &&
-                                previewState.targetTerm === "fall" &&
-                                previewState.targetCourseIndex ===
-                                  courseIndex ? (
-                                <div className="text-yellow-600">
-                                  {previewState.course.name} (Preview)
-                                </div>
-                              ) : (
-                                "Drop course here"
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Winter Term */}
-                    <div className="flex-1 p-2">
-                      <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
-                        <span className="font-semibold">Winter</span>
-                        <div className="flex items-center">
-                          <span className="text-sm mr-2">term units</span>
-                          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
-                            {calculateTermUnits(year.winter).toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {year.winter.map((course, courseIndex) => (
-                        <div
-                          key={courseIndex}
-                          className={getSlotClassName(
-                            yearIndex,
-                            "winter",
-                            courseIndex
-                          )}
-                          onDragOver={(e) =>
-                            handleDragOver(e, yearIndex, "winter", courseIndex)
-                          }
-                          onDrop={(e) =>
-                            handleDrop(e, yearIndex, "winter", courseIndex)
-                          }
-                        >
-                          {course ? (
-                            <div
-                              className="flex justify-between items-center cursor-move"
-                              draggable
-                              onDragStart={(e) =>
-                                handleDragStart(
-                                  e,
-                                  course,
-                                  false,
-                                  yearIndex,
-                                  "winter",
-                                  courseIndex
-                                )
-                              }
-                              onDragEnd={handleDragEnd}
-                            >
-                              <span>
-                                {course.name}
-                                {previewState &&
-                                  previewState.sourceYearIndex === yearIndex &&
-                                  previewState.sourceTerm === "winter" &&
-                                  previewState.sourceCourseIndex ===
-                                    courseIndex && (
-                                    <span className="ml-2 text-yellow-600 text-xs">
-                                      (Moving)
-                                    </span>
-                                  )}
-                              </span>
-                              <div className="flex items-center">
-                                <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
-                                  {course.units.toFixed(1)}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    handleRemoveCourse(
-                                      yearIndex,
-                                      "winter",
-                                      courseIndex
-                                    )
-                                  }
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-gray-400 text-center py-1">
-                              {invalidDrop &&
-                              dragTarget.yearIndex === yearIndex &&
-                              dragTarget.term === "winter" &&
-                              dragTarget.courseIndex === courseIndex ? (
-                                <div className="text-red-600">
-                                  Course not offered in Winter
-                                </div>
-                              ) : previewState &&
-                                previewState.targetYearIndex === yearIndex &&
-                                previewState.targetTerm === "winter" &&
-                                previewState.targetCourseIndex ===
-                                  courseIndex ? (
-                                <div className="text-yellow-600">
-                                  {previewState.course.name} (Preview)
-                                </div>
-                              ) : (
-                                "Drop course here"
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Spring Term */}
-                    <div className="flex-1 p-2">
-                      <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
-                        <span className="font-semibold">Spring</span>
-                        <div className="flex items-center">
-                          <span className="text-sm mr-2">term units</span>
-                          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
-                            {calculateTermUnits(year.spring).toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {year.spring.map((course, courseIndex) => (
-                        <div
-                          key={courseIndex}
-                          className={getSlotClassName(
-                            yearIndex,
-                            "spring",
-                            courseIndex
-                          )}
-                          onDragOver={(e) =>
-                            handleDragOver(e, yearIndex, "spring", courseIndex)
-                          }
-                          onDrop={(e) =>
-                            handleDrop(e, yearIndex, "spring", courseIndex)
-                          }
-                        >
-                          {course ? (
-                            <div
-                              className="flex justify-between items-center cursor-move"
-                              draggable
-                              onDragStart={(e) =>
-                                handleDragStart(
-                                  e,
-                                  course,
-                                  false,
-                                  yearIndex,
-                                  "spring",
-                                  courseIndex
-                                )
-                              }
-                              onDragEnd={handleDragEnd}
-                            >
-                              <span>
-                                {course.name}
-                                {previewState &&
-                                  previewState.sourceYearIndex === yearIndex &&
-                                  previewState.sourceTerm === "spring" &&
-                                  previewState.sourceCourseIndex ===
-                                    courseIndex && (
-                                    <span className="ml-2 text-yellow-600 text-xs">
-                                      (Moving)
-                                    </span>
-                                  )}
-                              </span>
-                              <div className="flex items-center">
-                                <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
-                                  {course.units.toFixed(1)}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    handleRemoveCourse(
-                                      yearIndex,
-                                      "spring",
-                                      courseIndex
-                                    )
-                                  }
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-gray-400 text-center py-1">
-                              {invalidDrop &&
-                              dragTarget.yearIndex === yearIndex &&
-                              dragTarget.term === "spring" &&
-                              dragTarget.courseIndex === courseIndex ? (
-                                <div className="text-red-600">
-                                  Course not offered in Spring
-                                </div>
-                              ) : previewState &&
-                                previewState.targetYearIndex === yearIndex &&
-                                previewState.targetTerm === "spring" &&
-                                previewState.targetCourseIndex ===
-                                  courseIndex ? (
-                                <div className="text-yellow-600">
-                                  {previewState.course.name} (Preview)
-                                </div>
-                              ) : (
-                                "Drop course here"
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div className="text-xs text-gray-600">
+                  <span>
+                    {course.id} • {course.department}
+                  </span>
+                  <span className="ml-2 text-amber-600">
+                    Prereq:
+                    <span className="text-gray-600 ml-1">
+                      {course.prerequisites && course.prerequisites.length > 0
+                        ? course.prerequisites.join(", ")
+                        : "None"}
+                    </span>
+                  </span>
+                  <span className="ml-2 text-green-600">
+                    Offered:
+                    {course.offeredIn.includes("fall") && (
+                      <span className="ml-1 mr-1">F</span>
+                    )}
+                    {course.offeredIn.includes("winter") && (
+                      <span className="mr-1">W</span>
+                    )}
+                    {course.offeredIn.includes("spring") && <span>S</span>}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Course Search Sidebar */}
-          <div className="w-full md:w-1/4 p-4 bg-white rounded-lg shadow overflow-y-auto h-full">
-            <h2 className="text-xl font-bold mb-4">Course Search</h2>
-            <input
-              type="text"
-              placeholder="Search courses..."
-              className="w-full p-2 mb-4 border border-gray-300 rounded"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="space-y-2">
-              {filteredCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className="p-2 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, course, true)}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-sm">{course.name}</span>
-                    <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
-                      {course.units.toFixed(1)}
-                    </span>
+        {/* Course Schedule - Middle Column (flexible width) */}
+        <div className="flex-1 p-4 bg-white rounded-lg shadow overflow-y-auto mx-2">
+          <h2 className="text-xl font-bold mb-4">Four Year Course Schedule</h2>
+
+          {schedule.map((year, yearIndex) => (
+            <div
+              key={yearIndex}
+              className="mb-6 border rounded-lg overflow-hidden"
+            >
+              {/* Year header with annual units */}
+              <div
+                className="bg-blue-500 text-white p-3 flex justify-between items-center cursor-pointer"
+                onClick={() => toggleYearCollapse(yearIndex)}
+              >
+                <div className="flex items-center">
+                  <span className="mr-2">
+                    {collapsedYears[yearIndex] ? "▶" : "▼"}
+                  </span>
+                  <span className="font-bold">{yearLabels[yearIndex]}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">annual units</span>
+                  <span className="bg-white text-blue-500 rounded-full px-3 py-1 font-bold">
+                    {calculateAnnualUnits(yearIndex).toFixed(1)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Terms container */}
+              {!collapsedYears[yearIndex] && (
+                <div className="flex flex-col md:flex-row">
+                  {/* Fall Term */}
+                  <div className="flex-1 p-2">
+                    {/* Term header with units */}
+                    <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
+                      <span className="font-semibold">Fall</span>
+                      <div className="flex items-center">
+                        <span className="text-sm mr-2">term units</span>
+                        <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
+                          {calculateTermUnits(year.fall).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Course slots */}
+                    {year.fall.map((course, courseIndex) => (
+                      <div
+                        key={courseIndex}
+                        className={getSlotClassName(
+                          yearIndex,
+                          "fall",
+                          courseIndex
+                        )}
+                        onDragOver={(e) =>
+                          handleDragOver(e, yearIndex, "fall", courseIndex)
+                        }
+                        onDrop={(e) =>
+                          handleDrop(e, yearIndex, "fall", courseIndex)
+                        }
+                      >
+                        {course ? (
+                          <div
+                            className="flex justify-between items-center cursor-move"
+                            draggable
+                            onDragStart={(e) =>
+                              handleDragStart(
+                                e,
+                                course,
+                                false,
+                                yearIndex,
+                                "fall",
+                                courseIndex
+                              )
+                            }
+                            onDragEnd={handleDragEnd}
+                          >
+                            <span>
+                              {course.name}
+                              {previewState &&
+                                previewState.sourceYearIndex === yearIndex &&
+                                previewState.sourceTerm === "fall" &&
+                                previewState.sourceCourseIndex ===
+                                  courseIndex && (
+                                  <span className="ml-2 text-yellow-600 text-xs">
+                                    (Moving)
+                                  </span>
+                                )}
+                            </span>
+                            <div className="flex items-center">
+                              <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
+                                {course.units.toFixed(1)}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleRemoveCourse(
+                                    yearIndex,
+                                    "fall",
+                                    courseIndex
+                                  )
+                                }
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-center py-1">
+                            {invalidDrop &&
+                            dragTarget.yearIndex === yearIndex &&
+                            dragTarget.term === "fall" &&
+                            dragTarget.courseIndex === courseIndex ? (
+                              <div className="text-red-600">
+                                Course not offered in Fall
+                              </div>
+                            ) : previewState &&
+                              previewState.targetYearIndex === yearIndex &&
+                              previewState.targetTerm === "fall" &&
+                              previewState.targetCourseIndex === courseIndex ? (
+                              <div className="text-yellow-600">
+                                {previewState.course.name} (Preview)
+                              </div>
+                            ) : (
+                              "Drop course here"
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xs text-gray-600">
-                    <span>
-                      {course.id} • {course.department}
-                    </span>
-                    <span className="ml-2 text-amber-600">
-                      Prereq:
-                      <span className="text-gray-600 ml-1">
-                        {course.prerequisites && course.prerequisites.length > 0
-                          ? course.prerequisites.join(", ")
-                          : "None"}
-                      </span>
-                    </span>
-                    <span className="ml-2 text-green-600">
-                      Offered:
-                      {course.offeredIn.includes("fall") && (
-                        <span className="ml-1 mr-1">F</span>
-                      )}
-                      {course.offeredIn.includes("winter") && (
-                        <span className="mr-1">W</span>
-                      )}
-                      {course.offeredIn.includes("spring") && <span>S</span>}
-                    </span>
+
+                  {/* Winter Term */}
+                  <div className="flex-1 p-2">
+                    <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
+                      <span className="font-semibold">Winter</span>
+                      <div className="flex items-center">
+                        <span className="text-sm mr-2">term units</span>
+                        <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
+                          {calculateTermUnits(year.winter).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {year.winter.map((course, courseIndex) => (
+                      <div
+                        key={courseIndex}
+                        className={getSlotClassName(
+                          yearIndex,
+                          "winter",
+                          courseIndex
+                        )}
+                        onDragOver={(e) =>
+                          handleDragOver(e, yearIndex, "winter", courseIndex)
+                        }
+                        onDrop={(e) =>
+                          handleDrop(e, yearIndex, "winter", courseIndex)
+                        }
+                      >
+                        {course ? (
+                          <div
+                            className="flex justify-between items-center cursor-move"
+                            draggable
+                            onDragStart={(e) =>
+                              handleDragStart(
+                                e,
+                                course,
+                                false,
+                                yearIndex,
+                                "winter",
+                                courseIndex
+                              )
+                            }
+                            onDragEnd={handleDragEnd}
+                          >
+                            <span>
+                              {course.name}
+                              {previewState &&
+                                previewState.sourceYearIndex === yearIndex &&
+                                previewState.sourceTerm === "winter" &&
+                                previewState.sourceCourseIndex ===
+                                  courseIndex && (
+                                  <span className="ml-2 text-yellow-600 text-xs">
+                                    (Moving)
+                                  </span>
+                                )}
+                            </span>
+                            <div className="flex items-center">
+                              <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
+                                {course.units.toFixed(1)}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleRemoveCourse(
+                                    yearIndex,
+                                    "winter",
+                                    courseIndex
+                                  )
+                                }
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-center py-1">
+                            {invalidDrop &&
+                            dragTarget.yearIndex === yearIndex &&
+                            dragTarget.term === "winter" &&
+                            dragTarget.courseIndex === courseIndex ? (
+                              <div className="text-red-600">
+                                Course not offered in Winter
+                              </div>
+                            ) : previewState &&
+                              previewState.targetYearIndex === yearIndex &&
+                              previewState.targetTerm === "winter" &&
+                              previewState.targetCourseIndex === courseIndex ? (
+                              <div className="text-yellow-600">
+                                {previewState.course.name} (Preview)
+                              </div>
+                            ) : (
+                              "Drop course here"
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Spring Term */}
+                  <div className="flex-1 p-2">
+                    <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
+                      <span className="font-semibold">Spring</span>
+                      <div className="flex items-center">
+                        <span className="text-sm mr-2">term units</span>
+                        <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
+                          {calculateTermUnits(year.spring).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {year.spring.map((course, courseIndex) => (
+                      <div
+                        key={courseIndex}
+                        className={getSlotClassName(
+                          yearIndex,
+                          "spring",
+                          courseIndex
+                        )}
+                        onDragOver={(e) =>
+                          handleDragOver(e, yearIndex, "spring", courseIndex)
+                        }
+                        onDrop={(e) =>
+                          handleDrop(e, yearIndex, "spring", courseIndex)
+                        }
+                      >
+                        {course ? (
+                          <div
+                            className="flex justify-between items-center cursor-move"
+                            draggable
+                            onDragStart={(e) =>
+                              handleDragStart(
+                                e,
+                                course,
+                                false,
+                                yearIndex,
+                                "spring",
+                                courseIndex
+                              )
+                            }
+                            onDragEnd={handleDragEnd}
+                          >
+                            <span>
+                              {course.name}
+                              {previewState &&
+                                previewState.sourceYearIndex === yearIndex &&
+                                previewState.sourceTerm === "spring" &&
+                                previewState.sourceCourseIndex ===
+                                  courseIndex && (
+                                  <span className="ml-2 text-yellow-600 text-xs">
+                                    (Moving)
+                                  </span>
+                                )}
+                            </span>
+                            <div className="flex items-center">
+                              <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
+                                {course.units.toFixed(1)}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleRemoveCourse(
+                                    yearIndex,
+                                    "spring",
+                                    courseIndex
+                                  )
+                                }
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-center py-1">
+                            {invalidDrop &&
+                            dragTarget.yearIndex === yearIndex &&
+                            dragTarget.term === "spring" &&
+                            dragTarget.courseIndex === courseIndex ? (
+                              <div className="text-red-600">
+                                Course not offered in Spring
+                              </div>
+                            ) : previewState &&
+                              previewState.targetYearIndex === yearIndex &&
+                              previewState.targetTerm === "spring" &&
+                              previewState.targetCourseIndex === courseIndex ? (
+                              <div className="text-yellow-600">
+                                {previewState.course.name} (Preview)
+                              </div>
+                            ) : (
+                              "Drop course here"
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
+          ))}
         </div>
-      </div>
 
-      {/* Permanent Chat Panel */}
-      <div className="border-t border-gray-300 bg-white">
-        {/* Resize handle - Direct implementation with inline event handlers */}
-        {!isChatMinimized && (
+        {/* Chat Panel - Right Column */}
+        <div
+          className="bg-white rounded-lg shadow overflow-hidden flex flex-col relative"
+          style={{ width: `${chatWidth}px` }}
+        >
+          {/* Resize handle on the left side */}
           <div
-            className="w-full h-10 bg-gray-300 hover:bg-blue-200 cursor-ns-resize flex flex-col items-center justify-center transition-colors select-none border-b border-gray-400"
+            className="absolute top-0 left-0 h-full w-2 bg-gray-300 hover:bg-blue-300 cursor-ew-resize z-10"
             onMouseDown={(e) => {
-              const startY = e.clientY;
-              const startHeight = chatHeight;
+              e.preventDefault();
+              const startX = e.clientX;
+              const startWidth = chatWidth;
 
               const handleMouseMove = (moveEvent) => {
-                const deltaY = startY - moveEvent.clientY;
-                const newHeight = Math.max(
-                  100,
-                  Math.min(800, startHeight + deltaY)
+                const deltaX = startX - moveEvent.clientX;
+                const newWidth = Math.max(
+                  40,
+                  Math.min(500, startWidth + deltaX)
                 );
-                setChatHeight(newHeight);
+                setChatWidth(newWidth);
               };
 
               const handleMouseUp = () => {
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
+                setIsResizing(false);
               };
 
+              setIsResizing(true);
               document.addEventListener("mousemove", handleMouseMove);
               document.addEventListener("mouseup", handleMouseUp);
             }}
-          >
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-32 h-2 bg-blue-600 rounded-full mb-1"></div>
-              <div className="text-xs font-bold text-gray-600">
-                DRAG TO RESIZE
-              </div>
-            </div>
-          </div>
-        )}
+          ></div>
 
-        <div
-          className="flex items-center justify-between bg-blue-500 text-white p-2 cursor-pointer"
-          onClick={toggleChatMinimize}
-        >
-          <h3 className="font-bold ml-2">Course Assistant</h3>
-          <div className="flex items-center">
-            <span className="mr-2">
-              {isChatMinimized ? "Show Chat" : "Minimize"}
-            </span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`h-5 w-5 transform ${
-                isChatMinimized ? "rotate-180" : ""
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+          {/* Chat header - Removed minimize button */}
+          <div className="bg-blue-500 text-white p-2">
+            <h3 className="font-bold ml-2">Course Assistant</h3>
           </div>
-        </div>
 
-        {!isChatMinimized && (
-          <div className="flex flex-col" style={{ height: `${chatHeight}px` }}>
+          {/* Chat content area */}
+          <div className="flex flex-col flex-grow">
             <div className="flex-grow p-3 overflow-y-auto bg-gray-50">
               {chatMessages.length === 0 ? (
                 <div className="text-center text-gray-500 mt-4">
@@ -1204,7 +1154,7 @@ const FourYearCoursePlannerV2 = () => {
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
