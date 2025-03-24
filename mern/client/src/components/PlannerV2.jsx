@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
+import CourseSearch from "./CourseSearch";
+import ChatBox from "./ChatBox";
+
 
 const FourYearCoursePlannerV2 = () => {
   // Sample course data - in a real app this would come from an API
@@ -125,6 +128,10 @@ const FourYearCoursePlannerV2 = () => {
     },
   ];
 
+  // Define these ChatBox features here, that way other components can dynamically change accordingly
+  const [chatHeight, setChatHeight] = useState(300); // Default height in pixels
+  const [isChatMinimized, setIsChatMinimized] = useState(false);
+
   // Initialize 4 years, each with 3 terms (Fall, Winter, Spring), with variable course slots
   const initialSchedule = Array(4)
     .fill()
@@ -136,8 +143,7 @@ const FourYearCoursePlannerV2 = () => {
 
   // Application state
   const [schedule, setSchedule] = useState(initialSchedule);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState(allCourses);
+  
   const [yearLabels] = useState([
     "2024-2025",
     "2025-2026",
@@ -151,6 +157,7 @@ const FourYearCoursePlannerV2 = () => {
     false,
   ]);
 
+
   // Chat feature state
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -159,6 +166,7 @@ const FourYearCoursePlannerV2 = () => {
   const [isResizing, setIsResizing] = useState(false);
   const chatEndRef = useRef(null);
   const dragHandleRef = useRef(null);
+
 
   // Drag and drop state
   const [dragTarget, setDragTarget] = useState({
@@ -175,24 +183,6 @@ const FourYearCoursePlannerV2 = () => {
   });
   const [previewState, setPreviewState] = useState(null);
   const [invalidDrop, setInvalidDrop] = useState(false);
-
-  // Update filtered courses when search term changes
-  useEffect(() => {
-    const filtered = allCourses.filter(
-      (course) =>
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.department.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredCourses(filtered);
-  }, [searchTerm]);
-
-  // Scroll to bottom of chat when new messages arrive
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
 
   // Calculate units for a term
   const calculateTermUnits = (courses) => {
@@ -548,79 +538,9 @@ const FourYearCoursePlannerV2 = () => {
     return className;
   };
 
-  // Send message to FastAPI backend
-  const sendMessage = async () => {
-    if (!currentMessage.trim()) return;
+  // Find height of Chat, to adjust the sidebar accordingly
+  const effectiveChatHeight = isChatMinimized ? 0 : chatHeight;
 
-    const userMessage = { role: "user", content: currentMessage };
-    setChatMessages((prevMessages) => [...prevMessages, userMessage]);
-    setCurrentMessage("");
-    setIsLoading(true);
-
-    try {
-      // Call the FastAPI backend
-      const response = await fetch("http://0.0.0.0:8000/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentMessage,
-          thread_id: "default-thread",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get response from assistant");
-      }
-
-      // Parse the response from the API
-      const data = await response.json();
-
-      // Process the response based on the structure from your API
-      let assistantContent = "";
-
-      // If the response is in the format you showed in the example
-      if (data.messages && Array.isArray(data.messages)) {
-        // Find the last AI message in the messages array
-        const aiMessages = data.messages.filter((msg) => msg.type === "ai");
-        if (aiMessages.length > 0) {
-          // Get the content from the last AI message
-          assistantContent = aiMessages[aiMessages.length - 1].content;
-        }
-      } else {
-        // Fallback for other response formats
-        assistantContent =
-          data.content || data.response || JSON.stringify(data);
-      }
-
-      const assistantMessage = {
-        role: "assistant",
-        content: assistantContent,
-      };
-
-      setChatMessages((prevMessages) => [...prevMessages, assistantMessage]);
-    } catch (error) {
-      console.error("Error communicating with backend:", error);
-      setChatMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          role: "assistant",
-          content: "Sorry, I encountered an error. Please try again later.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle key press in chat input
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -980,6 +900,8 @@ const FourYearCoursePlannerV2 = () => {
                                 ×
                               </button>
                             </div>
+
+
                           </div>
                         ) : (
                           <div className="text-gray-400 text-center py-1">
@@ -1009,7 +931,10 @@ const FourYearCoursePlannerV2 = () => {
               )}
             </div>
           ))}
+          
+          
         </div>
+
 
         {/* Chat Panel - Right Column */}
         <div
@@ -1156,6 +1081,8 @@ const FourYearCoursePlannerV2 = () => {
           </div>
         </div>
       </div>
+
+
     </div>
   );
 };
