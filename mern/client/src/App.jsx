@@ -1,11 +1,12 @@
 import FourYearCoursePlanner from "./components/Planner";
 import FourYearCoursePlannerV2 from "./components/PlannerV2";
-import CourseSearch from "./components/CourseSearch";
+import FourYearCoursePlannerPrototype from "./components/PlannerPrototype";
+
 
 const App = () => {
   return (
     <div className="w-full">
-      <FourYearCoursePlannerV2 />
+      <FourYearCoursePlannerPrototype />
     </div>
   );
 };

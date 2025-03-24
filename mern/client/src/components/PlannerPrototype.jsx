@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import CourseSearch from "./CourseSearch";
-import ChatBox from "./ChatBox";
 
-
-const FourYearCoursePlannerV2 = () => {
+const FourYearCoursePlannerPrototype = () => {
   // Sample course data - in a real app this would come from an API
   const allCourses = [
     {
@@ -128,10 +125,6 @@ const FourYearCoursePlannerV2 = () => {
     },
   ];
 
-  // Define these ChatBox features here, that way other components can dynamically change accordingly
-  const [chatHeight, setChatHeight] = useState(300); // Default height in pixels
-  const [isChatMinimized, setIsChatMinimized] = useState(false);
-
   // Initialize 4 years, each with 3 terms (Fall, Winter, Spring), with variable course slots
   const initialSchedule = Array(4)
     .fill()
@@ -143,7 +136,8 @@ const FourYearCoursePlannerV2 = () => {
 
   // Application state
   const [schedule, setSchedule] = useState(initialSchedule);
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredCourses, setFilteredCourses] = useState(allCourses);
   const [yearLabels] = useState([
     "2024-2025",
     "2025-2026",
@@ -157,16 +151,18 @@ const FourYearCoursePlannerV2 = () => {
     false,
   ]);
 
+  // Right sidebar state (containing both Course Search and Chat)
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(300); // Default width for right sidebar
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Course search section height (percentage of right sidebar)
+  const [searchSectionHeight, setSearchSectionHeight] = useState(50); // Default 50%
 
   // Chat feature state
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [chatWidth, setChatWidth] = useState(250); // Default width in pixels
-  const [isResizing, setIsResizing] = useState(false);
   const chatEndRef = useRef(null);
-  const dragHandleRef = useRef(null);
-
 
   // Drag and drop state
   const [dragTarget, setDragTarget] = useState({
@@ -183,6 +179,24 @@ const FourYearCoursePlannerV2 = () => {
   });
   const [previewState, setPreviewState] = useState(null);
   const [invalidDrop, setInvalidDrop] = useState(false);
+
+  // Update filtered courses when search term changes
+  useEffect(() => {
+    const filtered = allCourses.filter(
+      (course) =>
+        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.department.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredCourses(filtered);
+  }, [searchTerm]);
+
+  // Scroll to bottom of chat when new messages arrive
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages]);
 
   // Calculate units for a term
   const calculateTermUnits = (courses) => {
@@ -538,68 +552,85 @@ const FourYearCoursePlannerV2 = () => {
     return className;
   };
 
-  // Find height of Chat, to adjust the sidebar accordingly
-  const effectiveChatHeight = isChatMinimized ? 0 : chatHeight;
+  // Send message to FastAPI backend
+  const sendMessage = async () => {
+    if (!currentMessage.trim()) return;
 
+    const userMessage = { role: "user", content: currentMessage };
+    setChatMessages((prevMessages) => [...prevMessages, userMessage]);
+    setCurrentMessage("");
+    setIsLoading(true);
+
+    try {
+      // Call the FastAPI backend
+      const response = await fetch("http://0.0.0.0:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: currentMessage,
+          thread_id: "default-thread",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get response from assistant");
+      }
+
+      // Parse the response from the API
+      const data = await response.json();
+
+      // Process the response based on the structure from your API
+      let assistantContent = "";
+
+      // If the response is in the format you showed in the example
+      if (data.messages && Array.isArray(data.messages)) {
+        // Find the last AI message in the messages array
+        const aiMessages = data.messages.filter((msg) => msg.type === "ai");
+        if (aiMessages.length > 0) {
+          // Get the content from the last AI message
+          assistantContent = aiMessages[aiMessages.length - 1].content;
+        }
+      } else {
+        // Fallback for other response formats
+        assistantContent =
+          data.content || data.response || JSON.stringify(data);
+      }
+
+      const assistantMessage = {
+        role: "assistant",
+        content: assistantContent,
+      };
+
+      setChatMessages((prevMessages) => [...prevMessages, assistantMessage]);
+    } catch (error) {
+      console.error("Error communicating with backend:", error);
+      setChatMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again later.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle key press in chat input
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Main content area - Flexible layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Course Search Sidebar - Left Column */}
-        <div className="w-64 p-4 bg-white rounded-lg shadow overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4">Course Search</h2>
-          <input
-            type="text"
-            placeholder="Search courses..."
-            className="w-full p-2 mb-4 border border-gray-300 rounded"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="space-y-2">
-            {filteredCourses.map((course) => (
-              <div
-                key={course.id}
-                className="p-2 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100"
-                draggable
-                onDragStart={(e) => handleDragStart(e, course, true)}
-                onDragEnd={handleDragEnd}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-sm">{course.name}</span>
-                  <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
-                    {course.units.toFixed(1)}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <span>
-                    {course.id} • {course.department}
-                  </span>
-                  <span className="ml-2 text-amber-600">
-                    Prereq:
-                    <span className="text-gray-600 ml-1">
-                      {course.prerequisites && course.prerequisites.length > 0
-                        ? course.prerequisites.join(", ")
-                        : "None"}
-                    </span>
-                  </span>
-                  <span className="ml-2 text-green-600">
-                    Offered:
-                    {course.offeredIn.includes("fall") && (
-                      <span className="ml-1 mr-1">F</span>
-                    )}
-                    {course.offeredIn.includes("winter") && (
-                      <span className="mr-1">W</span>
-                    )}
-                    {course.offeredIn.includes("spring") && <span>S</span>}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Course Schedule - Middle Column (flexible width) */}
+        {/* Course Schedule - Left/Main Column (flexible width) */}
         <div className="flex-1 p-4 bg-white rounded-lg shadow overflow-y-auto mx-2">
           <h2 className="text-xl font-bold mb-4">Four Year Course Schedule</h2>
 
@@ -900,8 +931,6 @@ const FourYearCoursePlannerV2 = () => {
                                 ×
                               </button>
                             </div>
-
-
                           </div>
                         ) : (
                           <div className="text-gray-400 text-center py-1">
@@ -931,15 +960,12 @@ const FourYearCoursePlannerV2 = () => {
               )}
             </div>
           ))}
-          
-          
         </div>
 
-
-        {/* Chat Panel - Right Column */}
+        {/* Right Sidebar - Contains Course Search and Chat */}
         <div
-          className="bg-white rounded-lg shadow overflow-hidden flex flex-col relative"
-          style={{ width: `${chatWidth}px` }}
+          className="flex flex-col bg-white rounded-lg shadow overflow-hidden relative"
+          style={{ width: `${rightSidebarWidth}px` }}
         >
           {/* Resize handle on the left side */}
           <div
@@ -947,15 +973,15 @@ const FourYearCoursePlannerV2 = () => {
             onMouseDown={(e) => {
               e.preventDefault();
               const startX = e.clientX;
-              const startWidth = chatWidth;
+              const startWidth = rightSidebarWidth;
 
               const handleMouseMove = (moveEvent) => {
                 const deltaX = startX - moveEvent.clientX;
                 const newWidth = Math.max(
-                  40,
+                  250,
                   Math.min(500, startWidth + deltaX)
                 );
-                setChatWidth(newWidth);
+                setRightSidebarWidth(newWidth);
               };
 
               const handleMouseUp = () => {
@@ -970,13 +996,104 @@ const FourYearCoursePlannerV2 = () => {
             }}
           ></div>
 
-          {/* Chat header - Removed minimize button */}
-          <div className="bg-blue-500 text-white p-2">
-            <h3 className="font-bold ml-2">Course Assistant</h3>
+          {/* Course Search Section - Top of right sidebar */}
+          <div
+            className="overflow-y-auto"
+            style={{ height: `${searchSectionHeight}%` }}
+          >
+            <div className="p-4">
+              <h2 className="text-xl font-bold mb-4">Course Search</h2>
+              <input
+                type="text"
+                placeholder="Search courses..."
+                className="w-full p-2 mb-4 border border-gray-300 rounded"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <div className="space-y-2">
+                {filteredCourses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="p-2 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, course, true)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-sm">{course.name}</span>
+                      <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
+                        {course.units.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      <span>
+                        {course.id} • {course.department}
+                      </span>
+                      <span className="ml-2 text-amber-600">
+                        Prereq:
+                        <span className="text-gray-600 ml-1">
+                          {course.prerequisites &&
+                          course.prerequisites.length > 0
+                            ? course.prerequisites.join(", ")
+                            : "None"}
+                        </span>
+                      </span>
+                      <span className="ml-2 text-green-600">
+                        Offered:
+                        {course.offeredIn.includes("fall") && (
+                          <span className="ml-1 mr-1">F</span>
+                        )}
+                        {course.offeredIn.includes("winter") && (
+                          <span className="mr-1">W</span>
+                        )}
+                        {course.offeredIn.includes("spring") && <span>S</span>}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Chat content area */}
-          <div className="flex flex-col flex-grow">
+          {/* Divider between search and chat */}
+          <div
+            className="bg-gray-300 h-1 cursor-ns-resize"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startY = e.clientY;
+              const startHeight = searchSectionHeight;
+
+              const handleMouseMove = (moveEvent) => {
+                const deltaY = moveEvent.clientY - startY;
+                const containerHeight = e.target.parentElement.offsetHeight;
+                const newHeightPercent = Math.max(
+                  20,
+                  Math.min(80, startHeight + (deltaY / containerHeight) * 100)
+                );
+                setSearchSectionHeight(newHeightPercent);
+              };
+
+              const handleMouseUp = () => {
+                document.removeEventListener("mousemove", handleMouseMove);
+                document.removeEventListener("mouseup", handleMouseUp);
+              };
+
+              document.addEventListener("mousemove", handleMouseMove);
+              document.addEventListener("mouseup", handleMouseUp);
+            }}
+          />
+
+          {/* Chat Section - Bottom of right sidebar */}
+          <div
+            className="flex flex-col"
+            style={{ height: `${100 - searchSectionHeight}%` }}
+          >
+            {/* Chat header */}
+            <div className="bg-blue-500 text-white p-2">
+              <h3 className="font-bold ml-2">Course Assistant</h3>
+            </div>
+
+            {/* Chat content area */}
             <div className="flex-grow p-3 overflow-y-auto bg-gray-50">
               {chatMessages.length === 0 ? (
                 <div className="text-center text-gray-500 mt-4">
@@ -1041,6 +1158,7 @@ const FourYearCoursePlannerV2 = () => {
               )}
             </div>
 
+            {/* Chat input */}
             <div className="p-2 border-t">
               <div className="flex">
                 <input
@@ -1081,10 +1199,8 @@ const FourYearCoursePlannerV2 = () => {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };
 
-export default FourYearCoursePlannerV2;
+export default FourYearCoursePlannerPrototype;
