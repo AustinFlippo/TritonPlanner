@@ -13,7 +13,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
 pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
-const FourYearCoursePlannerPrototype = () => {
+const FourYearCoursePlannerV3 = () => {
   // Sample course data - in a real app this would come from an API
   const allCourses = [
     {
@@ -151,12 +151,10 @@ const FourYearCoursePlannerPrototype = () => {
     false,
   ]);
 
-  // Right sidebar state (containing both Course Search and Chat)
-  const [rightSidebarWidth, setRightSidebarWidth] = useState(300); // Default width for right sidebar
+  // Right sidebar state
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
-
-  // Course search section height (percentage of right sidebar)
-  const [searchSectionHeight, setSearchSectionHeight] = useState(50); // Default 50%
+  const [searchSectionHeight, setSearchSectionHeight] = useState(50);
 
   // Chat feature state
   const [chatMessages, setChatMessages] = useState([]);
@@ -180,6 +178,40 @@ const FourYearCoursePlannerPrototype = () => {
   const [previewState, setPreviewState] = useState(null);
   const [invalidDrop, setInvalidDrop] = useState(false);
 
+  // NEW: Schedule loading state
+  const [isScheduleLoading, setIsScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState(null);
+  const [scheduleTemplates, setScheduleTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [graduationInfo, setGraduationInfo] = useState(null);
+
+  // NEW: Fetch available schedule templates on component mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        // In production, replace with actual API call
+        // const response = await fetch('http://your-backend-url/api/schedule-templates');
+
+        // For now, just use dummy data
+        const dummyTemplates = [
+          { id: "cs-standard", name: "Computer Science (Standard)" },
+          { id: "cs-ai", name: "Computer Science (AI Focus)" },
+          { id: "cs-web", name: "Computer Science (Web Development)" },
+          { id: "ds-standard", name: "Data Science" },
+        ];
+
+        setScheduleTemplates(dummyTemplates);
+        if (dummyTemplates.length > 0) {
+          setSelectedTemplate(dummyTemplates[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching schedule templates:", error);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
   // Update filtered courses when search term changes
   useEffect(() => {
     const filtered = allCourses.filter(
@@ -197,6 +229,164 @@ const FourYearCoursePlannerPrototype = () => {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chatMessages]);
+
+  // NEW: Function to get the graduation term with correct sorting
+  const getGraduationTerm = (backendSchedule) => {
+    // First step: properly sort the term codes
+    const termCodeOrder = {
+      // 2024-2025
+      FA24: 20240,
+      WI25: 20241,
+      SP25: 20242,
+
+      // 2025-2026
+      FA25: 20250,
+      WI26: 20251,
+      SP26: 20252,
+
+      // 2026-2027
+      FA26: 20260,
+      WI27: 20261,
+      SP27: 20262,
+
+      // 2027-2028
+      FA27: 20270,
+      WI28: 20271,
+      SP28: 20272,
+    };
+
+    // Get all term codes and sort them chronologically
+    const sortedTerms = Object.keys(backendSchedule).sort((a, b) => {
+      const orderA = termCodeOrder[a] || 0;
+      const orderB = termCodeOrder[b] || 0;
+      return orderB - orderA; // Descending order, most recent first
+    });
+
+    // If no terms, return null
+    if (sortedTerms.length === 0) return null;
+
+    // The first term in the sorted list is the most recent one
+    const lastTermCode = sortedTerms[0];
+
+    // Map to our schedule format
+    const termMapping = {
+      // Year 0 (2024-2025)
+      FA24: { yearIndex: 0, term: "fall", yearName: "2024-2025" },
+      WI25: { yearIndex: 0, term: "winter", yearName: "2024-2025" },
+      SP25: { yearIndex: 0, term: "spring", yearName: "2024-2025" },
+
+      // Year 1 (2025-2026)
+      FA25: { yearIndex: 1, term: "fall", yearName: "2025-2026" },
+      WI26: { yearIndex: 1, term: "winter", yearName: "2025-2026" },
+      SP26: { yearIndex: 1, term: "spring", yearName: "2025-2026" },
+
+      // Year 2 (2026-2027)
+      FA26: { yearIndex: 2, term: "fall", yearName: "2026-2027" },
+      WI27: { yearIndex: 2, term: "winter", yearName: "2026-2027" },
+      SP27: { yearIndex: 2, term: "spring", yearName: "2026-2027" },
+
+      // Year 3 (2027-2028)
+      FA27: { yearIndex: 3, term: "fall", yearName: "2027-2028" },
+      WI28: { yearIndex: 3, term: "winter", yearName: "2027-2028" },
+      SP28: { yearIndex: 3, term: "spring", yearName: "2027-2028" },
+    };
+
+    const mapping = termMapping[lastTermCode];
+    if (!mapping) return null;
+
+    return {
+      code: lastTermCode,
+      yearIndex: mapping.yearIndex,
+      term: mapping.term,
+      yearName: mapping.yearName,
+      displayName: `${
+        mapping.term.charAt(0).toUpperCase() + mapping.term.slice(1)
+      } ${mapping.yearName}`,
+    };
+  };
+
+  // NEW: Function to convert backend schedule format to frontend format
+  const convertScheduleFormat = (backendSchedule) => {
+    // Initialize empty schedule structure (4 years, each with fall, winter, spring terms)
+    const frontendSchedule = Array(4)
+      .fill()
+      .map(() => ({
+        fall: Array(3).fill(null),
+        winter: Array(3).fill(null),
+        spring: Array(3).fill(null),
+      }));
+
+    // Define term mapping
+    const termMapping = {
+      // Year 0 (2024-2025)
+      FA24: { yearIndex: 0, term: "fall" },
+      WI25: { yearIndex: 0, term: "winter" },
+      SP25: { yearIndex: 0, term: "spring" },
+
+      // Year 1 (2025-2026)
+      FA25: { yearIndex: 1, term: "fall" },
+      WI26: { yearIndex: 1, term: "winter" },
+      SP26: { yearIndex: 1, term: "spring" },
+
+      // Year 2 (2026-2027)
+      FA26: { yearIndex: 2, term: "fall" },
+      WI27: { yearIndex: 2, term: "winter" },
+      SP27: { yearIndex: 2, term: "spring" },
+
+      // Year 3 (2027-2028)
+      FA27: { yearIndex: 3, term: "fall" },
+      WI28: { yearIndex: 3, term: "winter" },
+      SP28: { yearIndex: 3, term: "spring" },
+    };
+
+    // Process each term in the backend schedule
+    Object.entries(backendSchedule).forEach(([termCode, courses]) => {
+      // Get the mapping for this term
+      const mapping = termMapping[termCode];
+
+      if (!mapping) {
+        console.warn(`Unknown term code: ${termCode}`);
+        return; // Skip this term
+      }
+
+      const { yearIndex, term } = mapping;
+
+      // For each course in this term, create a proper course object
+      courses.forEach((courseName, index) => {
+        if (index >= 3) {
+          console.warn(
+            `More than 3 courses in ${termCode}, only first 3 will be displayed`
+          );
+          return; // Skip courses beyond the first 3
+        }
+
+        // Handle empty courses or placeholders
+        if (!courseName || courseName === "N/A" || courseName === "-") {
+          return; // Skip this course slot
+        }
+
+        // Parse course name to extract department and course number
+        const parts = courseName.split(" ");
+        const department = parts[0];
+        const courseNumber = parts.slice(1).join(" ");
+
+        // Create a course object with the required properties
+        const courseObject = {
+          id: courseName.replace(" ", ""), // Remove space to create id like "MATH20C"
+          name: courseName,
+          units: 4.0, // Default to 4.0 units since we don't have this info
+          department: department,
+          prerequisites: [], // We don't have this info, so use empty array
+          offeredIn: ["fall", "winter", "spring"], // Assume offered in all terms as we don't have this info
+        };
+
+        // Add the course to the appropriate slot in our schedule
+        frontendSchedule[yearIndex][term][index] = courseObject;
+      });
+    });
+
+    return frontendSchedule;
+  };
 
   // Calculate units for a term
   const calculateTermUnits = (courses) => {
@@ -286,6 +476,59 @@ const FourYearCoursePlannerPrototype = () => {
     const newCollapsedYears = [...collapsedYears];
     newCollapsedYears[yearIndex] = !newCollapsedYears[yearIndex];
     setCollapsedYears(newCollapsedYears);
+  };
+
+  // NEW: Load schedule from backend
+  const loadScheduleFromBackend = async () => {
+    setIsScheduleLoading(true);
+    setScheduleError(null);
+
+    try {
+      // In production, make the actual API call
+      // const response = await fetch(`http://your-backend-url/api/schedules/${selectedTemplate}`);
+      // if (!response.ok) throw new Error(`Failed to load schedule: ${response.statusText}`);
+      // const backendData = await response.json();
+
+      // For demo, using sample data with the student graduating in FA27
+      const backendData = {
+        WI25: ["MATH 20C", "DSC 30", "CCE 1"],
+        SP25: ["DSC 40A", "DSC 80", "CCE 2"],
+        FA25: ["DSC 40B", "MATH 181A", "CCE 3"],
+        WI26: ["DSC 100", "DSC 102", "CCE 120"],
+        SP26: ["DSC 106", "MATH 189", "DSC 140A"],
+        FA26: ["DSC 140B", "DSC 148", "PHIL 150"],
+        WI27: ["DSC 180A", "PHIL 160", "TDGE 11"],
+        SP27: ["DSC 180B", "PHIL 170", "MUS 1A"],
+        FA27: ["ANTH 101", "PHIL 180", "MUS 4"],
+        // Student graduates after FA27
+      };
+
+      // Convert the backend data to frontend format
+      const convertedSchedule = convertScheduleFormat(backendData);
+
+      // Get graduation information
+      const graduation = getGraduationTerm(backendData);
+      if (graduation) {
+        setGraduationInfo(graduation);
+
+        // Optionally show a notification or message about graduation timeline
+        console.log(
+          `This schedule shows courses through ${graduation.displayName}`
+        );
+      } else {
+        setGraduationInfo(null);
+      }
+
+      // Update the schedule state
+      setSchedule(convertedSchedule);
+    } catch (error) {
+      console.error("Error loading schedule:", error);
+      setScheduleError(
+        error.message || "Failed to load schedule. Please try again."
+      );
+    } finally {
+      setIsScheduleLoading(false);
+    }
   };
 
   // Handle drag start for a course from the sidebar or within planner
@@ -562,8 +805,8 @@ const FourYearCoursePlannerPrototype = () => {
     setIsLoading(true);
 
     try {
-      // Call the FastAPI backend
-      const response = await fetch("http://0.0.0.0:8000/chat", {
+      // Call the MERN server endpoint
+      const response = await fetch("http://localhost:5050/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -583,6 +826,7 @@ const FourYearCoursePlannerPrototype = () => {
 
       // Process the response based on the structure from your API
       let assistantContent = "";
+      let scheduleData = null;
 
       // If the response is in the format you showed in the example
       if (data.messages && Array.isArray(data.messages)) {
@@ -590,12 +834,23 @@ const FourYearCoursePlannerPrototype = () => {
         const aiMessages = data.messages.filter((msg) => msg.type === "ai");
         if (aiMessages.length > 0) {
           // Get the content from the last AI message
-          assistantContent = aiMessages[aiMessages.length - 1].content;
+          const lastMessage = aiMessages[aiMessages.length - 1];
+          assistantContent = lastMessage.content;
+
+          // Check if the message contains schedule data
+          if (lastMessage.schedule) {
+            scheduleData = lastMessage.schedule;
+          }
         }
       } else {
         // Fallback for other response formats
         assistantContent =
           data.content || data.response || JSON.stringify(data);
+
+        // Check if the response contains schedule data
+        if (data.schedule) {
+          scheduleData = data.schedule;
+        }
       }
 
       const assistantMessage = {
@@ -604,6 +859,36 @@ const FourYearCoursePlannerPrototype = () => {
       };
 
       setChatMessages((prevMessages) => [...prevMessages, assistantMessage]);
+
+      // If schedule data is present, update the schedule
+      if (scheduleData) {
+        try {
+          // Convert the schedule data to frontend format
+          const convertedSchedule = convertScheduleFormat(scheduleData);
+
+          // Get graduation information
+          const graduation = getGraduationTerm(scheduleData);
+          if (graduation) {
+            setGraduationInfo(graduation);
+          } else {
+            setGraduationInfo(null);
+          }
+
+          // Update the schedule state
+          setSchedule(convertedSchedule);
+        } catch (error) {
+          console.error("Error updating schedule from chat response:", error);
+          // Add an error message to the chat
+          setChatMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              role: "assistant",
+              content:
+                "I found schedule data but couldn't update the schedule. Please try again.",
+            },
+          ]);
+        }
+      }
     } catch (error) {
       console.error("Error communicating with backend:", error);
       setChatMessages((prevMessages) => [
@@ -632,7 +917,93 @@ const FourYearCoursePlannerPrototype = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Course Schedule - Left/Main Column (flexible width) */}
         <div className="flex-1 p-4 bg-white rounded-lg shadow overflow-y-auto mx-2">
-          <h2 className="text-xl font-bold mb-4">Four Year Course Schedule</h2>
+          {/* NEW: Add the schedule controls and graduation info */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Four Year Course Schedule</h2>
+
+            <div className="flex items-center space-x-2">
+              <select
+                className="p-2 border rounded text-sm"
+                value={selectedTemplate}
+                onChange={(e) => setSelectedTemplate(e.target.value)}
+                disabled={isScheduleLoading || scheduleTemplates.length === 0}
+              >
+                {scheduleTemplates.length === 0 ? (
+                  <option>Loading templates...</option>
+                ) : (
+                  scheduleTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))
+                )}
+              </select>
+
+              <button
+                className={`px-4 py-2 rounded text-sm ${
+                  isScheduleLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                }`}
+                onClick={loadScheduleFromBackend}
+                disabled={isScheduleLoading}
+              >
+                {isScheduleLoading ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Loading...
+                  </span>
+                ) : (
+                  "Load Recommended Schedule"
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* NEW: Error message display */}
+          {scheduleError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {scheduleError}
+            </div>
+          )}
+
+          {/* NEW: Graduation info */}
+          {graduationInfo && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded relative">
+              <div className="flex items-center">
+                <svg
+                  className="w-5 h-5 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                </svg>
+                <span>
+                  This schedule shows completion in {graduationInfo.displayName}
+                </span>
+              </div>
+            </div>
+          )}
 
           {schedule.map((year, yearIndex) => (
             <div
@@ -1203,4 +1574,4 @@ const FourYearCoursePlannerPrototype = () => {
   );
 };
 
-export default FourYearCoursePlannerPrototype;
+export default FourYearCoursePlannerV3;
