@@ -16,16 +16,16 @@ const CoursePlanner = ({
   previewState,
   getSlotClassName,
 }) => {
+  
   return (
-    <div className="space-y-6">
+    <div className="[&>*]:m-4">
       {schedule.map((year, yearIndex) => (
         <YearBlock
-          key={yearIndex}
           year={year}
           yearIndex={yearIndex}
           yearLabel={yearLabels[yearIndex]}
-          isCollapsed={collapsedYears[yearIndex]}
-          toggleCollapse={() => toggleYearCollapse(yearIndex)}
+          collapsed={collapsedYears[yearIndex]}
+          toggleCollapse={toggleYearCollapse}
           calculateAnnualUnits={calculateAnnualUnits}
           calculateTermUnits={calculateTermUnits}
           handleDragOver={handleDragOver}

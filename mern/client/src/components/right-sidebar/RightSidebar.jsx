@@ -134,6 +134,7 @@ const RightSidebar = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCourses, setFilteredCourses] = useState(allCourses);
+
   const [currentMessage, setCurrentMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -236,7 +237,7 @@ const RightSidebar = () => {
         }}
       ></div>
 
-<div className="flex flex-col h-screen">
+      <div className="flex flex-col h-screen">
         {/* Course search area */}
         <div style={{ height: `${searchSectionHeight}%` }} className="flex-shrink-0">
           <div className="h-full overflow-y-auto">

@@ -1,7 +1,7 @@
 import React from "react";
 import Header from "./Header";
 import CoursePlannerContainer from "./planner/CoursePlannerContainer";
-import RightSidebar from "./right-sidebar/RightSidebar";
+import RightSidebar from "./right-sidebar/RightSideBar";
 
 const MainLayout = () => {
 
@@ -12,7 +12,7 @@ const MainLayout = () => {
       {/* Main content area */}
       <div className="flex h-full w-full overflow-hidden">
         {/* Left: Planner (flexible space) */}
-        <div className="flex-grow overflow-auto">
+        <div className="flex-grow overflow-y-auto overflow-x-hidden">
           <CoursePlannerContainer />
         </div>
 

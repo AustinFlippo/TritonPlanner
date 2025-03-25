@@ -19,6 +19,7 @@ const YearBlock = ({
   dragTarget,
   invalidDrop
 }) => {
+  console.log("collapsed", collapsed);
   return (
     <div className="mb-6 border rounded-lg overflow-hidden">
       {/* Year header */}
@@ -43,8 +44,7 @@ const YearBlock = ({
         <div className="flex flex-col md:flex-row">
           {['fall', 'winter', 'spring'].map((term) => (
             <TermBlock
-              key={term}
-              term={term}
+              termKey={term}
               termName={term.charAt(0).toUpperCase() + term.slice(1)}
               courses={year[term]}
               yearIndex={yearIndex}
