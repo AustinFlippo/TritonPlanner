@@ -19,7 +19,6 @@ const YearBlock = ({
   dragTarget,
   invalidDrop
 }) => {
-  console.log("collapsed", collapsed);
   return (
     <div className="mb-6 border rounded-lg overflow-hidden">
       {/* Year header */}

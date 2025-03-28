@@ -27,7 +27,6 @@ const CoursePlannerContainer = () => {
   const [invalidDrop, setInvalidDrop] = useState(false);
 
   const toggleYearCollapse = (yearIndex) => {
-    console.log("yoooo");
     const newState = [...collapsedYears];
     newState[yearIndex] = !newState[yearIndex];
     setCollapsedYears(newState);
@@ -151,8 +150,40 @@ const CoursePlannerContainer = () => {
   };
   
   const getSlotClassName = (yearIndex, term, courseIndex) => {
+    let className = "border rounded mb-2 p-2 ";
+
+    // Check if this is the current drag target
+    if (
+      dragTarget.yearIndex === yearIndex &&
+      dragTarget.term === term &&
+      dragTarget.courseIndex === courseIndex
+    ) {
+      // If invalid drop, show red highlight
+      if (invalidDrop) {
+        className += "border-red-500 border-2 bg-red-50 ";
+      } else {
+        className += "border-blue-500 border-2 bg-blue-50 ";
+      }
+    }
+
+    // Check if this is the destination in a preview
+    if (
+      previewState &&
+      previewState.targetYearIndex === yearIndex &&
+      previewState.targetTerm === term &&
+      previewState.targetCourseIndex === courseIndex
+    ) {
+      className += "border-yellow-400 border-2 bg-yellow-50 ";
+    }
+
+    return className;
+    
+    /*
     let className = "border rounded p-2 mb-2 transition-colors ";
-  
+    console.log("yearIndex: " + yearIndex);
+    console.log("term: " + term);
+    console.log("courseIndex: " + courseIndex);
+
     if (
       dragTarget.yearIndex === yearIndex &&
       dragTarget.term === term &&
@@ -163,7 +194,7 @@ const CoursePlannerContainer = () => {
         : "border-blue-500 bg-blue-50";
     }
   
-    return className;
+    return className;*/
   };
   
 
