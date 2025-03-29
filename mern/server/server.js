@@ -3,6 +3,8 @@ import cors from "cors";
 import records from "./routes/record.js";
 import chat from "./routes/chat.js";
 
+const connect = require("./connect");
+
 const PORT = process.env.PORT || 5050;
 const app = express();
 
