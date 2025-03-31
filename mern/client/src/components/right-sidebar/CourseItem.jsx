@@ -1,12 +1,13 @@
 import React from "react";
 
-const CourseItem = ({ course, onDragStart, onDragEnd }) => {
+const CourseItem = ({ course, onDragStart, onDragEnd, onDoubleClick }) => {
   return (
     <div
       className="p-2 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100"
       draggable
       onDragStart={(e) => onDragStart(e, course)}
       onDragEnd={onDragEnd}
+      onDoubleClick={() => onDoubleClick?.(course)}
     >
       <div className="flex justify-between items-center">
         <span className="font-bold text-sm">{course.course_name}</span>

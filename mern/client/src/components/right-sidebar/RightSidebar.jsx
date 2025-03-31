@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
 import CourseItem  from "./CourseItem";
+import CourseDetails from "./CourseDetails";
 import { debounce } from "lodash"; 
 
 const RightSidebar = () => {
@@ -9,6 +10,8 @@ const RightSidebar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
 
   const [currentMessage, setCurrentMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
@@ -21,7 +24,7 @@ const RightSidebar = () => {
   const handleSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
-      return
+      return;
     }
     try {
       setIsCourseLoading(true);
@@ -146,6 +149,12 @@ const RightSidebar = () => {
         {/* Course search area */}
         <div style={{ height: `${searchSectionHeight}%` }} className="flex-shrink-0">
           <div className="h-full overflow-y-auto">
+          {selectedCourse ? (
+            <CourseDetails
+              course={selectedCourse}
+              onBack={() => setSelectedCourse(null)}
+            />
+          ) : (
             <CourseSearch
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
@@ -155,7 +164,9 @@ const RightSidebar = () => {
               handleDragEnd={handleDragEnd}
               isCourseLoading={isCourseLoading}
               debouncedSearch={debouncedSearch}
+              onCourseDoubleClick={(course) => setSelectedCourse(course)}
             />
+          )}
           </div>
         </div>
 

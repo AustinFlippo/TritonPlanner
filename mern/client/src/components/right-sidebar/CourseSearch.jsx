@@ -8,7 +8,8 @@ const CourseSearch = ({
   handleDragStart,
   handleDragEnd,
   debouncedSearch,
-  isCourseLoading
+  isCourseLoading,
+  onCourseDoubleClick
 }) => {
   return (
     <div className="p-4">
@@ -40,6 +41,7 @@ const CourseSearch = ({
             course={course}
             onDragStart={(e) => handleDragStart(e, course, true)}
             onDragEnd={handleDragEnd}
+            onDoubleClick={onCourseDoubleClick}
           />
         ))}
       </div>
