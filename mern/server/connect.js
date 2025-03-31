@@ -1,6 +1,6 @@
-const{ MongoClient, ServerApiVersion } = require("mongodb");
-require("dotenv").config({path: "./config.env"});
-
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
+dotenv.config({ path: "./config.env" });
 
 const URI = process.env.ATLAS_URI || "";
 const client = new MongoClient(URI, {
@@ -13,15 +13,16 @@ const client = new MongoClient(URI, {
 
 let database;
 
-module.exports = {
-  connectToServer: () => {
-    database = client.db("sample_mflix");
-  },
-
-  getDb: () => {
-    return database;
-  }
+function connectToServer() {
+  database = client.db("sample_mflix");
 }
+
+function getDb() {
+  return database;
+}
+
+export { connectToServer, getDb };
+
 
 
 /*
