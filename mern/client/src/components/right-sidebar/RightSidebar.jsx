@@ -1,139 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
+import CourseItem  from "./CourseItem";
+import { debounce } from "lodash"; 
 
 const RightSidebar = () => {
 
-    const allCourses = [
-        {
-          id: "cs101",
-          name: "Introduction to Computer Science",
-          units: 4.0,
-          department: "CS",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-        {
-          id: "cs201",
-          name: "Data Structures",
-          units: 4.0,
-          department: "CS",
-          prerequisites: ["cs101"],
-          offeredIn: ["winter", "spring"],
-        },
-        {
-          id: "cs301",
-          name: "Algorithms",
-          units: 4.0,
-          department: "CS",
-          prerequisites: ["cs201", "math201"],
-          offeredIn: ["fall", "spring"],
-        },
-        {
-          id: "math101",
-          name: "Calculus I",
-          units: 4.0,
-          department: "MATH",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-        {
-          id: "math201",
-          name: "Linear Algebra",
-          units: 4.0,
-          department: "MATH",
-          prerequisites: ["math101"],
-          offeredIn: ["winter"],
-        },
-        {
-          id: "eng101",
-          name: "Composition",
-          units: 4.0,
-          department: "ENG",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-        {
-          id: "hist101",
-          name: "World History",
-          units: 4.0,
-          department: "HIST",
-          prerequisites: [],
-          offeredIn: ["fall", "spring"],
-        },
-        {
-          id: "phys101",
-          name: "Physics I",
-          units: 4.0,
-          department: "PHYS",
-          prerequisites: ["math101"],
-          offeredIn: ["fall", "winter"],
-        },
-        {
-          id: "chem101",
-          name: "Chemistry I",
-          units: 4.0,
-          department: "CHEM",
-          prerequisites: [],
-          offeredIn: ["fall", "spring"],
-        },
-        {
-          id: "bio101",
-          name: "Biology I",
-          units: 4.0,
-          department: "BIO",
-          prerequisites: [],
-          offeredIn: ["winter", "spring"],
-        },
-        {
-          id: "ld-bdaas",
-          name: "LD BDAAS CORE",
-          units: 4.0,
-          department: "CORE",
-          prerequisites: [],
-          offeredIn: ["fall"],
-        },
-        {
-          id: "breadth-ge",
-          name: "Breadth GE",
-          units: 4.0,
-          department: "GE",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-        {
-          id: "dei",
-          name: "DEI",
-          units: 4.0,
-          department: "DEI",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-        {
-          id: "cce1",
-          name: "CCE 1",
-          units: 4.0,
-          department: "CCE",
-          prerequisites: [],
-          offeredIn: ["spring"],
-        },
-        {
-          id: "elective",
-          name: "Elective",
-          units: 4.0,
-          department: "ELEC",
-          prerequisites: [],
-          offeredIn: ["fall", "winter", "spring"],
-        },
-      ];
-
-    useEffect(() => {
-        localStorage.setItem("allCourses", JSON.stringify(allCourses));
-      }, []);
-
-
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState(allCourses);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isCourseLoading, setIsCourseLoading] = useState(false);
 
   const [currentMessage, setCurrentMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
@@ -143,16 +18,46 @@ const RightSidebar = () => {
   const [isResizing, setIsResizing] = useState(false);
   const chatEndRef = useRef(null);
 
-  useEffect(() => {
-    const allCourses = JSON.parse(localStorage.getItem("allCourses")) || [];
-    const filtered = allCourses.filter(
-      (course) =>
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.department.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredCourses(filtered);
-  }, [searchTerm]);
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return
+    }
+    try {
+      setIsCourseLoading(true);
+      console.log("🎯 Sending query:", query);
+      
+      const response = await fetch("http://localhost:5050/search-courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+      console.log("📡 Raw response:", response);
+
+      if (!response.ok) {
+        const errorText = await response.text(); // grab server error content
+        console.error("❌ Server responded with error:", response.status, errorText);
+        throw new Error(`Server error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("✅ Results from backend:", data.results);
+      setSearchResults(
+        data.results.map((course) => ({
+          ...course,
+          credits: isNaN(Number(course.credits)) ? 0 : Number(course.credits),
+        }))
+      );
+      
+    } catch (error) {
+      console.error("❌ Search error:", error);
+    } finally {
+      setIsCourseLoading(false);
+    }
+  };
+  const debouncedSearch = debounce(handleSearch, 500);
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -244,9 +149,12 @@ const RightSidebar = () => {
             <CourseSearch
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              filteredCourses={filteredCourses}
+              setSearchResults={setSearchResults}
+              searchResults={searchResults}
               handleDragStart={handleDragStart}
               handleDragEnd={handleDragEnd}
+              isCourseLoading={isCourseLoading}
+              debouncedSearch={debouncedSearch}
             />
           </div>
         </div>
