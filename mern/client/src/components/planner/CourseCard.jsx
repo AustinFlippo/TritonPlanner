@@ -17,14 +17,14 @@ const CourseCard = ({
       onDragEnd={onDragEnd}
     >
       <span>
-        {course.name}
+        {course.course_id}
         {isPreviewing && (
           <span className="ml-2 text-yellow-600 text-xs">(Moving)</span>
         )}
       </span>
       <div className="flex items-center">
         <span className="bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs mr-2">
-          {course.units.toFixed(1)}
+          {course.credits.toFixed(1)}
         </span>
         <button
           onClick={onRemove}

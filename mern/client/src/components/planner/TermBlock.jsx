@@ -67,7 +67,7 @@ const TermBlock = ({
                 previewState.targetTerm === termKey &&
                 previewState.targetCourseIndex === courseIndex ? (
                 <div className="text-yellow-600">
-                  {previewState.course.name} (Preview)
+                  {previewState.course.course_name} (Preview)
                 </div>
               ) : (
                 "Drop course here"

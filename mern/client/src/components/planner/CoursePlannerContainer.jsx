@@ -33,7 +33,7 @@ const CoursePlannerContainer = () => {
   };
 
   const calculateTermUnits = (courses) => {
-    return courses.reduce((total, course) => total + (course ? course.units : 0), 0);
+    return courses.reduce((total, course) => total + (course ? course.credits : 0), 0);
   };
 
   const calculateAnnualUnits = (yearIndex) => {

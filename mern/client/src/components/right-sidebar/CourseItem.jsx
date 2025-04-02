@@ -17,7 +17,7 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onDoubleClick }) => {
       </div>
       <div className="text-xs text-gray-600">
         <span>
-          {course.course_id} • {course.course_id.split(' ')[0]}
+          {course.course_id}
         </span>
         <span className="ml-2 text-amber-600">
           Prereq:
@@ -33,11 +33,13 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onDoubleClick }) => {
         </span>
         <span className="ml-2 text-green-600">
           Offered:
-          {course.offerings.includes("fall") && (
+          <span className="text-gray-600 ml-1">
+          {course.offerings.includes("FA") && (
             <span className="ml-1 mr-1">F</span>
           )}
-          {course.offerings.includes("winter") && <span className="mr-1">W</span>}
-          {course.offerings.includes("spring") && <span>S</span>}
+          {course.offerings.includes("WI") && <span className="mr-1">W</span>}
+          {course.offerings.includes("SP") && <span>S</span>}
+          </span>
         </span>
       </div>
     </div>
