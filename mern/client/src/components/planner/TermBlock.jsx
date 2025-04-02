@@ -20,7 +20,7 @@ const TermBlock = ({
   return (
     <div className="flex-1 p-2">
       {/* Term header with units */}
-      <div className="bg-blue-50 p-2 mb-2 flex justify-between items-center rounded">
+      <div className="bg-stone-100 p-2 mb-2 flex justify-between items-center rounded">
         <span className="font-semibold">{termName}</span>
         <div className="flex items-center">
           <span className="text-sm mr-2">term units</span>
@@ -34,10 +34,11 @@ const TermBlock = ({
       {courses.map((course, courseIndex) => (
         <div
           key={courseIndex}
-          className={getSlotClassName(yearIndex, termKey, courseIndex)}
+          className="border border-gray-300 rounded mb-2 p-2"
           onDragOver={(e) => handleDragOver(e, yearIndex, termKey, courseIndex)}
           onDrop={(e) => handleDrop(e, yearIndex, termKey, courseIndex)}
         >
+          {/* use this for showing red for invalid drop:    className=getSlotClassName(yearIndex, termKey, courseIndex)*/}
           {course ? (
             <CourseCard
               course={course}

@@ -178,44 +178,34 @@ const CoursePlannerContainer = () => {
 
     return className;
     
-    /*
-    let className = "border rounded p-2 mb-2 transition-colors ";
-    console.log("yearIndex: " + yearIndex);
-    console.log("term: " + term);
-    console.log("courseIndex: " + courseIndex);
-
-    if (
-      dragTarget.yearIndex === yearIndex &&
-      dragTarget.term === term &&
-      dragTarget.courseIndex === courseIndex
-    ) {
-      className += invalidDrop
-        ? "border-red-500 bg-red-100"
-        : "border-blue-500 bg-blue-50";
-    }
-  
-    return className;*/
   };
   
 
   return (
-    <CoursePlanner
-      schedule={schedule}
-      yearLabels={yearLabels}
-      collapsedYears={collapsedYears}
-      toggleYearCollapse={toggleYearCollapse}
-      calculateAnnualUnits={calculateAnnualUnits}
-      calculateTermUnits={calculateTermUnits}
-      handleDragStart={handleDragStart}
-      handleDragEnd={handleDragEnd}
-      handleDragOver={handleDragOver}
-      handleDrop={handleDrop}
-      handleRemoveCourse={handleRemoveCourse}
-      previewState={previewState}
-      dragTarget={dragTarget}
-      invalidDrop={invalidDrop}
-      getSlotClassName={getSlotClassName}
-    />
+    <div>
+      {/* Button for saving */}
+      <div className="flex justify-end p-3">
+        <button className="bg-blue-500 text-white">Save</button>
+      </div>
+
+      <CoursePlanner
+        schedule={schedule}
+        yearLabels={yearLabels}
+        collapsedYears={collapsedYears}
+        toggleYearCollapse={toggleYearCollapse}
+        calculateAnnualUnits={calculateAnnualUnits}
+        calculateTermUnits={calculateTermUnits}
+        handleDragStart={handleDragStart}
+        handleDragEnd={handleDragEnd}
+        handleDragOver={handleDragOver}
+        handleDrop={handleDrop}
+        handleRemoveCourse={handleRemoveCourse}
+        previewState={previewState}
+        dragTarget={dragTarget}
+        invalidDrop={invalidDrop}
+        getSlotClassName={getSlotClassName}
+      />
+    </div>
   );
 };
 

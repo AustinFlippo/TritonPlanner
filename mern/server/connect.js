@@ -13,8 +13,13 @@ const client = new MongoClient(URI, {
 
 let database;
 
-function connectToServer() {
-  database = client.db("sample_mflix");
+async function connectToServer() {
+  if(!database){
+    await client.connect();
+    database = client.db("scheduled_courses");
+    console.log("connected to db successfully");
+  }
+  
 }
 
 function getDb() {

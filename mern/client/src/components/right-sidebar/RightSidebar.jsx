@@ -116,12 +116,12 @@ const RightSidebar = () => {
 
   return (
     <div
-      className="relative bg-white rounded-lg shadow"
+      className="relative bg-white shadow"
       style={{ width: `${rightSidebarWidth}px` }}
     >
-      {/* Resize handle on the left side */}
+      {/* Resize handle on the left side -- Divider between planner and Right Side Bar */}
       <div
-        className="absolute top-0 left-0 h-full w-2 bg-gray-300 hover:bg-blue-300 cursor-ew-resize z-10"
+        className="absolute top-0 left-0 h-full w-1 bg-gray-300 hover:bg-gray-400 cursor-ew-resize z-10"
         onMouseDown={(e) => {
           e.preventDefault();
           const startX = e.clientX;
@@ -145,7 +145,7 @@ const RightSidebar = () => {
         }}
       ></div>
 
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-full min-h-0">
         {/* Course search area */}
         <div style={{ height: `${searchSectionHeight}%` }} className="flex-shrink-0">
           <div className="h-full overflow-y-auto">

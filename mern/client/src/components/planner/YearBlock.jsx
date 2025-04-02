@@ -20,7 +20,7 @@ const YearBlock = ({
   invalidDrop
 }) => {
   return (
-    <div className="mb-6 border rounded-lg overflow-hidden">
+    <div className="mb-6 border rounded-lg overflow-hidden shadow-md">
       {/* Year header */}
       <div
         className="bg-blue-500 text-white p-3 flex justify-between items-center cursor-pointer"
