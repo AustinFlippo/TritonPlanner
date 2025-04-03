@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 // Load and parse course data JSON
-const courseDataPath = path.resolve("./controllers/v3.json");
+const courseDataPath = path.resolve("./controllers/v4.json");
 
 let allCourses = [];
 try {
