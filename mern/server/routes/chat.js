@@ -17,10 +17,10 @@ router.post("/", async (req, res) => {
     if (!response.ok) {
       throw new Error(`FastAPI responded with status: ${response.status}`);
     }
-    console.log("fuckkkk");
-    console.log(response);
 
     const data = await response.json();
+    console.log(data);
+
     res.json(data);
   } catch (error) {
     console.error("Error proxying chat request:", error);

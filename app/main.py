@@ -49,6 +49,6 @@ async def chat(request: ChatRequest):
         
         config = {"configurable": {"thread_id": request.thread_id}}
         result = await graph.ainvoke(
-            {"messages": [{"role": "user", "content": request.message}]})
-        return result
+            {"question": request.message})
+        return result["answer"]
     

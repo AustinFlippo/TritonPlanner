@@ -1,17 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
-import CourseItem  from "./CourseItem";
+import CourseItem from "./CourseItem";
 import CourseDetails from "./CourseDetails";
-import { debounce } from "lodash"; 
+import { debounce } from "lodash";
 
 const RightSidebar = () => {
-
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-
 
   const [currentMessage, setCurrentMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
@@ -29,7 +27,7 @@ const RightSidebar = () => {
     try {
       setIsCourseLoading(true);
       console.log("🎯 Sending query:", query);
-      
+
       const response = await fetch("http://localhost:5050/search-courses", {
         method: "POST",
         headers: {
@@ -41,10 +39,14 @@ const RightSidebar = () => {
 
       if (!response.ok) {
         const errorText = await response.text(); // grab server error content
-        console.error("❌ Server responded with error:", response.status, errorText);
+        console.error(
+          "❌ Server responded with error:",
+          response.status,
+          errorText
+        );
         throw new Error(`Server error: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("✅ Results from backend:", data.results);
       setSearchResults(
@@ -53,7 +55,6 @@ const RightSidebar = () => {
           credits: isNaN(Number(course.credits)) ? 0 : Number(course.credits),
         }))
       );
-      
     } catch (error) {
       console.error("❌ Search error:", error);
     } finally {
@@ -87,20 +88,35 @@ const RightSidebar = () => {
       const response = await fetch("http://localhost:5050/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentMessage, thread_id: "default-thread" })
+        body: JSON.stringify({
+          message: currentMessage,
+          thread_id: "default-thread",
+        }),
       });
 
       const data = await response.json();
       const assistantMessage = {
         role: "assistant",
-        content: data.messages?.filter((msg) => msg.type === "ai").pop()?.content || "No response"
+        content:
+          data.messages?.filter((msg) => msg.type === "ai").pop()?.content ||
+          "No response",
       };
+      console.log(data);
 
-      setChatMessages((prev) => [...prev, assistantMessage]);
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data,
+        },
+      ]);
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, something went wrong. Try again later." }
+        {
+          role: "assistant",
+          content: "Sorry, something went wrong. Try again later.",
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -147,26 +163,29 @@ const RightSidebar = () => {
 
       <div className="flex flex-col h-full min-h-0">
         {/* Course search area */}
-        <div style={{ height: `${searchSectionHeight}%` }} className="flex-shrink-0">
+        <div
+          style={{ height: `${searchSectionHeight}%` }}
+          className="flex-shrink-0"
+        >
           <div className="h-full overflow-y-auto">
-          {selectedCourse ? (
-            <CourseDetails
-              course={selectedCourse}
-              onBack={() => setSelectedCourse(null)}
-            />
-          ) : (
-            <CourseSearch
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setSearchResults={setSearchResults}
-              searchResults={searchResults}
-              handleDragStart={handleDragStart}
-              handleDragEnd={handleDragEnd}
-              isCourseLoading={isCourseLoading}
-              debouncedSearch={debouncedSearch}
-              onCourseDoubleClick={(course) => setSelectedCourse(course)}
-            />
-          )}
+            {selectedCourse ? (
+              <CourseDetails
+                course={selectedCourse}
+                onBack={() => setSelectedCourse(null)}
+              />
+            ) : (
+              <CourseSearch
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                setSearchResults={setSearchResults}
+                searchResults={searchResults}
+                handleDragStart={handleDragStart}
+                handleDragEnd={handleDragEnd}
+                isCourseLoading={isCourseLoading}
+                debouncedSearch={debouncedSearch}
+                onCourseDoubleClick={(course) => setSelectedCourse(course)}
+              />
+            )}
           </div>
         </div>
 
@@ -213,7 +232,6 @@ const RightSidebar = () => {
       </div>
     </div>
   );
-
 };
 
 export default RightSidebar;
