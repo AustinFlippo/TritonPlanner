@@ -19,17 +19,15 @@ from langgraph.graph import StateGraph, START, END
 
 load_dotenv()
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
-pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
-index = pc.Index("vac")
-
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+index_name = "openaicourses"
+pc = Pinecone(api_key="pcsk_5b67TL_BgErCnfngE1K8C6Kh4SuPuiFZNDyALbvtqi1fUn1gxzEK5p2KYm4nue6fwxEp4C")
+index = pc.Index(index_name)
 vector_store = PineconeVectorStore(embedding=embeddings, index=index)
 
-llm = ChatOpenAI(model="gpt-4o-mini")
 
 rag_prompt = hub.pull("rlm/rag-prompt")
-
 
 # Define state for application
 class State(TypedDict):
