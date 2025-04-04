@@ -183,10 +183,11 @@ const CoursePlannerContainer = () => {
 
   return (
     <div>
-      {/* Button for saving */}
+      {/* Button for saving
       <div className="flex justify-end p-3">
         <button className="bg-blue-500 text-white">Save</button>
       </div>
+      */}
 
       <CoursePlanner
         schedule={schedule}
