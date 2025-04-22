@@ -1,0 +1,154 @@
+{
+    "completed_courses": [
+      {
+        "term": "FA24",
+        "course": "DSC 10",
+        "title": "Principles of Data Science",
+        "units": 4.00,
+        "grade": "A",
+        "source": "ucsd"
+      },
+      {
+        "term": "FA24",
+        "course": "MATH 20C",
+        "title": "Calculus&Analyt Geom/Sci&Engn",
+        "units": 4.00,
+        "grade": "A",
+        "source": "ucsd"
+      },
+      {
+        "term": "FA24",
+        "course": "ECON 1",
+        "title": "Principles of Microeconomics",
+        "units": 4.00,
+        "grade": "A",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP24",
+        "course": "MATH 20A",
+        "title": "Calculus/Science & Engineerin",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP24",
+        "course": "PHYS 10",
+        "title": "Concepts In Physics",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP24",
+        "course": "POLI 10",
+        "title": "Intro/Poli Sci:Amer Politics",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP24",
+        "course": "PHYSAP10",
+        "title": "AP Physics B",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ap"
+      },
+      {
+        "term": "SP23",
+        "course": "MATH 20B",
+        "title": "Calculus/Science & Engineerin",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP23",
+        "course": "ESYS 10",
+        "title": "Intro to Environmental System",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP23",
+        "course": "CSE 3",
+        "title": "Fluency/Information Technolog",
+        "units": 8.00,
+        "grade": "TP",
+        "source": "ucsd"
+      },
+      {
+        "term": "SP23",
+        "course": "HILDAPA",
+        "title": "AP HISTORY (Score=3-4-5)",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ap"
+      },
+      {
+        "term": "SP23",
+        "course": "HILDAPB",
+        "title": "AP HISTORY (Score=3-4-5)",
+        "units": 4.00,
+        "grade": "TP",
+        "source": "ap"
+      },
+      {
+        "term": "SP23",
+        "course": "AP EL4",
+        "title": "Engl Lang Comp",
+        "units": 8.00,
+        "grade": "tP",
+        "source": "ap"
+      },
+      {
+        "term": "SP22",
+        "course": "AP EH5",
+        "title": "European Histor",
+        "units": 8.00,
+        "grade": "tP",
+        "source": "ap"
+      },
+      {
+        "term": "S123",
+        "course": "MATH 11",
+        "title": "Calculus-Based Prob & Stats",
+        "units": 6.00,
+        "grade": "TA",
+        "source": "ucsd"
+      }
+    ],
+    "current_courses": [
+      {
+        "term": "WI25",
+        "course": "MATH 18",
+        "title": "Linear Algebra",
+        "units": 4.00,
+        "source": "ucsd"
+      },
+      {
+        "term": "WI25",
+        "course": "COGS 9",
+        "title": "Introduction to Data Science",
+        "units": 4.00,
+        "source": "ucsd"
+      },
+      {
+        "term": "WI25",
+        "course": "DSC 20",
+        "title": "Prgrmng/DataStruc for Data Sc",
+        "units": 4.00,
+        "source": "ucsd"
+      },
+      {
+        "term": "WI25",
+        "course": "CCE 1",
+        "title": "CriticalApproach/CommPractice",
+        "units": 4.00,
+        "source": "ucsd"
+      }
+    ]
+  }

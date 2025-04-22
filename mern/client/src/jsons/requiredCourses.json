@@ -1,0 +1,79 @@
+{
+    "student": {
+      "name": "Flippo, Austin Tai Ming",
+      "pid": "A18606003",
+      "major": "Data Science (BS)",
+      "college": "Eighth"
+    },
+    "requirements": [
+      {
+        "category": "Major Requirements",
+        "subcategories": [
+          {
+            "name": "Lower Division",
+            "required_courses": ["DSC 30", "DSC 40A", "DSC 40B", "DSC 80"],
+            "in_progress": ["DSC 20", "COGS 9", "MATH 18"]
+          },
+          {
+            "name": "Subject Domain",
+            "required_courses": ["One course from: BILD 1, BILD 3, ECON 3, COGS 14A, COGS 14B, POLI 30, POLI 5, ECON 5, SOCI 60, USP 4"]
+          },
+          {
+            "name": "Upper Division Core",
+            "required_courses": ["MATH 189", "DSC 100", "DSC 102", "DSC 106", "DSC 140A OR CSE 150A", "DSC 140B OR CSE 151A", "DSC 148 OR CSE 158"]
+          },
+          {
+            "name": "Core Statistics",
+            "required_courses": ["MATH 181A OR MATH 183 OR ECON 120A"]
+          },
+          {
+            "name": "Senior Project",
+            "required_courses": ["DSC 180A", "DSC 180B"]
+          },
+          {
+            "name": "Electives",
+            "notes": ["20 units from approved list"]
+          },
+          {
+            "name": "Upper Division Units",
+            "notes": ["Minimum of 48 upper division units in the major"]
+          }
+        ]
+      },
+      {
+        "category": "College Requirements",
+        "subcategories": [
+          {
+            "name": "Critical Community Engagement",
+            "required_courses": ["CCE 2", "CCE 3", "CCE 120"],
+            "in_progress": ["CCE 1"]
+          },
+          {
+            "name": "Breadth",
+            "notes": {
+              "arts": "Two 4-unit courses",
+              "humanities": "One 4-unit course (one already completed)",
+              "social_sciences": "One 4-unit course (one already completed)"
+            }
+          }
+        ]
+      },
+      {
+        "category": "University Requirements",
+        "subcategories": [
+          {
+            "name": "DEI",
+            "notes": ["One course from approved list"]
+          },
+          {
+            "name": "Climate Education",
+            "notes": ["One course from JTCCER list"]
+          },
+          {
+            "name": "Unit Requirements",
+            "notes": ["Minimum of 180 total units", "Minimum of 60 upper-division units"]
+          }
+        ]
+      }
+    ]
+  }

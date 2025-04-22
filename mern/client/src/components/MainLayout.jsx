@@ -6,6 +6,13 @@ import CourseStorage from "./CourseStorage";
 import QuarterlyView from "./QuarterlyView";
 import Header from "./Header";
 
+const completedCourses = [
+  { "id": "CSE 100", "units": 4 },
+  { "id": "MATH 20C", "units": 4 },
+  { "id": "PHYS 2A", "units": 4 }
+];
+
+
 const MainLayout = () => {
   
   const [currentPage, setCurrentPage] = useState("planner");
@@ -31,7 +38,7 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <LeftSidebar setCurrentPage={setCurrentPage} currentPage={currentPage} />
+      <LeftSidebar setCurrentPage={setCurrentPage} currentPage={currentPage} completedCourses={completedCourses}/>
 
       {/* Main Panel: header + content + right sidebar */}
       
