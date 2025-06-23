@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import CoursePlanner from "./CoursePlanner";
+import { processAuditForPlanner } from "../../utils/auditCoursePlanner";
 
-const CoursePlannerContainer = () => {
+const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} } }) => {
   const [schedule, setSchedule] = useState(
     Array(4).fill().map(() => ({
       fall: Array(3).fill(null),
@@ -25,6 +26,26 @@ const CoursePlannerContainer = () => {
     courseIndex: null,
   });
   const [invalidDrop, setInvalidDrop] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Effect to populate courses from audit data
+  useEffect(() => {
+    if (!parsedCourseData.sections || parsedCourseData.sections.length === 0) {
+      return; // No audit data to process
+    }
+
+    
+    // Create fresh schedule
+    const emptySchedule = Array(4).fill().map(() => ({
+      fall: Array(3).fill(null),
+      winter: Array(3).fill(null),
+      spring: Array(3).fill(null),
+    }));
+
+    // Process audit sections and populate schedule
+    const updatedSchedule = processAuditForPlanner(parsedCourseData.sections, emptySchedule);
+    setSchedule(updatedSchedule);
+  }, [parsedCourseData]);
 
   const toggleYearCollapse = (yearIndex) => {
     const newState = [...collapsedYears];
@@ -83,14 +104,6 @@ const CoursePlannerContainer = () => {
       const sourceYearIndex = parseInt(e.dataTransfer.getData("sourceYearIndex"));
       const sourceTerm = e.dataTransfer.getData("sourceTerm");
       const sourceCourseIndex = parseInt(e.dataTransfer.getData("sourceCourseIndex"));
-      console.log("Swap attempt:", {
-        sourceYearIndex,
-        sourceTerm,
-        sourceCourseIndex,
-        targetYearIndex: yearIndex,
-        targetTerm: term,
-        targetCourseIndex: courseIndex,
-      });
       
       if (
         sourceYearIndex === yearIndex &&
@@ -98,7 +111,7 @@ const CoursePlannerContainer = () => {
         sourceCourseIndex === courseIndex
       ) return;
   
-      const sourceCourse = newSchedule[sourceYearIndex]?.[sourceTerm]?.[sourceCourseIndex];
+      // const sourceCourse = newSchedule[sourceYearIndex]?.[sourceTerm]?.[sourceCourseIndex];
   
       // Swap or clear source
       if (existingCourse) {
@@ -179,7 +192,39 @@ const CoursePlannerContainer = () => {
     return className;
     
   };
-  
+
+  const handleExportToSheets = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('http://localhost:5050/api/export/google-sheets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          schedule,
+          yearLabels,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Open the Google Sheets URL in a new tab
+        window.open(data.url, '_blank');
+        alert('Schedule exported successfully! Opening Google Sheets...');
+      } else {
+        console.error('Export failed:', data.error);
+        alert(`Export failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export schedule. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -205,6 +250,8 @@ const CoursePlannerContainer = () => {
         dragTarget={dragTarget}
         invalidDrop={invalidDrop}
         getSlotClassName={getSlotClassName}
+        onExportToSheets={handleExportToSheets}
+        loading={loading}
       />
     </div>
   );

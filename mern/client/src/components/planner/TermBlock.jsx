@@ -34,11 +34,10 @@ const TermBlock = ({
       {courses.map((course, courseIndex) => (
         <div
           key={courseIndex}
-          className="border border-gray-300 rounded mb-2 p-2"
+          className={`mb-2 ${getSlotClassName(yearIndex, termKey, courseIndex)}`}
           onDragOver={(e) => handleDragOver(e, yearIndex, termKey, courseIndex)}
           onDrop={(e) => handleDrop(e, yearIndex, termKey, courseIndex)}
         >
-          {/* use this for showing red for invalid drop:    className=getSlotClassName(yearIndex, termKey, courseIndex)*/}
           {course ? (
             <CourseCard
               course={course}
@@ -55,7 +54,7 @@ const TermBlock = ({
               onRemove={() => handleRemoveCourse(yearIndex, termKey, courseIndex)}
             />
           ) : (
-            <div className="text-gray-400 text-center py-1">
+            <div className="border border-gray-300 rounded p-4 text-gray-400 text-center bg-gray-50">
               {invalidDrop &&
               dragTarget.yearIndex === yearIndex &&
               dragTarget.term === termKey &&

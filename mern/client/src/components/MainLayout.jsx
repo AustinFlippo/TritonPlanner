@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RightSidebar from "./right-sidebar/RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import CoursePlannerContainer from "./planner/CoursePlannerContainer"; // use existing planner
@@ -6,16 +6,31 @@ import CourseStorage from "./CourseStorage";
 import QuarterlyView from "./QuarterlyView";
 import Header from "./Header";
 
-const completedCourses = [
-  { "id": "CSE 100", "units": 4 },
-  { "id": "MATH 20C", "units": 4 },
-  { "id": "PHYS 2A", "units": 4 }
-];
-
+// Note: Demo data imports are now in LeftSidebar.jsx
 
 const MainLayout = () => {
-  
   const [currentPage, setCurrentPage] = useState("planner");
+  
+  // State for parsed degree audit data
+  const [parsedCourseData, setParsedCourseData] = useState({
+    sections: [],
+    metadata: {}
+  });
+
+  // DEMO: Optionally auto-load Austin's data when component mounts
+  // TODO: Replace this with actual file upload functionality
+  useEffect(() => {
+    // Uncomment the lines below to auto-load Austin's data on page load
+    
+    // const demoData = {
+    //   completed_courses: austinCompletedData.completed_courses || [],
+    //   current_courses: austinCompletedData.current_courses || [],
+    //   requirements: austinRequiredData.requirements || []
+    // };
+    
+    // setParsedCourseData(demoData);
+    
+  }, []);
 
   const pageTitles = {
     planner: "4-Year Planner",
@@ -26,19 +41,21 @@ const MainLayout = () => {
   const renderPage = () => {
     switch (currentPage) {
       case "planner":
-        return <CoursePlannerContainer />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} />;
       case "storage":
         return <CourseStorage />;
       case "quarter":
         return <QuarterlyView />;
       default:
-        return <CoursePlannerContainer />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} />;
     }
   };
 
   return (
     <div className="flex h-screen">
-      <LeftSidebar setCurrentPage={setCurrentPage} currentPage={currentPage} completedCourses={completedCourses}/>
+      <LeftSidebar 
+        onParsedDataUpdate={setParsedCourseData}
+      />
 
       {/* Main Panel: header + content + right sidebar */}
       

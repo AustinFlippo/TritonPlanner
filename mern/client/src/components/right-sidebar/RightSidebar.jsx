@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
-import CourseItem from "./CourseItem";
 import CourseDetails from "./CourseDetails";
 import { debounce } from "lodash";
 
@@ -26,7 +25,6 @@ const RightSidebar = () => {
     }
     try {
       setIsCourseLoading(true);
-      console.log("🎯 Sending query:", query);
 
       const response = await fetch("http://localhost:5050/search-courses", {
         method: "POST",
@@ -35,20 +33,13 @@ const RightSidebar = () => {
         },
         body: JSON.stringify({ query }),
       });
-      console.log("📡 Raw response:", response);
 
       if (!response.ok) {
-        const errorText = await response.text(); // grab server error content
-        console.error(
-          "❌ Server responded with error:",
-          response.status,
-          errorText
-        );
+        await response.text(); // grab server error content
         throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("✅ Results from backend:", data.results);
       setSearchResults(
         data.results.map((course) => ({
           ...course,
@@ -56,7 +47,6 @@ const RightSidebar = () => {
         }))
       );
     } catch (error) {
-      console.error("❌ Search error:", error);
     } finally {
       setIsCourseLoading(false);
     }
@@ -95,19 +85,28 @@ const RightSidebar = () => {
       });
 
       const data = await response.json();
-      const assistantMessage = {
-        role: "assistant",
-        content:
-          data.messages?.filter((msg) => msg.type === "ai").pop()?.content ||
-          "No response",
-      };
-      console.log(data);
+
+      // Extract the actual content from the response
+      let assistantContent;
+      if (data.error) {
+        assistantContent = `Error: ${data.error}`;
+      } else if (data.messages?.length > 0) {
+        // Find the last AI message
+        const aiMessage = data.messages.filter((msg) => msg.type === "ai").pop();
+        assistantContent = aiMessage?.content || "No response";
+      } else if (data.content) {
+        assistantContent = data.content;
+      } else if (data.response) {
+        assistantContent = data.response;
+      } else {
+        assistantContent = "No response received";
+      }
 
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: data,
+          content: assistantContent,
         },
       ]);
     } catch (err) {

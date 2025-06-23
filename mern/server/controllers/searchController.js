@@ -2,13 +2,12 @@
 import fs from "fs";
 import path from "path";
 
-// Load and parse course data JSON
-const courseDataPath = path.resolve("./controllers/v4.json");
+// Load and parse course data JSON (v5 = v4 data + v3 credits)
+const courseDataPath = path.resolve("./controllers/v5.json");
 
 let allCourses = [];
 try {
   allCourses = JSON.parse(fs.readFileSync(courseDataPath, "utf-8"));
-  console.log(`📚 Loaded ${allCourses.length} courses from JSON`);
 } catch (err) {
   console.error("❌ Failed to load course data:", err);
 }

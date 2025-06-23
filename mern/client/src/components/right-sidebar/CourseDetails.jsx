@@ -4,6 +4,28 @@ import ProfessorInfo from "./ProfessorInfo";
 const CourseDetails = ({ course, onBack }) => {
   if (!course) return null;
 
+  // Extract clean description without prerequisites
+  const getCleanDescription = (course) => {
+    if (!course.description) return "No description available.";
+    
+    // The description field contains both description and prerequisites
+    // We need to remove the prerequisites part that starts with "Prerequisites:"
+    let description = course.description;
+    
+    // Find where "Prerequisites:" starts (case insensitive)
+    const prereqIndex = description.toLowerCase().indexOf("prerequisites:");
+    
+    if (prereqIndex !== -1) {
+      // Extract only the part before "Prerequisites:"
+      description = description.substring(0, prereqIndex).trim();
+    }
+    
+    // Remove any trailing periods or whitespace and clean up
+    description = description.replace(/\.$/, '').trim();
+    
+    return description || "No description available.";
+  };
+
   return (
     <div className="p-4 space-y-3">
       <button
@@ -19,8 +41,8 @@ const CourseDetails = ({ course, onBack }) => {
       <div className="text-sm text-gray-700 space-y-1">
         <p><span className="font-semibold">Credits:</span> {course.credits}</p>
         <p><span className="font-semibold">Prerequisites:</span>{" "}
-          {Array.isArray(course.prerequisites) && course.prerequisites.length > 0
-            ? course.prerequisites.join(", ")
+          {course.prerequisites && course.prerequisites.trim() !== ""
+            ? course.prerequisites
             : "None"}
         </p>
         <p><span className="font-semibold">Offered:</span>{" "}
@@ -28,7 +50,7 @@ const CourseDetails = ({ course, onBack }) => {
             ? course.offerings.join(", ")
             : "Unknown"}
         </p>
-        <p><span className="font-semibold">Description:</span> {course.description || "No description available."}</p>
+        <p><span className="font-semibold">Description:</span> {getCleanDescription(course)}</p>
       </div>
       {course.professors && course.professors.length > 0 && (
         <div className="mt-4">

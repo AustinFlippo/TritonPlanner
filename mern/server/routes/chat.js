@@ -6,7 +6,7 @@ const router = express.Router();
 // Proxy endpoint for chat
 router.post("/", async (req, res) => {
   try {
-    const response = await fetch("http://0.0.0.0:8000/chat", {
+    const response = await fetch("http://localhost:8000/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,8 +19,6 @@ router.post("/", async (req, res) => {
     }
 
     const data = await response.json();
-    console.log(data);
-
     res.json(data);
   } catch (error) {
     console.error("Error proxying chat request:", error);

@@ -1,5 +1,6 @@
 import React from "react";
 import CourseItem from "./CourseItem";
+import LoadingSpinner from "../LoadingSpinner";
 
 const CourseSearch = ({
   searchTerm,
@@ -27,7 +28,7 @@ const CourseSearch = ({
       />
       {isCourseLoading ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500" />
+          <LoadingSpinner size="6" color="blue-500" />
         </div>
       ) : searchTerm.trim() === "" ? (
         <div className="text-gray-500 text-sm text-center py-4">Enter in a course!</div>

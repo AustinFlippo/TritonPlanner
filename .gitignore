@@ -1,0 +1,158 @@
+# ============================================================================
+# AIVac Academic Planner - Git Ignore Rules
+# ============================================================================
+
+# Environment Variables (CRITICAL - Contains API Keys)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+app/.env
+mern/server/config.env
+mern/client/.env
+
+# Google Service Account Keys (CRITICAL - Contains Private Keys)
+credentials/
+*.json
+!package.json
+!package-lock.json
+!*.config.json
+!tsconfig.json
+!cypress.json
+# Specifically ignore the service account file
+academic-planner-463804-202e89b2e5e4.json
+mern/server/academic-planner-463804-202e89b2e5e4.json
+
+# Logs and Debug Files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency Directories
+node_modules/
+mern/client/node_modules/
+mern/server/node_modules/
+app/venv/
+app/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Build Outputs
+dist/
+dist-ssr/
+mern/client/dist/
+build/
+*.tgz
+*.tar.gz
+
+# Python Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE and Editor Files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*Zone.Identifier
+
+# Temporary Files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Coverage and Testing
+coverage/
+*.lcov
+.nyc_output/
+.coverage
+htmlcov/
+.pytest_cache/
+.cache/
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+
+# Upload Directories (May Contain Sensitive User Data)
+uploads/
+mern/server/uploads/
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# Local Configuration
+*.local
+config.local.js
+settings.local.json
+
+# Runtime Data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Output Files
+parsed-outputs/
+output/
+out/
+
+# Documentation Build
+docs/_build/
+site/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# PyTorch Model Files (Large)
+*.pth
+*.pkl
+models/
+
+# Large Dataset Files
+*.csv
+!*template*.csv
+*.jsonl
+*.parquet
+
+# Claude Code Generated Files
+.claude/
