@@ -16,9 +16,6 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 
-console.log("GOOGLE_SHEETS_KEY_LOCAL_PATH:", process.env.GOOGLE_SHEETS_KEY_LOCAL_PATH);
-
-
 
 // Configure Google Sheets API
 let auth = null;
@@ -74,8 +71,8 @@ function initializeGoogleAPI() {
       }
     }
     
-    sheets = google.sheets({ version: 'v4' });
-    drive = google.drive({ version: 'v3' });
+    sheets = google.sheets({ version: 'v4', auth });
+    drive = google.drive({ version: 'v3', auth });
     
     console.log('✅ Google API initialized successfully');
     return true;
@@ -108,6 +105,13 @@ router.post('/google-sheets', async (req, res) => {
 
     // Get authenticated client
     const authClient = await auth.getClient();
+
+    console.log("Auth type:", auth.constructor.name);
+    console.log("Auth key file path:", process.env.GOOGLE_SHEETS_KEY_FILENAME_IN_RENDER);
+
+    console.log("✅ Authenticated successfully as:", authClient.email || "Unknown email");
+
+
 
     // Create a new spreadsheet with student name
     const titleName = studentName || 'Student';
