@@ -72,6 +72,7 @@ class ChatRequest(BaseModel):
 
 
 # Dummy schedule data
+#MARKED OPEN
 DUMMY_SCHEDULE = {
     "WI25": ["MATH 20C", "DSC 30", "CCE 1"],
     "SP25": ["DSC 40A", "DSC 80", "CCE 2"],
@@ -83,6 +84,7 @@ DUMMY_SCHEDULE = {
     "SP27": ["DSC 180B", "PHIL 170", "MUS 1A"],
     "FA27": ["ANTH 101", "PHIL 180", "MUS 4"]
 }
+#MARKED CLOSED
 
 
 @app.post("/chat")
@@ -95,6 +97,7 @@ async def chat(request: ChatRequest):
     - Other queries: Processed through RAG pipeline
     """
     
+    #MARKED OPEN
     # Handle special schedule command
     if request.message.lower().strip() == "schedule":
         return {
@@ -104,7 +107,7 @@ async def chat(request: ChatRequest):
                 "schedule": DUMMY_SCHEDULE
             }]
         }
-    
+    #MARKED CLOSED
     # Process query through RAG pipeline
     try:
         rag = get_rag_system()
@@ -151,6 +154,7 @@ async def chat(request: ChatRequest):
         }
 
 
+#MARKED OPEN
 @app.post("/upload-degree-audit")
 async def upload_degree_audit(pdf: UploadFile = File(...)):
     """Upload and parse degree audit PDF."""
@@ -164,6 +168,7 @@ async def upload_degree_audit(pdf: UploadFile = File(...)):
         "filename": pdf.filename,
         "size": pdf.size if hasattr(pdf, 'size') else "unknown"
     }
+#MARKED CLOSED 
 
 
 @app.head("/")

@@ -90,11 +90,11 @@ def main():
 
 
         #NEW PORT SETTING
-
-        port_env = os.getenv('PORT')
-        if not port_env or not port_env.strip():
-            print("❌ No PORT provided by Render. Exiting to prevent binding errors.")
-            sys.exit(1)
+        port_env = os.getenv('PORT', '8000')
+        # port_env = os.getenv('PORT')
+        # if not port_env or not port_env.strip():
+        #     print("❌ No PORT provided by Render. Exiting to prevent binding errors.")
+        #     sys.exit(1)
         
         try:
             port = int(port_env)
