@@ -21,11 +21,11 @@ router.post("/", async (req, res) => {
     // Use backend-specific environment variable or fallback
     const FASTAPI_URL = process.env.FASTAPI_URL || 
                        process.env.REACT_APP_FASTAPI_URL || 
-                       'https://academic-planner-app.onrender.com';
-    
+                       process.env.ENV_FAST_API_URL; 
+    //MARK OPEN
     console.log(`📡 Proxying chat request to: ${FASTAPI_URL}/chat`);
     console.log(`📦 Request body:`, req.body);
-    
+    //MARK CLOSED
     const response = await fetch(`${FASTAPI_URL}/chat`, {
       method: "POST",
       headers: {
@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
       timeout: 30000 // 30 second timeout
     });
 
-    console.log(`📡 FastAPI response status: ${response.status}`);
+    console.log(`📡 FastAPI response status: ${response.status}`); //MARK OPEN, MARK CLOSED
     
     if (!response.ok) {
       const errorText = await response.text();

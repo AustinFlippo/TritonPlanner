@@ -2,17 +2,13 @@ import express from 'express';
 import { google } from 'googleapis';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+
 import dotenv from 'dotenv';
 
-// Load environment variables based on NODE_ENV
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config({ path: path.resolve('../../.env.production') });
-} else {
-  dotenv.config({ path: path.resolve('../../.env.development') });
-}
 
-// Fallback to root .env
-dotenv.config({ path: path.resolve('../../.env') });
+
+
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +25,7 @@ function initializeGoogleAPI() {
     // Check if we're in production (Render) with secret files
     if (process.env.NODE_ENV === 'production') {
       // On Render, secret files are mounted at /etc/secrets/
-      const KEYFILE_PATH = '/etc/secrets/ucsd-planner-463920-0b8bad5f9948.json';
+      const KEYFILE_PATH = process.env.GOOGLE_SHEETS_KEY_FILENAME_IN_RENDER;
       console.log('Production: Looking for service account key at:', KEYFILE_PATH);
       
       auth = new google.auth.GoogleAuth({
@@ -41,11 +37,14 @@ function initializeGoogleAPI() {
       });
     } else {
       // Development: Try to use service account from environment variable or local file
-      const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+      const serviceAccountKey = process.env.GOOGLE_SHEETS_KEY_LOCAL_PATH;
       
       if (serviceAccountKey) {
+
+        // Read JSON from file 
+        const keyFileContents = fs.readFileSync(serviceAccountKey, 'utf8');
         // Parse JSON from environment variable
-        const credentials = JSON.parse(serviceAccountKey);
+        const credentials = JSON.parse(keyFileContents);
         auth = new google.auth.GoogleAuth({
           credentials: credentials,
           scopes: [
@@ -56,7 +55,7 @@ function initializeGoogleAPI() {
         console.log('Development: Using service account from environment variable');
       } else {
         // Fallback to local file (for development)
-        const localKeyPath = path.join(__dirname, 'ucsd-planner-463920-0b8bad5f9948.json');
+        const localKeyPath =  process.env.GOOGLE_SHEETS_KEY_LOCAL_PATH;
         console.log('Development: Looking for service account key at:', localKeyPath);
         
         auth = new google.auth.GoogleAuth({
@@ -157,7 +156,7 @@ router.post('/google-sheets', async (req, res) => {
     }
 
     // Prepare data following the CSV template format
-    const headers = ['Year', 'Quarter', 'Course Slot 1', 'Course Slot 2', 'Course Slot 3', 'Term Units', 'Notes'];
+    const headers = ['Year', 'Quarter', 'Course Slot 1', 'Course Slot 2', 'Course Slot 3', 'Term Units'];
     const rows = [headers];
 
     // Convert schedule data to CSV format
