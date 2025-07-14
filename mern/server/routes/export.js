@@ -13,6 +13,12 @@ import dotenv from 'dotenv';
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+
+console.log("GOOGLE_SHEETS_KEY_LOCAL_PATH:", process.env.GOOGLE_SHEETS_KEY_LOCAL_PATH);
+
+
 
 // Configure Google Sheets API
 let auth = null;
