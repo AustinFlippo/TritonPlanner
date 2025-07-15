@@ -23,13 +23,13 @@ const CourseSearch = ({
       {/* Fixed header section - This part is correct and remains unchanged. */}
       <div className="p-4 flex-shrink-0">
         <div className="flex items-center mb-4">
-          <h2 className="text-xl font-bold">Course Search</h2>
+          <h2 className="text-lg font-bold">Course Search</h2>
           {/* Tooltip '?' icon ... */}
         </div>
         <input
           type="text"
           placeholder="Search courses..."
-          className="w-full p-2 border border-gray-300 rounded"
+          className="w-full p-2 border border-gray-300 rounded text-sm"
           value={searchTerm}
           onChange={(e) => {
             const newQuery = e.target.value;
@@ -54,9 +54,9 @@ const CourseSearch = ({
             <LoadingSpinner size="6" color="blue-500" />
           </div>
         ) : searchTerm.trim() === "" ? (
-          <div className="text-gray-500 text-sm text-center py-4">Enter in a course!</div>
+          <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
         ) : searchResults.length === 0 ? (
-          <div className="text-gray-500 text-sm text-center py-4">No results found.</div>
+          <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
         ) : (
           <div className="space-y-2">
             {searchResults.map((course) => (

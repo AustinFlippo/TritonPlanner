@@ -120,7 +120,7 @@ const CourseAssistant = ({
     return (
       // MAIN CONTAINER: flex flex-col and h-full are ESSENTIAL.
       // It will now correctly inherit the constrained height from its parent in ActionDrawer.
-      <div className="flex flex-col h-full bg-gray-100">
+      <div className="flex flex-col h-full bg-gray-100 w-full max-w-full overflow-hidden">
         
         {/* HEADER: A non-growing part of the flex layout. */}
         <div className="p-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
@@ -174,19 +174,19 @@ const CourseAssistant = ({
         </div>
 
         {/* CHAT INPUT FORM: The non-growing footer. */}
-        <div className="p-2 border-t border-gray-300 bg-white flex-shrink-0">
-          <div className="flex">
+        <div className="p-2 border-t border-gray-300 bg-white flex-shrink-0 w-full">
+          <div className="flex w-full max-w-full">
             <input
               type="text"
               placeholder="Type your question here..."
-              className="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-grow p-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               onKeyPress={onKeyPress}
               disabled={isLoading}
             />
             <button
-              className={`px-4 py-2 rounded-r ${
+              className={`px-3 py-2 rounded-r flex-shrink-0 ${
                 isLoading || !currentMessage.trim()
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600 text-white"

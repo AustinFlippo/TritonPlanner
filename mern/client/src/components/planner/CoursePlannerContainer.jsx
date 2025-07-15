@@ -8,10 +8,10 @@ import { shouldUseDndKit } from "../../utils/deviceDetection";
 const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} } }) => {
   const useDndKit = shouldUseDndKit();
   
-  // Droppable zone for mobile drag and drop (only enabled for mobile)
+  // General droppable zone disabled - now using specific slot drop zones
   const { isOver, setNodeRef } = useDroppable({
     id: 'planner-drop-zone',
-    disabled: !useDndKit // Only enable for mobile devices
+    disabled: true // Disabled - using specific slot drop zones instead
   });
 
   const [schedule, setSchedule] = useState(
@@ -63,34 +63,52 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
     if (!useDndKit) return; // Only listen for mobile devices
     
     const handleAddCourse = (event) => {
-      // console.log('CoursePlannerContainer received addCourseToPlanner event:', event.detail);
-      const { course, isFromSidebar } = event.detail;
+      console.log('CoursePlannerContainer received addCourseToPlanner event:', event.detail);
+      const { course, isFromSidebar, targetSlot } = event.detail;
       
       if (isFromSidebar && course) {
-        // console.log('Adding course to schedule:', course);
-        // Add course to the first available slot in the first year, fall term
+        console.log('Adding course to schedule:', course);
         const newSchedule = [...schedule];
-        const firstYear = newSchedule[0];
-        const fallTerm = firstYear.fall;
         
-        // Find the first empty slot
-        const emptySlotIndex = fallTerm.findIndex(slot => slot === null);
-        
-        if (emptySlotIndex !== -1) {
-          // Add course to the empty slot
-          fallTerm[emptySlotIndex] = course;
+        if (targetSlot) {
+          // Add course to specific slot
+          const { yearIndex, termKey, courseIndex } = targetSlot;
+          const targetYear = newSchedule[yearIndex];
+          const targetTerm = targetYear[termKey];
+          
+          // Add course to the specific slot
+          targetTerm[courseIndex] = course;
           
           // Ensure there's always an empty slot at the end
-          if (!fallTerm.some(slot => slot === null)) {
-            fallTerm.push(null);
+          if (!targetTerm.some(slot => slot === null)) {
+            targetTerm.push(null);
           }
           
           setSchedule(newSchedule);
         } else {
-          // No empty slots, add to the end
-          fallTerm.push(course);
-          fallTerm.push(null); // Add empty slot
-          setSchedule(newSchedule);
+          // Fallback: Add course to the first available slot in the first year, fall term
+          const firstYear = newSchedule[0];
+          const fallTerm = firstYear.fall;
+          
+          // Find the first empty slot
+          const emptySlotIndex = fallTerm.findIndex(slot => slot === null);
+          
+          if (emptySlotIndex !== -1) {
+            // Add course to the empty slot
+            fallTerm[emptySlotIndex] = course;
+            
+            // Ensure there's always an empty slot at the end
+            if (!fallTerm.some(slot => slot === null)) {
+              fallTerm.push(null);
+            }
+            
+            setSchedule(newSchedule);
+          } else {
+            // No empty slots, add to the end
+            fallTerm.push(course);
+            fallTerm.push(null); // Add empty slot
+            setSchedule(newSchedule);
+          }
         }
       }
     };
@@ -364,9 +382,8 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
 
   return (
     <div
-      ref={useDndKit ? setNodeRef : undefined}
-      className={`${useDndKit && isOver ? 'bg-blue-50 border-2 border-blue-500 border-dashed transition-all duration-200' : ''}`}
-      style={useDndKit && isOver ? { zIndex: 1 } : {}}
+      // General drop zone disabled - using specific slot drop zones
+      className=""
     >
       {/* Button for saving
       <div className="flex justify-end p-3">

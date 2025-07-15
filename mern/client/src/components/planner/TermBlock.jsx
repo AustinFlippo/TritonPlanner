@@ -1,5 +1,52 @@
 import React from "react";
+import { useDroppable } from '@dnd-kit/core';
 import CourseCard from "./CourseCard";
+import { shouldUseDndKit } from "../../utils/deviceDetection";
+
+// Component for empty course slots with mobile drop zone functionality
+const EmptySlot = ({ useDndKit, yearIndex, termKey, courseIndex, termName, invalidDrop, dragTarget, previewState }) => {
+  // Create unique drop zone ID for each course slot
+  const dropZoneId = `course-slot-${yearIndex}-${termKey}-${courseIndex}`;
+  
+  // Mobile droppable zone
+  const { isOver, setNodeRef } = useDroppable({
+    id: dropZoneId,
+    data: {
+      yearIndex,
+      termKey,
+      courseIndex,
+      termName
+    },
+    disabled: !useDndKit // Only enable for mobile devices
+  });
+
+  return (
+    <div 
+      ref={useDndKit ? setNodeRef : undefined}
+      className={`border border-gray-300 rounded-lg p-4 md:p-4 text-gray-400 text-center bg-gray-50 min-h-[60px] flex items-center justify-center transition-all duration-200 ${
+        useDndKit && isOver ? 'border-blue-500 border-2 bg-blue-50' : ''
+      }`}
+    >
+      {invalidDrop &&
+      dragTarget.yearIndex === yearIndex &&
+      dragTarget.term === termKey &&
+      dragTarget.courseIndex === courseIndex ? (
+        <div className="text-red-600 text-sm">
+          Course not offered in {termName}
+        </div>
+      ) : previewState &&
+        previewState.targetYearIndex === yearIndex &&
+        previewState.targetTerm === termKey &&
+        previewState.targetCourseIndex === courseIndex ? (
+        <div className="text-yellow-600 text-sm">
+          {previewState.course.course_name} (Preview)
+        </div>
+      ) : (
+        <span className="text-sm">Drop course here</span>
+      )}
+    </div>
+  );
+};
 
 const TermBlock = ({
   termName,
@@ -17,6 +64,7 @@ const TermBlock = ({
   dragTarget,
   invalidDrop,
 }) => {
+  const useDndKit = shouldUseDndKit();
   return (
     <div className="flex-1 p-2 md:p-2">
       {/* Term header with units */}
@@ -54,25 +102,16 @@ const TermBlock = ({
               onRemove={() => handleRemoveCourse(yearIndex, termKey, courseIndex)}
             />
           ) : (
-            <div className="border border-gray-300 rounded-lg p-4 md:p-4 text-gray-400 text-center bg-gray-50 min-h-[60px] flex items-center justify-center">
-              {invalidDrop &&
-              dragTarget.yearIndex === yearIndex &&
-              dragTarget.term === termKey &&
-              dragTarget.courseIndex === courseIndex ? (
-                <div className="text-red-600 text-sm">
-                  Course not offered in {termName}
-                </div>
-              ) : previewState &&
-                previewState.targetYearIndex === yearIndex &&
-                previewState.targetTerm === termKey &&
-                previewState.targetCourseIndex === courseIndex ? (
-                <div className="text-yellow-600 text-sm">
-                  {previewState.course.course_name} (Preview)
-                </div>
-              ) : (
-                <span className="text-sm">Drop course here</span>
-              )}
-            </div>
+            <EmptySlot
+              useDndKit={useDndKit}
+              yearIndex={yearIndex}
+              termKey={termKey}
+              courseIndex={courseIndex}
+              termName={termName}
+              invalidDrop={invalidDrop}
+              dragTarget={dragTarget}
+              previewState={previewState}
+            />
           )}
         </div>
       ))}

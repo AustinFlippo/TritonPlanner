@@ -79,15 +79,43 @@ const MainLayout = () => {
       return;
     }
     
-    if (over.id === 'planner-drop-zone') {
+    // Handle drops on specific course slots
+    if (over.id.startsWith('course-slot-')) {
       const courseData = active.data.current;
+      const dropZoneData = over.data.current;
       
-      // console.log('Course data:', courseData); // Debug log
+      console.log('Course data:', courseData); // Debug log
+      console.log('Drop zone data:', dropZoneData); // Debug log
+      
+      if (courseData && courseData.course && courseData.isFromSidebar && dropZoneData) {
+        const course = courseData.course;
+        const { yearIndex, termKey, courseIndex } = dropZoneData;
+        
+        console.log('Adding course to specific slot:', { course: course.course_id, yearIndex, termKey, courseIndex }); // Debug log
+        
+        // Create a custom event with specific slot information
+        const addCourseEvent = new CustomEvent('addCourseToPlanner', {
+          detail: {
+            course: course,
+            isFromSidebar: true,
+            targetSlot: {
+              yearIndex,
+              termKey,
+              courseIndex
+            }
+          }
+        });
+        
+        document.dispatchEvent(addCourseEvent);
+        closeAllOverlays();
+      }
+    }
+    // Fallback for the old general planner drop zone (if still needed)
+    else if (over.id === 'planner-drop-zone') {
+      const courseData = active.data.current;
       
       if (courseData && courseData.course && courseData.isFromSidebar) {
         const course = courseData.course;
-        
-        // console.log('Adding course to planner:', course); // Debug log
         
         // Create a custom event to communicate with the planner
         const addCourseEvent = new CustomEvent('addCourseToPlanner', {

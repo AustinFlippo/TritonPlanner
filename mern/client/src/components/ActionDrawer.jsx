@@ -165,14 +165,14 @@ const ActionDrawer = () => {
         * - `min-h-0` is the critical fix to allow its children to scroll properly.
         * - DndContext is now handled at MainLayout level
       */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 w-full">
         
         {/* 
           * Left Column - Passes props directly to CourseAssistant.
           * The component itself will now handle its own layout.
           * `min-w-0` is added to prevent content overflow issues in flex children.
         */}
-        <div className="w-1/2 border-r border-gray-200 min-w-0">
+        <div className="w-1/2 border-r border-gray-200 min-w-0 overflow-hidden">
           <CourseAssistant
             chatMessages={chatMessages}
             currentMessage={currentMessage}
@@ -189,7 +189,7 @@ const ActionDrawer = () => {
           * It is a flex column to correctly manage its children.
           * `min-w-0` is added here as well.
         */}
-        <div className="w-1/2 flex flex-col min-w-0">
+        <div className="w-1/2 flex flex-col min-w-0 overflow-hidden">
           {selectedCourse ? (
             <CourseDetails
               course={selectedCourse}
