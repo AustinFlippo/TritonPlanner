@@ -66,24 +66,24 @@ const CoursePlanner = ({
                 'Export to PDF'
               )}
             </button>
-            <button
-              onClick={onExportToSheets}
-              disabled={loading}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                loading 
-                  ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
-                  : 'bg-green-500 text-white hover:bg-green-600'
-              }`}
-            >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Exporting...
+            <div className="flex items-center">
+              <button
+                onClick={onExportToSheets}
+                disabled={true}
+                className="px-6 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 bg-gray-400 text-gray-700 cursor-not-allowed"
+              >
+                Export to Google Sheets
+              </button>
+              <div className="relative ml-2 group">
+                <div className="w-5 h-5 bg-gray-500 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-help">
+                  ?
                 </div>
-              ) : (
-                'Export to Google Sheets'
-              )}
-            </button>
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[9999]">
+                  Google Sheets export feature currently under maintenance.
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-800"></div>
+                </div>
+              </div>
+            </div>
           </div>
           <p className="text-sm text-gray-500 mt-2">
             Export your 4-year plan as a form-fillable PDF or shareable Google Sheets

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const WelcomePopup = () => {
-  const [showPopup, setShowPopup] = useState(true);
-
+const WelcomePopup = ({ showPopup, onClose }) => {
   const handleClose = () => {
-    setShowPopup(false);
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleBackdropClick = (e) => {

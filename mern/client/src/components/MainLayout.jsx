@@ -11,6 +11,7 @@ import Maintenance from "./Maintenance";
 const MainLayout = () => {
   const [currentPage, setCurrentPage] = useState("planner");
   const [maintenanceMode, setMaintenanceMode] = useState(false); // toggle flag
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
   
   const [parsedCourseData, setParsedCourseData] = useState({
     sections: [],
@@ -19,6 +20,14 @@ const MainLayout = () => {
 
   const pageTitles = {
     planner: "Triton Planner - Plan Your Future at UCSD",
+  };
+
+  const handleTutorialClick = () => {
+    setShowWelcomePopup(true);
+  };
+
+  const handleCloseWelcomePopup = () => {
+    setShowWelcomePopup(false);
   };
 
   if (maintenanceMode) {
@@ -40,7 +49,10 @@ const MainLayout = () => {
       <LeftSidebar onParsedDataUpdate={setParsedCourseData} />
 
       <div className="flex flex-col flex-grow overflow-hidden">
-        <Header currentPage={pageTitles[currentPage] || "Blueprint"} />
+        <Header 
+          currentPage={pageTitles[currentPage] || "Blueprint"} 
+          onTutorialClick={handleTutorialClick}
+        />
 
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-grow p-6 overflow-y-auto">
@@ -50,7 +62,10 @@ const MainLayout = () => {
         </div>
       </div>
 
-      <WelcomePopup />
+      <WelcomePopup 
+        showPopup={showWelcomePopup} 
+        onClose={handleCloseWelcomePopup}
+      />
     </div>
   );
 };
