@@ -39,9 +39,9 @@ const MainLayout = () => {
   });
 
   const touchSensor = useSensor(TouchSensor, {
-    // Press delay of 250ms, with tolerance of 5px of movement
+    // Press delay of 100ms, with tolerance of 5px of movement
     activationConstraint: {
-      delay: 250,
+      delay: 100,
       tolerance: 5,
     },
   });

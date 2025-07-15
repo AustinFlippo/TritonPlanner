@@ -20,6 +20,14 @@ const CourseSearch = ({
   const viewportRef = useRef(null);
   const contentRef = useRef(null);
 
+  // Limit search results for mobile to prevent crashes
+  const displayResults = useDndKit 
+    ? searchResults.slice(0, 10) // Mobile: max 10 results
+    : searchResults; // Desktop: all results
+
+  const totalResults = searchResults.length;
+  const isLimited = useDndKit && totalResults > 10;
+
   // Disable all native scrolling methods for mobile
   useEffect(() => {
     if (!useDndKit || !viewportRef.current) return;
@@ -118,11 +126,17 @@ const CourseSearch = ({
                   </div>
                 ) : searchTerm.trim() === "" ? (
                   <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
-                ) : searchResults.length === 0 ? (
+                ) : displayResults.length === 0 ? (
                   <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
                 ) : (
                   <div className="space-y-2">
-                    {searchResults.map((course) => (
+                    {/* Results limit notification for mobile */}
+                    {isLimited && (
+                      <div className="text-blue-600 text-xs text-center py-2 bg-blue-50 rounded border border-blue-200">
+                        Showing first 10 of {totalResults} results (mobile limit)
+                      </div>
+                    )}
+                    {displayResults.map((course) => (
                       <CourseItem
                         key={course.course_id}
                         course={course}
@@ -148,11 +162,11 @@ const CourseSearch = ({
               </div>
             ) : searchTerm.trim() === "" ? (
               <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
-            ) : searchResults.length === 0 ? (
+            ) : displayResults.length === 0 ? (
               <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
             ) : (
               <div className="space-y-2">
-                {searchResults.map((course) => (
+                {displayResults.map((course) => (
                   <CourseItem
                     key={course.course_id}
                     course={course}
