@@ -22,32 +22,32 @@ const exportToPdf = async (req, res) => {
     const darkGrayColor = rgb(0.75, 0.75, 0.75);
     const blackColor = rgb(0, 0, 0);
     
-    // Layout constants (coordinate-based)
+    // Layout constants (coordinate-based) - reduced for better fit
     const pageWidth = 595;
     const pageHeight = 842;
-    const margin = 50;
-    const yearBlockWidth = pageWidth - (2 * margin); // 495 points
-    const yearBlockHeight = 170;
-    const yearBlockGap = 20;
-    const yearHeaderHeight = 30;
-    const termColumnWidth = yearBlockWidth / 3; // 165 points each
-    const courseSlotWidth = 155;
-    const courseSlotHeight = 35;
-    const courseSlotGap = 5;
+    const margin = 40;
+    const yearBlockWidth = pageWidth - (2 * margin); // 515 points
+    const yearBlockHeight = 155; // Reduced from 170
+    const yearBlockGap = 15; // Reduced from 20
+    const yearHeaderHeight = 25; // Reduced from 30
+    const termColumnWidth = yearBlockWidth / 3; // ~171 points each
+    const courseSlotWidth = 165; // Slightly increased
+    const courseSlotHeight = 30; // Reduced from 35
+    const courseSlotGap = 4; // Reduced from 5
     
     // Add title
     if (studentName) {
       page.drawText(`Academic Plan - ${studentName}`, {
         x: margin,
-        y: pageHeight - margin - 20,
-        size: 16,
+        y: pageHeight - margin - 15,
+        size: 14, // Reduced from 16
         font: boldFont,
         color: blackColor,
       });
     }
     
     // Starting Y position for first year block
-    let currentY = pageHeight - margin - 50;
+    let currentY = pageHeight - margin - 40;
     
     // Process each year (maximum 4 years to fit on one page)
     for (let yearIndex = 0; yearIndex < Math.min(schedule.length, 4); yearIndex++) {
@@ -73,11 +73,11 @@ const exportToPdf = async (req, res) => {
         color: blueColor,
       });
       
-      // Year title (left-aligned)
+      // Year title (left-aligned) - adjusted for smaller header
       page.drawText(yearData.year, {
-        x: margin + 15,
-        y: currentY - yearHeaderHeight + 8,
-        size: 14,
+        x: margin + 12,
+        y: currentY - yearHeaderHeight + 6,
+        size: 12, // Reduced from 14
         font: boldFont,
         color: whiteColor,
       });
@@ -85,13 +85,13 @@ const exportToPdf = async (req, res) => {
       // Calculate annual units from terms
       const annualUnits = yearData.terms.reduce((sum, term) => sum + (term.termUnits || 0), 0);
       
-      // Annual units display (right-aligned)
+      // Annual units display (right-aligned) - adjusted for smaller header
       const annualUnitsText = `Annual Units: ${annualUnits}`;
-      const annualUnitsWidth = font.widthOfTextAtSize(annualUnitsText, 12);
+      const annualUnitsWidth = font.widthOfTextAtSize(annualUnitsText, 10);
       page.drawText(annualUnitsText, {
-        x: margin + yearBlockWidth - annualUnitsWidth - 15,
-        y: currentY - yearHeaderHeight + 8,
-        size: 12,
+        x: margin + yearBlockWidth - annualUnitsWidth - 12,
+        y: currentY - yearHeaderHeight + 6,
+        size: 10, // Reduced from 12
         font: boldFont,
         color: whiteColor,
       });
@@ -104,11 +104,11 @@ const exportToPdf = async (req, res) => {
         const termData = yearData.terms[termIndex];
         const termX = margin + (termIndex * termColumnWidth);
         
-        // Draw term sub-header
+        // Draw term sub-header - adjusted for smaller layout
         page.drawText(termNames[termIndex], {
-          x: termX + 10,
+          x: termX + 8,
           y: termStartY,
-          size: 12,
+          size: 11, // Reduced from 12
           font: boldFont,
           color: blackColor,
         });
@@ -118,13 +118,13 @@ const exportToPdf = async (req, res) => {
           return sum + (course ? (course.units || 4) : 0);
         }, 0) || 0;
         
-        // Draw term units
+        // Draw term units - adjusted for smaller layout
         const termUnitsText = `${termUnits} units`;
-        const termUnitsWidth = font.widthOfTextAtSize(termUnitsText, 10);
+        const termUnitsWidth = font.widthOfTextAtSize(termUnitsText, 9);
         page.drawText(termUnitsText, {
-          x: termX + termColumnWidth - termUnitsWidth - 10,
+          x: termX + termColumnWidth - termUnitsWidth - 8,
           y: termStartY,
-          size: 10,
+          size: 9, // Reduced from 10
           font,
           color: blackColor,
         });
@@ -132,8 +132,8 @@ const exportToPdf = async (req, res) => {
         // Draw three course slots for this term
         for (let courseIndex = 0; courseIndex < 3; courseIndex++) {
           const course = termData?.courses[courseIndex];
-          const slotX = termX + 5;
-          const slotY = termStartY - 25 - (courseIndex * (courseSlotHeight + courseSlotGap));
+          const slotX = termX + 3;
+          const slotY = termStartY - 20 - (courseIndex * (courseSlotHeight + courseSlotGap));
           
           // Draw course slot rectangle (white background)
           page.drawRectangle({
@@ -153,52 +153,77 @@ const exportToPdf = async (req, res) => {
             
             if (courseCode) {
               page.drawText(courseCode, {
-                x: slotX + 5,
-                y: slotY - 15,
-                size: 10,
+                x: slotX + 4,
+                y: slotY - 12, // Adjusted for smaller slot
+                size: 9, // Reduced from 10
                 font: boldFont,
                 color: blackColor,
               });
             }
             
             if (courseTitle) {
-              // Truncate long titles to fit
+              // Truncate long titles to fit smaller space
               let titleText = courseTitle;
-              if (titleText.length > 25) {
-                titleText = titleText.substring(0, 22) + '...';
+              if (titleText.length > 28) {
+                titleText = titleText.substring(0, 25) + '...';
               }
               page.drawText(titleText, {
-                x: slotX + 5,
-                y: slotY - 28,
-                size: 8,
+                x: slotX + 4,
+                y: slotY - 23, // Adjusted for smaller slot
+                size: 7, // Reduced from 8
                 font,
                 color: blackColor,
               });
             }
           } else {
-            // Create fillable text field for empty slots
-            const fieldName = `${yearData.year}_${termNames[termIndex]}_slot_${courseIndex}`;
-            const textField = form.createTextField(fieldName);
-            textField.setText('Empty Slot');
-            textField.enableMultiline();
+            // Create two separate fillable fields for empty slots
+            // Field 1: Course ID (bold, matches existing course code styling)
+            const courseIdFieldName = `${yearData.year}_${termNames[termIndex]}_slot_${courseIndex}_id`;
+            const courseIdField = form.createTextField(courseIdFieldName);
+            courseIdField.setText('Course ID');
             
-            textField.addToPage(page, {
-              x: slotX + 1,
-              y: slotY - courseSlotHeight + 1,
-              width: courseSlotWidth - 2,
-              height: courseSlotHeight - 2,
+            courseIdField.addToPage(page, {
+              x: slotX + 4,
+              y: slotY - 18, // Adjusted for smaller slot
+              width: courseSlotWidth - 8,
+              height: 12, // Reduced from 15
+              font: boldFont,
+              textColor: rgb(0.5, 0.5, 0.5),
+              backgroundColor: whiteColor,
+              borderColor: rgb(0.8, 0.8, 0.8),
+              borderWidth: 0.5,
+            });
+            
+            // Set font size for course ID field
+            try {
+              courseIdField.setFontSize(9); // Reduced from 10
+            } catch (error) {
+              console.warn('Could not set font size for course ID field:', error.message);
+            }
+            
+            // Field 2: Course Name (normal font, matches existing course title styling)
+            const courseNameFieldName = `${yearData.year}_${termNames[termIndex]}_slot_${courseIndex}_name`;
+            const courseNameField = form.createTextField(courseNameFieldName);
+            courseNameField.setText('Course Name');
+            courseNameField.enableMultiline();
+            
+            courseNameField.addToPage(page, {
+              x: slotX + 4,
+              y: slotY - 29, // Adjusted for smaller slot
+              width: courseSlotWidth - 8,
+              height: 8, // Reduced from 10
               font,
               textColor: rgb(0.5, 0.5, 0.5),
               backgroundColor: whiteColor,
-              borderColor: darkGrayColor,
-              borderWidth: 1,
+              borderColor: rgb(0.8, 0.8, 0.8),
+              borderWidth: 0.5,
             });
             
-            // Set font size after adding to page to avoid DA entry error
+            // Set font size for course name field
             try {
-              textField.setFontSize(9);
+              courseNameField.setFontSize(7); // Reduced from 8
             } catch (error) {
-              console.warn('Could not set font size for text field:', error.message);
+              console.warn('Could not set font size for course name field:', error.message);
             }
           }
         }
