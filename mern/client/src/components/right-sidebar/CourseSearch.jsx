@@ -1,8 +1,9 @@
 // In /src/components/right-sidebar/CourseSearch.jsx
 
-import React from "react";
+import React, { useRef } from "react";
 import CourseItem from "./CourseItem";
 import LoadingSpinner from "../LoadingSpinner";
+import CustomScrollbar from "./CustomScrollbar";
 import { shouldUseDndKit } from "../../utils/deviceDetection";
 
 const CourseSearch = ({
@@ -16,6 +17,9 @@ const CourseSearch = ({
   onCourseDoubleClick
 }) => {
   const useDndKit = shouldUseDndKit();
+  const viewportRef = useRef(null);
+  const contentRef = useRef(null);
+  
   return (
     // The main container is already flex-col and h-full from ActionDrawer, which is correct.
     <div className="flex flex-col h-full">
@@ -41,33 +45,72 @@ const CourseSearch = ({
 
       {/* 
         * RESULTS SECTION: Conditional scrolling based on device type
-        * - Mobile (useDndKit): Remove scroll entirely, only drag functionality
+        * - Mobile (useDndKit): Custom scrollbar with explicit viewport/content architecture
         * - Desktop: Keep existing scroll behavior with styled scrollbar
       */}
-      <div className={`flex-1 px-4 pb-4 ${
-        useDndKit 
-          ? 'overflow-hidden' // Mobile: no scroll, only drag
-          : 'overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-full' // Desktop: full scroll
-      }`}>
-        {isCourseLoading ? (
-          <div className="flex justify-center py-4">
-            <LoadingSpinner size="6" color="blue-500" />
-          </div>
-        ) : searchTerm.trim() === "" ? (
-          <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
-        ) : searchResults.length === 0 ? (
-          <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
+      <div className={`flex-1 px-4 pb-4 ${useDndKit ? 'relative min-h-0' : ''}`}>
+        {useDndKit ? (
+          // Mobile: Explicit viewport/content architecture
+          <>
+            {/* Viewport - the visible scrollable area */}
+            <div 
+              ref={viewportRef}
+              className="overflow-y-scroll scrollbar-hide pr-6"
+              style={{ height: '100%', maxHeight: '100%', minHeight: '0' }}
+            >
+              {/* Content - the actual scrollable content */}
+              <div ref={contentRef}>
+                {isCourseLoading ? (
+                  <div className="flex justify-center py-4">
+                    <LoadingSpinner size="6" color="blue-500" />
+                  </div>
+                ) : searchTerm.trim() === "" ? (
+                  <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {searchResults.map((course) => (
+                      <CourseItem
+                        key={course.course_id}
+                        course={course}
+                        onDragStart={(e) => handleDragStart(e, course, true)}
+                        onDragEnd={handleDragEnd}
+                        onDoubleClick={onCourseDoubleClick}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Custom scrollbar for mobile */}
+            <CustomScrollbar viewportRef={viewportRef} contentRef={contentRef} />
+          </>
         ) : (
-          <div className="space-y-2">
-            {searchResults.map((course) => (
-              <CourseItem
-                key={course.course_id}
-                course={course}
-                onDragStart={(e) => handleDragStart(e, course, true)}
-                onDragEnd={handleDragEnd}
-                onDoubleClick={onCourseDoubleClick}
-              />
-            ))}
+          // Desktop: Original scroll behavior
+          <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-200 scrollbar-thumb-rounded-full">
+            {isCourseLoading ? (
+              <div className="flex justify-center py-4">
+                <LoadingSpinner size="6" color="blue-500" />
+              </div>
+            ) : searchTerm.trim() === "" ? (
+              <div className="text-gray-500 text-xs text-center py-4">Enter in a course!</div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-gray-500 text-xs text-center py-4">No results found.</div>
+            ) : (
+              <div className="space-y-2">
+                {searchResults.map((course) => (
+                  <CourseItem
+                    key={course.course_id}
+                    course={course}
+                    onDragStart={(e) => handleDragStart(e, course, true)}
+                    onDragEnd={handleDragEnd}
+                    onDoubleClick={onCourseDoubleClick}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
