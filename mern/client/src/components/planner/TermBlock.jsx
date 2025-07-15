@@ -18,13 +18,13 @@ const TermBlock = ({
   invalidDrop,
 }) => {
   return (
-    <div className="flex-1 p-2">
+    <div className="flex-1 p-2 md:p-2">
       {/* Term header with units */}
-      <div className="bg-stone-100 p-2 mb-2 flex justify-between items-center rounded">
-        <span className="font-semibold">{termName}</span>
+      <div className="bg-stone-100 p-3 mb-3 flex justify-between items-center rounded-lg">
+        <span className="font-semibold text-sm md:text-base">{termName}</span>
         <div className="flex items-center">
-          <span className="text-sm mr-2">term units</span>
-          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
+          <span className="text-xs md:text-sm mr-2">term units</span>
+          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs md:text-sm font-bold">
             {calculateTermUnits(courses).toFixed(1)}
           </span>
         </div>
@@ -54,23 +54,23 @@ const TermBlock = ({
               onRemove={() => handleRemoveCourse(yearIndex, termKey, courseIndex)}
             />
           ) : (
-            <div className="border border-gray-300 rounded p-4 text-gray-400 text-center bg-gray-50">
+            <div className="border border-gray-300 rounded-lg p-4 md:p-4 text-gray-400 text-center bg-gray-50 min-h-[60px] flex items-center justify-center">
               {invalidDrop &&
               dragTarget.yearIndex === yearIndex &&
               dragTarget.term === termKey &&
               dragTarget.courseIndex === courseIndex ? (
-                <div className="text-red-600">
+                <div className="text-red-600 text-sm">
                   Course not offered in {termName}
                 </div>
               ) : previewState &&
                 previewState.targetYearIndex === yearIndex &&
                 previewState.targetTerm === termKey &&
                 previewState.targetCourseIndex === courseIndex ? (
-                <div className="text-yellow-600">
+                <div className="text-yellow-600 text-sm">
                   {previewState.course.course_name} (Preview)
                 </div>
               ) : (
-                "Drop course here"
+                <span className="text-sm">Drop course here</span>
               )}
             </div>
           )}

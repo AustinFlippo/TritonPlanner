@@ -1,10 +1,13 @@
 import MainLayout from "./components/MainLayout";
+import { MobileUIProvider } from "./context/MobileUIContext";
 
 const App = () => {
   return (
-    <div className="w-full">
-      <MainLayout />
-    </div>
+    <MobileUIProvider>
+      <div className="w-full">
+        <MainLayout />
+      </div>
+    </MobileUIProvider>
   );
 };
 export default App;
