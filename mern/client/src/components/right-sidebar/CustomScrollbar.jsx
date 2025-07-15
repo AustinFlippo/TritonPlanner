@@ -215,7 +215,7 @@ const CustomScrollbar = ({ viewportRef, contentRef }) => {
   // Render scrollbar with different states
   
   return (
-    <div className="absolute top-0 right-0 h-full w-4 z-50 bg-transparent pointer-events-auto">
+    <div className="absolute top-0 right-0 h-full w-4 z-50 bg-transparent pointer-events-auto custom-scrollbar">
       {/* Scrollbar Track - always rendered */}
       <div
         ref={trackRef}
