@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import CoursePlanner from "./CoursePlanner";
 import { processAuditForPlanner } from "../../utils/auditCoursePlanner";
-import { EXPRESS_URL } from "../../config.js";
+import { EXPRESS_URL, exportScheduleAsPdf } from "../../config.js";
 
 const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} } }) => {
   const [schedule, setSchedule] = useState(
@@ -231,6 +231,81 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
     }
   };
 
+  const handleExportToPdf = async () => {
+    try {
+      setLoading(true);
+      
+      // Get student name from parsed course data
+      const studentName = parsedCourseData?.metadata?.studentName || 'Student';
+      
+      // Transform schedule data to match PDF backend expectations
+      const transformedSchedule = yearLabels.map((yearLabel, yearIndex) => {
+        const yearData = schedule[yearIndex];
+        return {
+          year: yearLabel,
+          terms: [
+            {
+              term: `Fall ${yearLabel.split('-')[0]}`,
+              courses: yearData.fall
+                .filter(course => course !== null)
+                .map(course => ({
+                  id: course.course_id || course.code || '',
+                  name: course.course_name || course.name || course.title || ''
+                }))
+            },
+            {
+              term: `Winter ${yearLabel.split('-')[0]}`,
+              courses: yearData.winter
+                .filter(course => course !== null)
+                .map(course => ({
+                  id: course.course_id || course.code || '',
+                  name: course.course_name || course.name || course.title || ''
+                }))
+            },
+            {
+              term: `Spring ${yearLabel.split('-')[1]}`,
+              courses: yearData.spring
+                .filter(course => course !== null)
+                .map(course => ({
+                  id: course.course_id || course.code || '',
+                  name: course.course_name || course.name || course.title || ''
+                }))
+            }
+          ]
+        };
+      });
+
+      const scheduleData = {
+        studentName,
+        schedule: transformedSchedule,
+      };
+
+      // Call the PDF export API
+      const pdfBlob = await exportScheduleAsPdf(scheduleData);
+
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(pdfBlob);
+
+      // Create a temporary link element to trigger the download
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'academic-schedule.pdf');
+      document.body.appendChild(link);
+      
+      // Programmatically click the link and clean up
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      alert('Schedule exported successfully as PDF!');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       {/* Button for saving
@@ -256,6 +331,7 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
         invalidDrop={invalidDrop}
         getSlotClassName={getSlotClassName}
         onExportToSheets={handleExportToSheets}
+        onExportToPdf={handleExportToPdf}
         loading={loading}
       />
     </div>
