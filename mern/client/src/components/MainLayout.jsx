@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 import RightSidebar from "./right-sidebar/RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import CoursePlannerContainer from "./planner/CoursePlannerContainer";
@@ -8,6 +9,8 @@ import MobileHeader from "./MobileHeader";
 import FloatingActionButton from "./FloatingActionButton";
 import ActionDrawer from "./ActionDrawer";
 import { useMobileUI } from "../context/MobileUIContext";
+import { shouldUseDndKit } from "../utils/deviceDetection";
+import CourseItem from "./right-sidebar/CourseItem";
 
 // Import your new component
 import Maintenance from "./Maintenance";
@@ -23,6 +26,86 @@ const MainLayout = () => {
   });
 
   const { isLeftSidebarOpen, isActionDrawerOpen, closeAllOverlays } = useMobileUI();
+  const useDndKit = shouldUseDndKit();
+  const [activeId, setActiveId] = useState(null);
+  const [activeCourse, setActiveCourse] = useState(null);
+
+  // Configure sensors for drag and drop
+  const mouseSensor = useSensor(MouseSensor, {
+    // Require the mouse to move by 10 pixels before activating
+    activationConstraint: {
+      distance: 10,
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    // Press delay of 250ms, with tolerance of 5px of movement
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  });
+
+  const sensors = useSensors(
+    mouseSensor,
+    touchSensor
+  );
+
+  // Dnd Kit drag start handler (mobile only)
+  const handleDndDragStart = (event) => {
+    if (!useDndKit) return;
+    
+    const { active } = event;
+    setActiveId(active.id);
+    
+    // Store the active course data for the overlay
+    if (active.data.current) {
+      setActiveCourse(active.data.current.course);
+    }
+    
+    // console.log('Drag start event:', { active });
+  };
+
+  // Dnd Kit drag end handler (mobile only)
+  const handleDndDragEnd = (event) => {
+    if (!useDndKit) return;
+    
+    const { active, over } = event;
+    
+    // console.log('Drag end event:', { active, over }); // Debug log
+    
+    if (!over) {
+      // console.log('No drop target'); // Debug log
+      return;
+    }
+    
+    if (over.id === 'planner-drop-zone') {
+      const courseData = active.data.current;
+      
+      // console.log('Course data:', courseData); // Debug log
+      
+      if (courseData && courseData.course && courseData.isFromSidebar) {
+        const course = courseData.course;
+        
+        // console.log('Adding course to planner:', course); // Debug log
+        
+        // Create a custom event to communicate with the planner
+        const addCourseEvent = new CustomEvent('addCourseToPlanner', {
+          detail: {
+            course: course,
+            isFromSidebar: true
+          }
+        });
+        
+        document.dispatchEvent(addCourseEvent);
+        closeAllOverlays();
+      }
+    }
+    
+    // Reset active drag state
+    setActiveId(null);
+    setActiveCourse(null);
+  };
 
   const pageTitles = {
     planner: "Triton Planner - Plan Your Future at UCSD",
@@ -50,7 +133,7 @@ const MainLayout = () => {
     }
   };
 
-  return (
+  const content = (
     <div className="flex flex-col md:flex-row h-screen">
       {/* Mobile Header - Only visible on mobile */}
       <MobileHeader />
@@ -114,6 +197,29 @@ const MainLayout = () => {
       />
     </div>
   );
+
+  return useDndKit ? (
+    <DndContext 
+      sensors={sensors} 
+      onDragStart={handleDndDragStart}
+      onDragEnd={handleDndDragEnd}
+    >
+      {content}
+      <DragOverlay>
+        {activeId && activeCourse ? (
+          <div 
+            className="transform rotate-12 opacity-90 shadow-2xl bg-white border-2 border-blue-500 rounded-lg p-1 pointer-events-none"
+            style={{ zIndex: 9999 }}
+          >
+            <CourseItem
+              course={activeCourse}
+              onDoubleClick={() => {}} // No-op for overlay
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  ) : content;
 };
 
 export default MainLayout;

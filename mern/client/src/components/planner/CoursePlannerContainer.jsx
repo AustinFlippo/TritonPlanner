@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
+import { useDroppable } from '@dnd-kit/core';
 import CoursePlanner from "./CoursePlanner";
 import { processAuditForPlanner } from "../../utils/auditCoursePlanner";
 import { EXPRESS_URL, exportScheduleAsPdf } from "../../config.js";
+import { shouldUseDndKit } from "../../utils/deviceDetection";
 
 const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} } }) => {
+  const useDndKit = shouldUseDndKit();
+  
+  // Droppable zone for mobile drag and drop (only enabled for mobile)
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'planner-drop-zone',
+    disabled: !useDndKit // Only enable for mobile devices
+  });
+
   const [schedule, setSchedule] = useState(
     Array(4).fill().map(() => ({
       fall: Array(3).fill(null),
@@ -47,6 +57,52 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
     const updatedSchedule = processAuditForPlanner(parsedCourseData.sections, emptySchedule);
     setSchedule(updatedSchedule);
   }, [parsedCourseData]);
+
+  // Effect to handle course addition from mobile ActionDrawer (only for mobile devices)
+  useEffect(() => {
+    if (!useDndKit) return; // Only listen for mobile devices
+    
+    const handleAddCourse = (event) => {
+      // console.log('CoursePlannerContainer received addCourseToPlanner event:', event.detail);
+      const { course, isFromSidebar } = event.detail;
+      
+      if (isFromSidebar && course) {
+        // console.log('Adding course to schedule:', course);
+        // Add course to the first available slot in the first year, fall term
+        const newSchedule = [...schedule];
+        const firstYear = newSchedule[0];
+        const fallTerm = firstYear.fall;
+        
+        // Find the first empty slot
+        const emptySlotIndex = fallTerm.findIndex(slot => slot === null);
+        
+        if (emptySlotIndex !== -1) {
+          // Add course to the empty slot
+          fallTerm[emptySlotIndex] = course;
+          
+          // Ensure there's always an empty slot at the end
+          if (!fallTerm.some(slot => slot === null)) {
+            fallTerm.push(null);
+          }
+          
+          setSchedule(newSchedule);
+        } else {
+          // No empty slots, add to the end
+          fallTerm.push(course);
+          fallTerm.push(null); // Add empty slot
+          setSchedule(newSchedule);
+        }
+      }
+    };
+
+    // Listen for the custom event
+    document.addEventListener('addCourseToPlanner', handleAddCourse);
+    
+    // Cleanup listener on unmount
+    return () => {
+      document.removeEventListener('addCourseToPlanner', handleAddCourse);
+    };
+  }, [schedule, useDndKit]);
 
   const toggleYearCollapse = (yearIndex) => {
     const newState = [...collapsedYears];
@@ -307,7 +363,11 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
   };
 
   return (
-    <div>
+    <div
+      ref={useDndKit ? setNodeRef : undefined}
+      className={`${useDndKit && isOver ? 'bg-blue-50 border-2 border-blue-500 border-dashed transition-all duration-200' : ''}`}
+      style={useDndKit && isOver ? { zIndex: 1 } : {}}
+    >
       {/* Button for saving
       <div className="flex justify-end p-3">
         <button className="bg-blue-500 text-white">Save</button>

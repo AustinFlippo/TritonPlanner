@@ -127,6 +127,7 @@ const ActionDrawer = () => {
 
   const handleDragEnd = () => {};
 
+
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -162,6 +163,7 @@ const ActionDrawer = () => {
         * - `flex-1` makes it take up ALL remaining vertical space in the drawer.
         * - `flex` makes it a flex container for its two children columns.
         * - `min-h-0` is the critical fix to allow its children to scroll properly.
+        * - DndContext is now handled at MainLayout level
       */}
       <div className="flex flex-1 min-h-0">
         
