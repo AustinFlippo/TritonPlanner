@@ -28,12 +28,12 @@ Location: `mern/client/src/components/audit/ProgressSummary.jsx`
   inProgress: number,
   notFulfilled: number,
   unitsCompleted: number | undefined,
-  totalSections: number
+  completionPercentage: number   // pre-calculated by caller via calculateCompletionPercentage()
 }
 ```
 
 **Renders:**
-- A thin progress bar (height 7px, rounded) filled to `fulfilled / totalSections * 100%` with a green gradient.
+- A thin progress bar (height 7px, rounded) filled to `completionPercentage%` with a green gradient. Caller passes the pre-calculated value so this component never divides by zero.
 - Four pill badges below the bar:
   - `✓ N done` — green (`bg-green-100 text-green-800`)
   - `⏳ N in progress` — yellow (`bg-yellow-50 text-yellow-800`)
@@ -45,7 +45,7 @@ Location: `mern/client/src/components/audit/ProgressSummary.jsx`
 
 **Upload area behavior:**
 - When `auditSections.length === 0`: show the existing full dashed upload zone (unchanged).
-- When `auditSections.length > 0`: hide the upload zone entirely; show a small outlined "↑ Replace audit" button inline in the header row, next to the "Graduation Progress" title.
+- When `auditSections.length > 0`: hide the upload zone entirely; show a small outlined "↑ Replace audit" button inline in the header row, next to the "Graduation Progress" title. This button is a `<label>` wrapping the same hidden `<input type="file">` as the full upload zone — same `handleFileUpload` handler, no new logic.
 
 **Stats block:**
 - Remove the four colored card divs and the separate "Overall Progress" card.
