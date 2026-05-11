@@ -1,0 +1,95 @@
+<h2>Accordion section style</h2>
+<p class="subtitle">Replacing the plain ▶/▼ toggle + duplicated status badge + "Status: FULFILLED" footer</p>
+
+<div class="cards">
+
+  <!-- Option A: Left color bar + clean row -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:12px;display:flex;flex-direction:column;gap:6px;">
+
+      <!-- fulfilled -->
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #22c55e;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Lower Division Core</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- in progress -->
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Upper Division Electives</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <!-- not fulfilled -->
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #ef4444;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Capstone Requirement</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Left accent bar + icon</h3>
+      <p>Colored left border signals status at a glance. SVG icon (✓ / clock / !) replaces the text dot. No redundant footer.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Subtle badge pill on right -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:12px;display:flex;flex-direction:column;gap:6px;">
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Lower Division Core</span>
+        <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 8px;font-weight:600;">Done</span>
+      </div>
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Upper Division Electives</span>
+        <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:999px;padding:2px 8px;font-weight:600;">In Progress</span>
+      </div>
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Capstone Requirement</span>
+        <span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 8px;font-weight:600;">Remaining</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Pill badge on right</h3>
+      <p>Status shown as a small colored pill on the right side. Clean left edge, status is readable as text.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Combination — left bar + pill -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:12px;display:flex;flex-direction:column;gap:6px;">
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #22c55e;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Lower Division Core</span>
+        <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 8px;font-weight:600;">Done</span>
+      </div>
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Upper Division Electives</span>
+        <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:999px;padding:2px 8px;font-weight:600;">In Progress</span>
+      </div>
+
+      <div style="display:flex;align-items:center;background:white;border:1px solid #e2e8f0;border-left:3px solid #ef4444;border-radius:6px;padding:9px 12px;gap:10px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;flex:1;">Capstone Requirement</span>
+        <span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 8px;font-weight:600;">Remaining</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Left bar + pill badge</h3>
+      <p>Both signals: colored left border for instant scanning + pill badge for readable label. Most information-dense without being noisy.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Click to select, then reply in the terminal.</p>
