@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AuditAccordionSection from './AuditAccordionSection';
+import ProgressSummary from './ProgressSummary';
 import { getStatusCounts, calculateCompletionPercentage } from '../../utils/auditParser';
 
 const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
@@ -151,7 +152,9 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
             const gradeElement = row.querySelector('.grade');
             
             if (courseElement && descElement) {
-              const courseCode = courseElement.textContent.trim();
+              const courseCode = courseElement.textContent.trim()
+                .replace(/\s+/g, ' ')
+                .replace(/([A-Za-z])(\d)/, '$1 $2');
               const description = descElement.textContent.trim();
               const term = termElement ? termElement.textContent.trim() : '';
               const grade = gradeElement ? gradeElement.textContent.trim() : '';
@@ -270,41 +273,58 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
     <div className="audit-tracker h-full flex flex-col">
       {/* Header - Fixed */}
       <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">
-          Graduation Progress
-        </h2>
-        
-        {/* Upload Section */}
-        <div className="mb-4">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">
-            Upload Degree Audit (HTML)
-          </label>
-          <label className="block w-full">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 hover:bg-gray-50 transition-colors cursor-pointer">
-              <svg className="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <div className="flex items-center justify-center">
-                <span className="bg-blue-500 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-600 transition-colors">
-                  Choose File
-                </span>
-                <span className="ml-2 text-sm text-blue-500">No file chosen</span>
-              </div>
-            </div>
-            <input
-              type="file"
-              accept=".html,.htm"
-              onChange={handleFileUpload}
-              disabled={loading}
-              className="hidden"
-            />
-          </label>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Upload an HTML degree audit to see your graduation progress.
-          </p>
+        {/* Title row + compact replace button when audit is loaded */}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Graduation Progress</h2>
+          {auditSections.length > 0 && (
+            <label className="cursor-pointer">
+              <span className="text-xs text-gray-500 border border-gray-300 rounded px-2 py-1 hover:bg-gray-50 transition-colors">
+                ↑ Replace audit
+              </span>
+              <input
+                type="file"
+                accept=".html,.htm"
+                onChange={handleFileUpload}
+                disabled={loading}
+                className="hidden"
+              />
+            </label>
+          )}
         </div>
 
-        {/* Loading/Error State */}
+        {/* Full upload zone — only shown when no audit is loaded */}
+        {auditSections.length === 0 && (
+          <div className="mb-4">
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Upload Degree Audit (HTML)
+            </label>
+            <label className="block w-full">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 hover:bg-gray-50 transition-colors cursor-pointer">
+                <svg className="w-6 h-6 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <div className="flex items-center justify-center">
+                  <span className="bg-blue-500 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-600 transition-colors">
+                    Choose File
+                  </span>
+                  <span className="ml-2 text-sm text-blue-500">No file chosen</span>
+                </div>
+              </div>
+              <input
+                type="file"
+                accept=".html,.htm"
+                onChange={handleFileUpload}
+                disabled={loading}
+                className="hidden"
+              />
+            </label>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Upload an HTML degree audit to see your graduation progress.
+            </p>
+          </div>
+        )}
+
+        {/* Loading state */}
         {loading && (
           <div className="text-center py-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
@@ -312,52 +332,22 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
           </div>
         )}
 
+        {/* Error state */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
             <div className="text-sm text-red-800">{error}</div>
           </div>
         )}
 
-        {/* Progress Summary */}
+        {/* Progress summary — only shown when audit is loaded */}
         {auditSections.length > 0 && (
-          <div className="space-y-2">
-            {/* Units Completed - Top priority display */}
-            {auditData?.metadata?.unitsCompleted !== undefined && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-purple-800">Units Completed</span>
-                  <span className="text-lg font-bold text-purple-800">{auditData.metadata.unitsCompleted}</span>
-                </div>
-              </div>
-            )}
-            
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-green-800">Completed</span>
-                <span className="text-lg font-bold text-green-800">{statusCounts.fulfilled}</span>
-              </div>
-            </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-800">In Progress</span>
-                <span className="text-lg font-bold text-blue-800">{statusCounts.in_progress}</span>
-              </div>
-            </div>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-red-800">Remaining</span>
-                <span className="text-lg font-bold text-red-800">{statusCounts.not_fulfilled}</span>
-              </div>
-            </div>
-            
-            {/* Completion Percentage */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-800">Overall Progress</span>
-                <span className="text-lg font-bold text-gray-800">{completionPercentage}%</span>
-              </div>
-            </div>
-          </div>
+          <ProgressSummary
+            fulfilled={statusCounts.fulfilled}
+            inProgress={statusCounts.in_progress}
+            notFulfilled={statusCounts.not_fulfilled}
+            unitsCompleted={auditData?.metadata?.unitsCompleted}
+            completionPercentage={completionPercentage}
+          />
         )}
       </div>
 
