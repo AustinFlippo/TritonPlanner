@@ -8,6 +8,7 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
+  const [unitsCompleted, setUnitsCompleted] = useState(undefined);
 
   // Initialize with passed audit data
   useEffect(() => {
@@ -235,7 +236,8 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
       }
       
       // Calculate total units completed
-      const unitsCompleted = calculateUnitsCompleted(doc);
+      const parsedUnitsCompleted = calculateUnitsCompleted(doc);
+      setUnitsCompleted(parsedUnitsCompleted);
       
       // Create audit result with same structure as demo
       const auditResult = {
@@ -245,7 +247,7 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
           fulfilledSections: newAuditSections.filter(s => s.status === 'fulfilled').length,
           inProgressSections: newAuditSections.filter(s => s.status === 'in_progress').length,
           notFulfilledSections: newAuditSections.filter(s => s.status === 'not_fulfilled').length,
-          unitsCompleted: unitsCompleted,
+          unitsCompleted: parsedUnitsCompleted,
           parseTimestamp: new Date().toISOString(),
           parsedBy: 'client'
         }
@@ -345,7 +347,7 @@ const SidebarAuditTracker = ({ auditData, onAuditDataUpdate }) => {
             fulfilled={statusCounts.fulfilled}
             inProgress={statusCounts.in_progress}
             notFulfilled={statusCounts.not_fulfilled}
-            unitsCompleted={auditData?.metadata?.unitsCompleted}
+            unitsCompleted={unitsCompleted}
             completionPercentage={completionPercentage}
           />
         )}
