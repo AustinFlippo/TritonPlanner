@@ -5,17 +5,13 @@ import CourseDetails from "./CourseDetails";
 import CourseDetailOverlay from "../planner/CourseDetailOverlay";
 import { debounce } from "lodash";
 
-const SectionHeader = ({ label, collapsed, onToggle }) => (
+const SectionHeader = ({ label }) => (
   <div
-    className="flex items-center px-3 flex-shrink-0 cursor-pointer"
+    className="flex items-center px-3 flex-shrink-0"
     style={{ height: '34px', background: '#003366' }}
-    onClick={onToggle}
   >
-    <span style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px', color: 'white', flex: 1 }}>
+    <span style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '0.5px', color: 'white' }}>
       {label}
-    </span>
-    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', transition: 'transform 0.15s', display: 'inline-block', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
-      ▾
     </span>
   </div>
 );
@@ -31,8 +27,6 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
   const [isLoading, setIsLoading] = useState(false);
 
   const [rightSidebarWidth, setRightSidebarWidth] = useState(300);
-  const [searchCollapsed, setSearchCollapsed] = useState(false);
-  const [chatCollapsed, setChatCollapsed] = useState(false);
 
   const chatEndRef = useRef(null);
 
@@ -139,52 +133,40 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
 
       {/* Search panel */}
       <div className="flex flex-col flex-shrink-0" style={{ borderBottom: '1px solid #e2e8f0' }}>
-        <SectionHeader
-          label="COURSE SEARCH"
-          collapsed={searchCollapsed}
-          onToggle={() => setSearchCollapsed((v) => !v)}
-        />
-        {!searchCollapsed && (
-          <div className="overflow-y-auto" style={{ maxHeight: '45vh' }}>
-            {selectedSearchCourse ? (
-              <CourseDetails course={selectedSearchCourse} onBack={() => setSelectedSearchCourse(null)} />
-            ) : (
-              <CourseSearch
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                setSearchResults={setSearchResults}
-                searchResults={searchResults}
-                handleDragStart={handleDragStart}
-                handleDragEnd={() => {}}
-                isCourseLoading={isCourseLoading}
-                debouncedSearch={debouncedSearch}
-                onCourseDoubleClick={(course) => setSelectedSearchCourse(course)}
-              />
-            )}
-          </div>
-        )}
+        <SectionHeader label="COURSE SEARCH" />
+        <div className="overflow-y-auto" style={{ maxHeight: '45vh' }}>
+          {selectedSearchCourse ? (
+            <CourseDetails course={selectedSearchCourse} onBack={() => setSelectedSearchCourse(null)} />
+          ) : (
+            <CourseSearch
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              setSearchResults={setSearchResults}
+              searchResults={searchResults}
+              handleDragStart={handleDragStart}
+              handleDragEnd={() => {}}
+              isCourseLoading={isCourseLoading}
+              debouncedSearch={debouncedSearch}
+              onCourseDoubleClick={(course) => setSelectedSearchCourse(course)}
+            />
+          )}
+        </div>
       </div>
 
       {/* Chat panel */}
       <div className="flex flex-col flex-1 min-h-0">
-        <SectionHeader
-          label="AI ASSISTANT"
-          collapsed={chatCollapsed}
-          onToggle={() => setChatCollapsed((v) => !v)}
-        />
-        {!chatCollapsed && (
-          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <CourseAssistant
-              chatMessages={chatMessages}
-              currentMessage={currentMessage}
-              setCurrentMessage={setCurrentMessage}
-              isLoading={isLoading}
-              sendMessage={sendMessage}
-              chatEndRef={chatEndRef}
-              onKeyPress={handleKeyPress}
-            />
-          </div>
-        )}
+        <SectionHeader label="AI ASSISTANT" />
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <CourseAssistant
+            chatMessages={chatMessages}
+            currentMessage={currentMessage}
+            setCurrentMessage={setCurrentMessage}
+            isLoading={isLoading}
+            sendMessage={sendMessage}
+            chatEndRef={chatEndRef}
+            onKeyPress={handleKeyPress}
+          />
+        </div>
       </div>
     </div>
   );
