@@ -49,30 +49,24 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <LeftSidebar 
+      <LeftSidebar
         onParsedDataUpdate={setParsedCourseData}
       />
 
-      {/* Main Panel: header + content + right sidebar */}
-      
+      {/* Center: header + planner content */}
       <div className="flex flex-col flex-grow overflow-hidden">
         <Header />
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main content area */}
-          <div className="flex-grow p-6 overflow-y-auto" onClick={() => setSelectedCourse(null)}>
-            {renderPage()}
-          </div>
-
-          {/* Right sidebar with course search & assistant */}
-          <RightSidebar
-            selectedCourse={selectedCourse}
-            onDismissDetail={() => setSelectedCourse(null)}
-            parsedCourseData={parsedCourseData}
-          />
-
+        <div className="flex-grow p-6 overflow-y-auto" onClick={() => setSelectedCourse(null)}>
+          {renderPage()}
         </div>
       </div>
+
+      {/* Right sidebar — full height, outside the header column */}
+      <RightSidebar
+        selectedCourse={selectedCourse}
+        onDismissDetail={() => setSelectedCourse(null)}
+        parsedCourseData={parsedCourseData}
+      />
     </div>
   );
 };
