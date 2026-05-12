@@ -97,7 +97,7 @@ const LeftSidebar = ({ onParsedDataUpdate }) => {
       />
 
       <div
-        className="absolute top-0 right-0 w-1 h-full bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors"
+        className="absolute top-0 right-0 w-1 h-full bg-gray-300 hover:bg-blue-400 cursor-col-resize opacity-0 hover:opacity-100 transition-opacity"
         onMouseDown={handleMouseDown}
         title="Drag to resize sidebar"
       />
