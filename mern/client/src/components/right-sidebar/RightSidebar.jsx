@@ -27,7 +27,7 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
   const [isLoading, setIsLoading] = useState(false);
 
   const [rightSidebarWidth, setRightSidebarWidth] = useState(300);
-  const [searchHeight, setSearchHeight] = useState(260);
+  const [searchHeight, setSearchHeight] = useState(window.innerHeight * 0.4);
 
   const chatEndRef = useRef(null);
 
