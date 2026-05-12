@@ -1,81 +1,50 @@
-// Course card component for displaying individual courses in the planner
-
-const CourseCard = ({
-  course,
-  onRemove,
-  onDragStart,
-  onDragEnd,
-  isPreviewing = false,
-}) => {
+const CourseCard = ({ course, onRemove, onDragStart, onDragEnd, isPreviewing = false, onCourseClick }) => {
   if (!course) return null;
 
-  // Determine styling based on course status
-  const getStatusStyling = (status) => {
-    switch (status) {
-      case 'completed':
-        return {
-          container: 'bg-green-100 border-green-300 text-green-800',
-          badge: 'bg-green-200 text-green-800',
-          statusIndicator: '✓'
-        };
-      case 'current':
-        return {
-          container: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-          badge: 'bg-yellow-200 text-yellow-800',
-          statusIndicator: '⟳'
-        };
-      case 'planned':
-        return {
-          container: 'bg-blue-100 border-blue-300 text-blue-800',
-          badge: 'bg-blue-200 text-blue-800',
-          statusIndicator: '📅'
-        };
-      default:
-        return {
-          container: 'bg-gray-100 border-gray-300 text-gray-800',
-          badge: 'bg-gray-200 text-gray-700',
-          statusIndicator: ''
-        };
-    }
+  const statusStyles = {
+    completed: { bg: '#dcfce7', border: '#16a34a', text: '#166534' },
+    current:   { bg: '#fef9c3', border: '#ca8a04', text: '#854d0e' },
+    planned:   { bg: '#e0f0ff', border: '#0066cc', text: '#003366' },
   };
 
-  const styling = getStatusStyling(course.status);
+  const style = statusStyles[course.status] || { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' };
 
   return (
     <div
-      className={`flex justify-between items-center cursor-move p-2 rounded border ${styling.container} ${
-        isPreviewing ? 'opacity-60' : ''
-      }`}
+      className="flex justify-between items-center cursor-move rounded"
+      style={{
+        padding: '5px 8px',
+        background: style.bg,
+        border: `1px solid ${style.border}`,
+        borderLeft: `3px solid ${style.border}`,
+        opacity: isPreviewing ? 0.55 : 1,
+        borderRadius: '6px',
+      }}
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onCourseClick) onCourseClick(course);
+      }}
     >
-      <div className="flex items-center">
-        {course.status && (
-          <span className="mr-2 text-xs font-bold">
-            {styling.statusIndicator}
-          </span>
-        )}
-        <div>
-          <div className="font-medium text-sm">
-            {course.course_id}
-            {isPreviewing && (
-              <span className="ml-2 text-yellow-600 text-xs">(Moving)</span>
-            )}
-          </div>
-          {course.grade && course.status === 'completed' && (
-            <div className="text-xs opacity-75">Grade: {course.grade}</div>
-          )}
+      <div>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: style.text }}>
+          {course.course_id}
+          {isPreviewing && <span style={{ marginLeft: '6px', fontSize: '10px', color: '#ca8a04' }}>(Moving)</span>}
         </div>
+        {course.grade && course.status === 'completed' && (
+          <div style={{ fontSize: '10px', color: style.text, opacity: 0.7 }}>Grade: {course.grade}</div>
+        )}
       </div>
-      <div className="flex items-center">
-        <span className={`${styling.badge} rounded-full px-2 py-1 text-xs mr-2 font-medium`}>
+      <div className="flex items-center gap-1">
+        <span style={{ background: style.border, color: 'white', borderRadius: '999px', padding: '1px 7px', fontSize: '10px', fontWeight: 600 }}>
           {course.credits.toFixed(1)}u
         </span>
         <button
-          onClick={onRemove}
-          className="text-red-500 hover:text-red-700 text-xs font-bold"
-          title="Remove course"
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          style={{ color: '#94a3b8', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
+          title="Remove"
         >
           ×
         </button>
