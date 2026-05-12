@@ -17,6 +17,7 @@ const CoursePlanner = ({
   getSlotClassName,
   onExportToSheets,
   loading = false,
+  onCourseClick,
 }) => {
   
   return (
@@ -37,6 +38,7 @@ const CoursePlanner = ({
           handleRemoveCourse={handleRemoveCourse}
           previewState={previewState}
           getSlotClassName={getSlotClassName}
+          onCourseClick={onCourseClick}
         />
       ))}
       

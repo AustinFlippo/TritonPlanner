@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import CoursePlanner from "./CoursePlanner";
 import { processAuditForPlanner } from "../../utils/auditCoursePlanner";
 
-const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} } }) => {
+const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {} }, onCourseClick }) => {
   const [schedule, setSchedule] = useState(
     Array(4).fill().map(() => ({
       fall: Array(3).fill(null),
@@ -252,6 +252,7 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
         getSlotClassName={getSlotClassName}
         onExportToSheets={handleExportToSheets}
         loading={loading}
+        onCourseClick={onCourseClick}
       />
     </div>
   );
