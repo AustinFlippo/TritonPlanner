@@ -22,7 +22,7 @@ const TermBlock = ({
       {courses.map((course, courseIndex) => (
         <div
           key={courseIndex}
-          className={`mb-2 ${getSlotClassName(yearIndex, termKey, courseIndex)}`}
+          className={getSlotClassName(yearIndex, termKey, courseIndex)}
           onDragOver={(e) => handleDragOver(e, yearIndex, termKey, courseIndex)}
           onDrop={(e) => handleDrop(e, yearIndex, termKey, courseIndex)}
           style={{ marginBottom: '5px' }}

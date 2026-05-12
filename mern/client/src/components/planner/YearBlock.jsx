@@ -24,7 +24,7 @@ const YearBlock = ({
           </svg>
           <span style={{ fontWeight: 700, fontSize: '13px', color: 'white' }}>{yearLabel}</span>
         </div>
-        <span style={{ background: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: '999px', padding: '2px 10px', fontSize: '11px', fontWeight: 600 }}>
+        <span style={{ background: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: '999px', padding: '1px 7px', fontSize: '11px', fontWeight: 600 }}>
           {calculateAnnualUnits(yearIndex).toFixed(1)}u
         </span>
       </div>
