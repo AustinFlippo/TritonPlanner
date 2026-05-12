@@ -3,9 +3,11 @@ import ProfessorInfo from "../right-sidebar/ProfessorInfo";
 const CourseDetailOverlay = ({ course, parsedCourseData, onDismiss }) => {
   if (!course) return null;
 
+  const normId = (s) => s?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+
   const matchedRequirements = (parsedCourseData?.sections || []).filter((section) =>
     (section.items || []).some(
-      (item) => item.courseId?.replace(/\s+/g, ' ').trim().toLowerCase() === course.course_id?.toLowerCase()
+      (item) => normId(item.courseId) === normId(course.course_id)
     )
   );
 
@@ -51,6 +53,7 @@ const CourseDetailOverlay = ({ course, parsedCourseData, onDismiss }) => {
         </div>
         <button
           onClick={onDismiss}
+          aria-label="Close"
           style={{ color: '#94a3b8', fontSize: '16px', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', marginLeft: '8px', flexShrink: 0 }}
           title="Close"
         >
@@ -77,7 +80,7 @@ const CourseDetailOverlay = ({ course, parsedCourseData, onDismiss }) => {
       </div>
 
       {/* Prerequisites */}
-      {course.prerequisites && (
+      {course.prerequisites != null && (
         <div style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ fontSize: '10px', fontWeight: 700, color: '#003366', marginBottom: '6px', letterSpacing: '0.3px' }}>PREREQUISITES</div>
           <div style={{ fontSize: '11px', color: '#475569' }}>
