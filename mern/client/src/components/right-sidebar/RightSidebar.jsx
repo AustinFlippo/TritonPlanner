@@ -27,6 +27,7 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
   const [isLoading, setIsLoading] = useState(false);
 
   const [rightSidebarWidth, setRightSidebarWidth] = useState(300);
+  const [searchHeight, setSearchHeight] = useState(260);
 
   const chatEndRef = useRef(null);
 
@@ -132,9 +133,9 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
       )}
 
       {/* Search panel */}
-      <div className="flex flex-col flex-shrink-0" style={{ borderBottom: '1px solid #e2e8f0' }}>
+      <div className="flex flex-col flex-shrink-0" style={{ height: `${searchHeight}px` }}>
         <SectionHeader label="COURSE SEARCH" />
-        <div className="overflow-y-auto" style={{ maxHeight: '45vh' }}>
+        <div className="overflow-y-auto flex-1">
           {selectedSearchCourse ? (
             <CourseDetails course={selectedSearchCourse} onBack={() => setSelectedSearchCourse(null)} />
           ) : (
@@ -151,6 +152,33 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
             />
           )}
         </div>
+      </div>
+
+      {/* Divider / resize handle between search and chat */}
+      <div
+        className="flex-shrink-0 cursor-row-resize flex items-center justify-center"
+        style={{ height: '6px', background: '#e2e8f0' }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startY = e.clientY;
+          const startHeight = searchHeight;
+          const onMove = (moveEvent) => {
+            const delta = moveEvent.clientY - startY;
+            setSearchHeight(Math.max(100, Math.min(500, startHeight + delta)));
+          };
+          const onUp = () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          };
+          document.body.style.cursor = 'row-resize';
+          document.body.style.userSelect = 'none';
+          document.addEventListener("mousemove", onMove);
+          document.addEventListener("mouseup", onUp);
+        }}
+      >
+        <div style={{ width: '24px', height: '2px', borderRadius: '1px', background: '#94a3b8' }} />
       </div>
 
       {/* Chat panel */}
