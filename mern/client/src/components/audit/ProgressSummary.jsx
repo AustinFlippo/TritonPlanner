@@ -1,25 +1,25 @@
 const ProgressSummary = ({ fulfilled, inProgress, notFulfilled, unitsCompleted, completionPercentage }) => {
   return (
     <div>
-      <div className="bg-gray-200 rounded-full h-[7px] mb-2.5 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-300"
-          style={{ width: `${completionPercentage}%` }}
-        />
+      {/* Progress bar */}
+      <div style={{ background: '#e2e8f0', borderRadius: '999px', height: '6px', marginBottom: '10px', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${completionPercentage}%`, background: 'linear-gradient(90deg, #0066cc, #7db8e8)', borderRadius: '999px', transition: 'width 0.3s' }} />
       </div>
-      <div className="flex gap-1.5 flex-wrap">
-        <span className="text-[10px] bg-green-100 text-green-800 rounded-full px-2 py-0.5 font-semibold">
-          ✓ {fulfilled} done
+
+      {/* Stat pills */}
+      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '10px', background: '#dcfce7', color: '#16a34a', borderRadius: '999px', padding: '2px 8px', fontWeight: 600 }}>
+          {fulfilled} done
         </span>
-        <span className="text-[10px] bg-yellow-50 text-yellow-800 rounded-full px-2 py-0.5 font-semibold">
-          ⏳ {inProgress} in progress
+        <span style={{ fontSize: '10px', background: '#fef9c3', color: '#ca8a04', borderRadius: '999px', padding: '2px 8px', fontWeight: 600 }}>
+          {inProgress} in progress
         </span>
-        <span className="text-[10px] bg-red-100 text-red-800 rounded-full px-2 py-0.5 font-semibold">
-          ✗ {notFulfilled} remaining
+        <span style={{ fontSize: '10px', background: '#fee2e2', color: '#dc2626', borderRadius: '999px', padding: '2px 8px', fontWeight: 600 }}>
+          {notFulfilled} remaining
         </span>
         {unitsCompleted !== undefined && (
-          <span className="text-[10px] bg-violet-100 text-violet-800 rounded-full px-2 py-0.5 font-semibold">
-            📚 {unitsCompleted} units
+          <span style={{ fontSize: '10px', background: '#e0f0ff', color: '#0066cc', borderRadius: '999px', padding: '2px 8px', fontWeight: 600 }}>
+            {unitsCompleted} units
           </span>
         )}
       </div>
