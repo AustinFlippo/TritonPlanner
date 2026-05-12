@@ -34,12 +34,6 @@ const MainLayout = () => {
     
   }, []);
 
-  const pageTitles = {
-    planner: "4-Year Planner",
-    storage: "Course Storage",
-    quarter: "Quarter View",
-  };  
-
   const renderPage = () => {
     switch (currentPage) {
       case "planner":
@@ -62,7 +56,7 @@ const MainLayout = () => {
       {/* Main Panel: header + content + right sidebar */}
       
       <div className="flex flex-col flex-grow overflow-hidden">
-        <Header currentPage={pageTitles[currentPage] || "Blueprint"} />
+        <Header />
 
         <div className="flex flex-1 overflow-hidden">
           {/* Main content area */}
