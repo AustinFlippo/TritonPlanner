@@ -26,6 +26,8 @@ const Header = ({
       const id = await saveSchedule(currentScheduleName, schedule, currentScheduleId);
       setCurrentScheduleId(id);
       setSavedSchedule(schedule);
+    } catch (err) {
+      console.error("Failed to save schedule:", err);
     } finally {
       setSaving(false);
     }
