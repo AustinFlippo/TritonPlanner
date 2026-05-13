@@ -26,7 +26,7 @@ const CoursePlannerContainer = ({
     }));
     const updatedSchedule = processAuditForPlanner(parsedCourseData.sections, emptySchedule);
     setSchedule(updatedSchedule);
-  }, [parsedCourseData]);
+  }, [parsedCourseData, setSchedule]);
 
   const toggleYearCollapse = (yearIndex) => {
     const newState = [...collapsedYears];

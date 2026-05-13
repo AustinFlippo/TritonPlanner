@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import RightSidebar from "./right-sidebar/RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import CoursePlannerContainer from "./planner/CoursePlannerContainer";
@@ -24,7 +24,7 @@ const MainLayout = () => {
   const [currentScheduleName, setCurrentScheduleName] = useState("My Schedule");
   const [savedSchedule, setSavedSchedule] = useState(null);
 
-  // True when logged in and schedule differs from last save (or has never been saved)
+  // True when schedule differs from last save (auth guard deferred to Header in Task 7)
   const hasUnsavedChanges =
     savedSchedule === null ||
     JSON.stringify(schedule) !== JSON.stringify(savedSchedule);
