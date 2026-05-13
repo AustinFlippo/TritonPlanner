@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import useSchedules from "../../hooks/useSchedules";
 
 const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
@@ -6,6 +6,7 @@ const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const skipBlurRef = useRef(false);
 
   const handleLoad = (s) => {
     onLoad(s.id, s.name, s.schedule);
@@ -17,7 +18,11 @@ const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
     setRenameValue(s.name);
   };
 
-  const handleRenameSubmit = async (id) => {
+  const handleRenameSubmit = async (id, fromBlur = false) => {
+    if (fromBlur && skipBlurRef.current) {
+      skipBlurRef.current = false;
+      return;
+    }
     if (renameValue.trim()) await renameSchedule(id, renameValue.trim());
     setRenamingId(null);
   };
@@ -79,10 +84,16 @@ const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
                   autoFocus
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  onBlur={() => handleRenameSubmit(s.id)}
+                  onBlur={() => handleRenameSubmit(s.id, true)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleRenameSubmit(s.id);
-                    if (e.key === "Escape") setRenamingId(null);
+                    if (e.key === "Enter") {
+                      skipBlurRef.current = true;
+                      handleRenameSubmit(s.id);
+                    }
+                    if (e.key === "Escape") {
+                      skipBlurRef.current = true;
+                      setRenamingId(null);
+                    }
                   }}
                   style={{
                     flex: 1,

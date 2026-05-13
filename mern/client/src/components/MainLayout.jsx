@@ -5,6 +5,7 @@ import CoursePlannerContainer from "./planner/CoursePlannerContainer";
 import CourseStorage from "./CourseStorage";
 import QuarterlyView from "./QuarterlyView";
 import Header from "./Header";
+import { useAuth } from "../context/AuthContext";
 
 const EMPTY_SCHEDULE = () =>
   Array(4).fill(null).map(() => ({
@@ -14,6 +15,7 @@ const EMPTY_SCHEDULE = () =>
   }));
 
 const MainLayout = () => {
+  const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState("planner");
   const [parsedCourseData, setParsedCourseData] = useState({ sections: [], metadata: {} });
   const [plannerCourse, setPlannerCourse] = useState(null);
@@ -24,10 +26,12 @@ const MainLayout = () => {
   const [currentScheduleName, setCurrentScheduleName] = useState("My Schedule");
   const [savedSchedule, setSavedSchedule] = useState(null);
 
-  // True when schedule differs from last save (auth guard deferred to Header in Task 7)
+  // Only true when signed in and schedule differs from last save
   const hasUnsavedChanges =
-    savedSchedule === null ||
-    JSON.stringify(schedule) !== JSON.stringify(savedSchedule);
+    !!currentUser && (
+      savedSchedule === null ||
+      JSON.stringify(schedule) !== JSON.stringify(savedSchedule)
+    );
 
   const handleLoadSchedule = (id, name, grid) => {
     setSchedule(grid);
