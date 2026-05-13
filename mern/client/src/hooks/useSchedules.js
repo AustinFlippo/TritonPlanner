@@ -29,6 +29,8 @@ const useSchedules = () => {
       const q = query(ref, orderBy("updatedAt", "desc"));
       const snap = await getDocs(q);
       setSchedules(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Failed to fetch schedules:", err);
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ const useSchedules = () => {
 
   const renameSchedule = async (id, newName) => {
     const ref = getRef();
-    if (!ref) return;
+    if (!ref) throw new Error("Not signed in");
     await updateDoc(doc(ref, id), { name: newName, updatedAt: serverTimestamp() });
     setSchedules((prev) =>
       prev.map((s) => (s.id === id ? { ...s, name: newName } : s))
@@ -68,7 +70,7 @@ const useSchedules = () => {
 
   const deleteSchedule = async (id) => {
     const ref = getRef();
-    if (!ref) return;
+    if (!ref) throw new Error("Not signed in");
     await deleteDoc(doc(ref, id));
     setSchedules((prev) => prev.filter((s) => s.id !== id));
   };
