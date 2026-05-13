@@ -17,14 +17,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const snap = await getDoc(userRef);
-        if (!snap.exists()) {
-          await setDoc(userRef, {
-            email: user.email,
-            name: user.displayName,
-            photoURL: user.photoURL,
-          });
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const snap = await getDoc(userRef);
+          if (!snap.exists()) {
+            await setDoc(userRef, {
+              email: user.email,
+              name: user.displayName,
+              photoURL: user.photoURL,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to create user document:", err);
         }
       }
       setCurrentUser(user ?? null);
