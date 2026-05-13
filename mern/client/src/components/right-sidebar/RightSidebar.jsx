@@ -22,7 +22,21 @@ const RightSidebar = ({ plannerCourse }) => {
   const [selectedSearchCourse, setSelectedSearchCourse] = useState(null);
 
   useEffect(() => {
-    if (plannerCourse) setSelectedSearchCourse(plannerCourse);
+    if (!plannerCourse) return;
+    // Planner courses only carry course_id/credits/status — fetch full data from server
+    fetch("http://localhost:5050/search-courses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: plannerCourse.course_id }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const full = data.results?.find(
+          (c) => c.course_id?.toLowerCase() === plannerCourse.course_id?.toLowerCase()
+        );
+        setSelectedSearchCourse(full ?? plannerCourse);
+      })
+      .catch(() => setSelectedSearchCourse(plannerCourse));
   }, [plannerCourse]);
 
   const [currentMessage, setCurrentMessage] = useState("");
