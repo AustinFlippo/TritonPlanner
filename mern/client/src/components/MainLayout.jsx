@@ -64,6 +64,7 @@ const MainLayout = () => {
       {/* Right sidebar — full height, outside the header column */}
       <RightSidebar
         plannerCourse={plannerCourse}
+        parsedCourseData={parsedCourseData}
       />
     </div>
   );

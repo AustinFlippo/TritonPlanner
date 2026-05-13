@@ -15,7 +15,26 @@ const SectionHeader = ({ label }) => (
   </div>
 );
 
-const RightSidebar = ({ plannerCourse }) => {
+const buildAuditSummary = (parsedCourseData) => {
+  if (!parsedCourseData?.sections?.length) return null;
+  const completed = [], inProgress = [], remaining = [];
+  for (const section of parsedCourseData.sections) {
+    const courseIds = (section.items || [])
+      .filter(item => !item.startsWith('NEEDS') && !item.startsWith('Available'))
+      .map(item => item.split(' - ')[0].trim());
+    if (section.status === 'fulfilled') completed.push(...courseIds);
+    else if (section.status === 'in_progress') inProgress.push(...courseIds);
+    else remaining.push(section.title);
+  }
+  const parts = [];
+  if (completed.length) parts.push(`Completed courses: ${completed.join(', ')}`);
+  if (inProgress.length) parts.push(`In progress: ${inProgress.join(', ')}`);
+  if (remaining.length) parts.push(`Remaining requirements: ${remaining.join(', ')}`);
+  if (parsedCourseData.metadata?.unitsCompleted) parts.push(`Units completed: ${parsedCourseData.metadata.unitsCompleted}`);
+  return parts.join('\n') || null;
+};
+
+const RightSidebar = ({ plannerCourse, parsedCourseData }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
@@ -47,6 +66,10 @@ const RightSidebar = ({ plannerCourse }) => {
   const [searchHeight, setSearchHeight] = useState(window.innerHeight * 0.45);
 
   const chatEndRef = useRef(null);
+  const auditSentRef = useRef(false);
+
+  // Reset audit-sent flag whenever a new audit is uploaded
+  useEffect(() => { auditSentRef.current = false; }, [parsedCourseData]);
 
   const handleSearch = async (query) => {
     if (!query.trim()) { setSearchResults([]); return; }
@@ -90,7 +113,13 @@ const RightSidebar = ({ plannerCourse }) => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentMessage, thread_id: "default-thread" }),
+        body: JSON.stringify({
+          message: currentMessage,
+          thread_id: "default-thread",
+          ...(!auditSentRef.current && buildAuditSummary(parsedCourseData)
+            ? { audit_context: buildAuditSummary(parsedCourseData) }
+            : {}),
+        }),
       });
       const data = await response.json();
       let assistantContent;
@@ -107,6 +136,7 @@ const RightSidebar = ({ plannerCourse }) => {
         assistantContent = "No response received";
       }
       setChatMessages((prev) => [...prev, { role: "assistant", content: assistantContent }]);
+      auditSentRef.current = true;
     } catch (err) {
       setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {

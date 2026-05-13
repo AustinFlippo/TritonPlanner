@@ -257,42 +257,55 @@ class PineconeRAG:
         return "\n\n" + "="*50 + "\n\n".join(context_parts)
     
     async def generate_answer(
-        self, 
-        query: str, 
-        context: str
+        self,
+        query: str,
+        context: str,
+        conversation_history: Optional[List[Dict[str, Any]]] = None
     ) -> str:
-        """
-        Generate answer using LLM with the retrieved context.
-        
-        Args:
-            query: Original user question
-            context: Formatted context from retrieved documents
-            
-        Returns:
-            Generated answer
-        """
         try:
-            # Format prompt
-            messages = self.prompt_template.format_messages(
-                context=context,
-                question=query
+            from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+            # Base system message with course context
+            base_system = (
+                "You are an expert academic advisor for UC San Diego specializing in course planning and degree requirements.\n\n"
+                "Your role is to help students with course selection, prerequisites, degree requirement planning, "
+                "academic scheduling, and course content.\n\n"
+                "Use the provided course context to answer questions. Be specific, helpful, and concise. "
+                "Always cite specific course codes when relevant.\n\n"
+                f"Relevant course information:\n{context}"
             )
-            
-            # Generate response
+            messages = [SystemMessage(content=base_system)]
+
+            # Inject audit context as a second system message if present
+            audit = next((h["content"] for h in (conversation_history or []) if h["role"] == "audit"), None)
+            if audit:
+                messages.append(SystemMessage(content=f"Student's academic record:\n{audit}"))
+
+            # Add recent conversation history (last 6 turns = 3 exchanges)
+            recent = [h for h in (conversation_history or []) if h["role"] in ("user", "assistant")][-6:]
+            for turn in recent:
+                if turn["role"] == "user":
+                    messages.append(HumanMessage(content=turn["content"]))
+                else:
+                    messages.append(AIMessage(content=turn["content"]))
+
+            # Current question
+            messages.append(HumanMessage(content=query))
+
             response = await self.llm.ainvoke(messages)
-            
             logger.info(f"Answer generated: {len(response.content)} characters")
             return response.content
-            
+
         except Exception as e:
             logger.error(f"Failed to generate answer: {e}")
             return f"Sorry, I encountered an error while generating the response: {str(e)}"
     
     async def query(
-        self, 
+        self,
         user_query: str,
         filters: Optional[Dict[str, Any]] = None,
-        top_k: Optional[int] = None
+        top_k: Optional[int] = None,
+        conversation_history: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """
         Complete RAG pipeline: retrieve relevant documents and generate answer.
@@ -329,7 +342,7 @@ class PineconeRAG:
             context = self.format_context(documents)
             
             # Step 3: Generate answer
-            answer = await self.generate_answer(user_query, context)
+            answer = await self.generate_answer(user_query, context, conversation_history)
             
             # Step 4: Extract sources
             sources = []

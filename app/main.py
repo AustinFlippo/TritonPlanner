@@ -1,6 +1,8 @@
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional, List, Dict
+from collections import defaultdict
 import os
 from dotenv import load_dotenv
 from pathlib import Path
@@ -48,6 +50,10 @@ def get_rag_system():
 class ChatRequest(BaseModel):
     message: str
     thread_id: str
+    audit_context: Optional[str] = None
+
+# Per-thread conversation history: thread_id -> list of {role, content}
+thread_histories: Dict[str, List[Dict]] = defaultdict(list)
 
 
 # Dummy schedule data
@@ -95,8 +101,20 @@ async def chat(request: ChatRequest):
                 }]
             }
         
-        result = await rag.query(request.message)
-        
+        history = thread_histories[request.thread_id]
+
+        # Store audit context once at the start of the thread
+        if request.audit_context and not any(h["role"] == "audit" for h in history):
+            history.insert(0, {"role": "audit", "content": request.audit_context})
+
+        result = await rag.query(request.message, conversation_history=history)
+
+        # Append this exchange to history (keep last 20 turns to bound token growth)
+        history.append({"role": "user", "content": request.message})
+        history.append({"role": "assistant", "content": result["answer"]})
+        if len(history) > 22:  # audit entry + 20 turns
+            thread_histories[request.thread_id] = history[:1] + history[-20:]
+
         # Format response
         response_content = result["answer"]
         
