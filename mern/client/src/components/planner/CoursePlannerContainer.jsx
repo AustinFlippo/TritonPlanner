@@ -197,7 +197,7 @@ const CoursePlannerContainer = ({ parsedCourseData = { sections: [], metadata: {
     try {
       setLoading(true);
       
-      const response = await fetch('http://localhost:5050/api/export/google-sheets', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/export/google-sheets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

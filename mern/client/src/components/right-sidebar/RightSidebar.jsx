@@ -24,7 +24,7 @@ const RightSidebar = ({ plannerCourse }) => {
   useEffect(() => {
     if (!plannerCourse) return;
     // Planner courses only carry course_id/credits/status — fetch full data from server
-    fetch("http://localhost:5050/search-courses", {
+    fetch(`${import.meta.env.VITE_API_URL}/search-courses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: plannerCourse.course_id }),
@@ -52,7 +52,7 @@ const RightSidebar = ({ plannerCourse }) => {
     if (!query.trim()) { setSearchResults([]); return; }
     try {
       setIsCourseLoading(true);
-      const response = await fetch("http://localhost:5050/search-courses", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/search-courses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -87,7 +87,7 @@ const RightSidebar = ({ plannerCourse }) => {
     setCurrentMessage("");
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5050/chat", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: currentMessage, thread_id: "default-thread" }),
