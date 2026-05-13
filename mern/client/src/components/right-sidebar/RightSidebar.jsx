@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
 import CourseDetails from "./CourseDetails";
-import CourseDetailOverlay from "../planner/CourseDetailOverlay";
 import { debounce } from "lodash";
 
 const SectionHeader = ({ label }) => (
@@ -16,11 +15,15 @@ const SectionHeader = ({ label }) => (
   </div>
 );
 
-const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => {
+const RightSidebar = ({ plannerCourse }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [selectedSearchCourse, setSelectedSearchCourse] = useState(null);
+
+  useEffect(() => {
+    if (plannerCourse) setSelectedSearchCourse(plannerCourse);
+  }, [plannerCourse]);
 
   const [currentMessage, setCurrentMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
@@ -122,15 +125,6 @@ const RightSidebar = ({ selectedCourse, onDismissDetail, parsedCourseData }) => 
           document.addEventListener("mouseup", onUp);
         }}
       />
-
-      {/* Course detail overlay — shown when a planner card is clicked */}
-      {selectedCourse && (
-        <CourseDetailOverlay
-          course={selectedCourse}
-          parsedCourseData={parsedCourseData}
-          onDismiss={onDismissDetail}
-        />
-      )}
 
       {/* Search panel */}
       <div className="flex flex-col flex-shrink-0" style={{ height: `${searchHeight}px` }}>

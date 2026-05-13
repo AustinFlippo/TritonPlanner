@@ -17,7 +17,7 @@ const MainLayout = () => {
     metadata: {}
   });
 
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [plannerCourse, setPlannerCourse] = useState(null);
 
   // DEMO: Optionally auto-load Austin's data when component mounts
   // TODO: Replace this with actual file upload functionality
@@ -37,13 +37,13 @@ const MainLayout = () => {
   const renderPage = () => {
     switch (currentPage) {
       case "planner":
-        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setSelectedCourse} />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setPlannerCourse} />;
       case "storage":
         return <CourseStorage />;
       case "quarter":
         return <QuarterlyView />;
       default:
-        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setSelectedCourse} />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setPlannerCourse} />;
     }
   };
 
@@ -56,16 +56,14 @@ const MainLayout = () => {
       {/* Center: header + planner content */}
       <div className="flex flex-col flex-grow overflow-hidden">
         <Header />
-        <div className="flex-grow p-6 overflow-y-auto" onClick={() => setSelectedCourse(null)}>
+        <div className="flex-grow p-6 overflow-y-auto">
           {renderPage()}
         </div>
       </div>
 
       {/* Right sidebar — full height, outside the header column */}
       <RightSidebar
-        selectedCourse={selectedCourse}
-        onDismissDetail={() => setSelectedCourse(null)}
-        parsedCourseData={parsedCourseData}
+        plannerCourse={plannerCourse}
       />
     </div>
   );
