@@ -1,150 +1,68 @@
 import { useState } from 'react';
 
+const STATUS_CONFIG = {
+  fulfilled:     { accent: '#16a34a', badge: { background: '#dcfce7', color: '#16a34a' }, label: 'Done' },
+  in_progress:   { accent: '#ca8a04', badge: { background: '#fef9c3', color: '#ca8a04' }, label: 'In Progress' },
+  not_fulfilled: { accent: '#dc2626', badge: { background: '#fee2e2', color: '#dc2626' }, label: 'Remaining' },
+};
+
+const isCourseCompleted = (item) => {
+  if (!item || typeof item !== 'string') return false;
+  if (item.includes('NEEDS:') || item.includes('Available:')) return false;
+  const gradeMatch = item.match(/\([^,)]+,\s*([^)]+)\)$/);
+  if (!gradeMatch) return false;
+  const grade = gradeMatch[1].trim().toLowerCase();
+  return grade && grade !== 'nr' && grade !== 'wip' && !grade.includes('wip') && !grade.includes('progress');
+};
+
 const AuditAccordionSection = ({ title, status, items }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Helper function to determine if a course item is completed based on grade
-  const isCourseCompleted = (item) => {
-    if (!item || typeof item !== 'string') return false;
-    
-    // Skip non-course items
-    if (item.includes('NEEDS:') || item.includes('Available:')) return false;
-    
-    // Look for grade pattern in parentheses: (TERM, GRADE)
-    const gradeMatch = item.match(/\([^,)]+,\s*([^)]+)\)$/);
-    if (!gradeMatch) return false;
-    
-    const grade = gradeMatch[1].trim().toLowerCase();
-    
-    // Course is NOT completed if grade is NR, WIP, or contains "progress"
-    if (!grade || 
-        grade === '' || 
-        grade === 'nr' || 
-        grade === 'wip' ||
-        grade.includes('wip') ||
-        grade.includes('progress')) {
-      return false;
-    }
-    
-    // Course is completed if it has any other non-empty grade (A, B+, C, etc.)
-    return true;
-  };
-
-  const getStatusConfig = (status) => {
-    switch (status) {
-      case 'fulfilled':
-        return {
-          badge: 'FULFILLED',
-          badgeStyle: 'bg-green-100 text-green-800 border border-green-200',
-          icon: '✅'
-        };
-      case 'in_progress':
-        return {
-          badge: 'IN PROGRESS',
-          badgeStyle: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-          icon: '🟨'
-        };
-      case 'not_fulfilled':
-        return {
-          badge: 'NOT FULFILLED',
-          badgeStyle: 'bg-red-100 text-red-800 border border-red-200',
-          icon: '❌'
-        };
-      default:
-        return {
-          badge: 'UNKNOWN',
-          badgeStyle: 'bg-gray-100 text-gray-800 border border-gray-200',
-          icon: '❓'
-        };
-    }
-  };
-
-  const statusConfig = getStatusConfig(status);
+  const cfg = STATUS_CONFIG[status] ?? { accent: '#cbd5e1', badge: { background: '#f1f5f9', color: '#64748b' }, label: 'Unknown' };
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header - Always Visible */}
+    <div style={{ border: '1px solid #e2e8f0', borderLeft: `3px solid ${cfg.accent}`, borderRadius: '7px', overflow: 'hidden' }}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-3 py-3 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none"
+        style={{ width: '100%', padding: '8px 10px', background: 'white', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
-            {/* Toggle Icon */}
-            <span className="text-gray-400 text-sm flex-shrink-0">
-              {isExpanded ? '▼' : '▶'}
-            </span>
-            
-            {/* Section Title */}
-            <h3 className="text-sm font-medium text-gray-900 truncate">
-              {title}
-            </h3>
-          </div>
-          
-          {/* Status Indicator */}
-          <div className="flex-shrink-0">
-            {status === 'fulfilled' && (
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            )}
-            {status === 'in_progress' && (
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-            )}
-            {status === 'not_fulfilled' && (
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            )}
-          </div>
-        </div>
+        <svg
+          width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ flexShrink: 0, transition: 'transform 0.15s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+        <span style={{ flex: 1, fontSize: '11px', fontWeight: 600, color: '#003366', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {title}
+        </span>
+        <span style={{ ...cfg.badge, fontSize: '9px', fontWeight: 700, padding: '2px 7px', borderRadius: '999px', flexShrink: 0 }}>
+          {cfg.label}
+        </span>
       </button>
 
-      {/* Expandable Content */}
       {isExpanded && (
-        <div className="px-3 pb-3 bg-gray-50 border-t border-gray-200">
-          <div className="space-y-2 pt-3">
-            {items.length > 0 ? (
-              items.map((item, index) => {
-                const isCompleted = isCourseCompleted(item);
-                return (
-                  <div
-                    key={index}
-                    className={`rounded border px-3 py-2 ${
-                      isCompleted 
-                        ? 'bg-green-50 border-green-200' 
-                        : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <p className={`text-xs leading-relaxed ${
-                      isCompleted 
-                        ? 'text-green-800' 
-                        : 'text-gray-700'
-                    }`}>
-                      {isCompleted && (
-                        <span className="mr-2 text-green-600 font-bold">✓</span>
-                      )}
-                      {item}
-                    </p>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <p className="text-xs">No courses found</p>
+        <div style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {items.length > 0 ? items.map((item, i) => {
+            const completed = isCourseCompleted(item);
+            return (
+              <div
+                key={i}
+                style={{
+                  background: completed ? '#f0fdf4' : 'white',
+                  border: `1px solid ${completed ? '#bbf7d0' : '#e2e8f0'}`,
+                  borderRadius: '5px',
+                  padding: '5px 8px',
+                  fontSize: '11px',
+                  color: completed ? '#166534' : '#475569',
+                  lineHeight: 1.4,
+                }}
+              >
+                {completed && <span style={{ marginRight: '5px', color: '#16a34a', fontWeight: 700 }}>✓</span>}
+                {item}
               </div>
-            )}
-          </div>
-          
-          {/* Status Details */}
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-600">Status:</span>
-              <span className={`text-xs font-medium ${
-                status === 'fulfilled' ? 'text-green-600' :
-                status === 'in_progress' ? 'text-yellow-600' :
-                'text-red-600'
-              }`}>
-                {statusConfig.badge}
-              </span>
-            </div>
-          </div>
+            );
+          }) : (
+            <div style={{ textAlign: 'center', fontSize: '11px', color: '#94a3b8', padding: '8px 0' }}>No courses</div>
+          )}
         </div>
       )}
     </div>

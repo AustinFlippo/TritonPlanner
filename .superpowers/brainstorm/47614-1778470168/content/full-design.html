@@ -1,0 +1,148 @@
+<h2>Full sidebar redesign — does this look right?</h2>
+<p class="subtitle">Before (left) vs After (right). The "After" reflects all three decisions.</p>
+
+<div class="split">
+
+  <!-- BEFORE -->
+  <div class="mockup">
+    <div class="mockup-header">Before</div>
+    <div class="mockup-body" style="padding:0;font-family:sans-serif;">
+      <div style="padding:16px;border-bottom:1px solid #e2e8f0;">
+        <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:12px;">Graduation Progress</div>
+
+        <!-- big upload zone -->
+        <div style="border:2px dashed #d1d5db;border-radius:8px;padding:12px;text-align:center;margin-bottom:12px;">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px;">Upload Degree Audit (HTML)</div>
+          <div style="font-size:24px;color:#9ca3af;">☁</div>
+          <div style="font-size:11px;background:#3b82f6;color:white;padding:4px 10px;border-radius:4px;display:inline-block;">Choose File</div>
+        </div>
+
+        <!-- 4 stacked cards -->
+        <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#6d28d9;">Units Completed</span>
+          <span style="font-size:14px;font-weight:700;color:#6d28d9;">132</span>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#166534;">Completed</span>
+          <span style="font-size:14px;font-weight:700;color:#166534;">5</span>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#1e40af;">In Progress</span>
+          <span style="font-size:14px;font-weight:700;color:#1e40af;">2</span>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#991b1b;">Remaining</span>
+          <span style="font-size:14px;font-weight:700;color:#991b1b;">3</span>
+        </div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;">
+          <span style="font-size:11px;color:#374151;">Overall Progress</span>
+          <span style="font-size:14px;font-weight:700;color:#374151;">50%</span>
+        </div>
+      </div>
+
+      <!-- accordion items -->
+      <div style="padding:12px;">
+        <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px;">Requirements</div>
+        <div style="border:1px solid #e2e8f0;border-radius:6px;margin-bottom:6px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:#9ca3af;">▶</span>
+              <span style="font-size:12px;font-weight:500;color:#111827;">Lower Division Core</span>
+            </div>
+            <div style="width:10px;height:10px;background:#22c55e;border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:6px;margin-bottom:6px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:#9ca3af;">▶</span>
+              <span style="font-size:12px;font-weight:500;color:#111827;">Upper Division Electives</span>
+            </div>
+            <div style="width:10px;height:10px;background:#eab308;border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:#9ca3af;">▶</span>
+              <span style="font-size:12px;font-weight:500;color:#111827;">Capstone Requirement</span>
+            </div>
+            <div style="width:10px;height:10px;background:#ef4444;border-radius:50%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AFTER -->
+  <div class="mockup">
+    <div class="mockup-header">After</div>
+    <div class="mockup-body" style="padding:0;font-family:sans-serif;">
+      <div style="padding:14px 16px;border-bottom:1px solid #e2e8f0;">
+
+        <!-- Header row with compact upload button -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:15px;font-weight:600;color:#111827;">Graduation Progress</div>
+          <button style="font-size:10px;color:#6b7280;background:white;border:1px solid #d1d5db;border-radius:5px;padding:3px 8px;cursor:pointer;">↑ Replace audit</button>
+        </div>
+
+        <!-- ProgressSummary: bar + pills -->
+        <div style="background:#e2e8f0;border-radius:999px;height:7px;margin-bottom:9px;overflow:hidden;">
+          <div style="width:50%;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:999px;"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 8px;font-weight:600;">✓ 5 done</span>
+          <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:999px;padding:2px 8px;font-weight:600;">⏳ 2 in progress</span>
+          <span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 8px;font-weight:600;">✗ 3 remaining</span>
+          <span style="font-size:10px;background:#ede9fe;color:#5b21b6;border-radius:999px;padding:2px 8px;font-weight:600;">📚 132 units</span>
+        </div>
+      </div>
+
+      <!-- accordion items -->
+      <div style="padding:12px;">
+        <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Requirements</div>
+
+        <!-- fulfilled row -->
+        <div style="border:1px solid #e2e8f0;border-left:3px solid #22c55e;border-radius:6px;margin-bottom:5px;overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:9px 12px;gap:10px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span style="font-size:12px;font-weight:500;color:#111827;flex:1;">Lower Division Core</span>
+            <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 7px;font-weight:600;">Done</span>
+          </div>
+        </div>
+
+        <!-- in progress row - expanded -->
+        <div style="border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:6px;margin-bottom:5px;overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:9px 12px;gap:10px;background:#fffbeb;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="transform:rotate(180deg)"><polyline points="6 9 12 15 18 9"/></svg>
+            <span style="font-size:12px;font-weight:500;color:#111827;flex:1;">Upper Division Electives</span>
+            <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:999px;padding:2px 7px;font-weight:600;">In Progress</span>
+          </div>
+          <!-- expanded items -->
+          <div style="border-top:1px solid #e2e8f0;padding:10px 12px;background:#f9fafb;">
+            <div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:4px;padding:6px 10px;margin-bottom:4px;">
+              <span style="font-size:10px;color:#166534;font-weight:600;">✓ </span>
+              <span style="font-size:10px;color:#166534;">COGS 108 - Data Science in Practice (SP23, A-)</span>
+            </div>
+            <div style="background:white;border:1px solid #e2e8f0;border-radius:4px;padding:6px 10px;">
+              <span style="font-size:10px;color:#374151;">NEEDS: 1 Course | Available: COGS 118A, COGS 118B</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- not fulfilled row -->
+        <div style="border:1px solid #e2e8f0;border-left:3px solid #ef4444;border-radius:6px;overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:9px 12px;gap:10px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <span style="font-size:12px;font-weight:500;color:#111827;flex:1;">Capstone Requirement</span>
+            <span style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 7px;font-weight:600;">Remaining</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">Does the "After" look right? Reply in the terminal — any changes before we write the spec?</p>

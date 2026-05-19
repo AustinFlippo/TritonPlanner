@@ -17,6 +17,8 @@ const MainLayout = () => {
     metadata: {}
   });
 
+  const [plannerCourse, setPlannerCourse] = useState(null);
+
   // DEMO: Optionally auto-load Austin's data when component mounts
   // TODO: Replace this with actual file upload functionality
   useEffect(() => {
@@ -32,47 +34,38 @@ const MainLayout = () => {
     
   }, []);
 
-  const pageTitles = {
-    planner: "4-Year Planner",
-    storage: "Course Storage",
-    quarter: "Quarter View",
-  };  
-
   const renderPage = () => {
     switch (currentPage) {
       case "planner":
-        return <CoursePlannerContainer parsedCourseData={parsedCourseData} />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setPlannerCourse} />;
       case "storage":
         return <CourseStorage />;
       case "quarter":
         return <QuarterlyView />;
       default:
-        return <CoursePlannerContainer parsedCourseData={parsedCourseData} />;
+        return <CoursePlannerContainer parsedCourseData={parsedCourseData} onCourseClick={setPlannerCourse} />;
     }
   };
 
   return (
     <div className="flex h-screen">
-      <LeftSidebar 
+      <LeftSidebar
         onParsedDataUpdate={setParsedCourseData}
       />
 
-      {/* Main Panel: header + content + right sidebar */}
-      
+      {/* Center: header + planner content */}
       <div className="flex flex-col flex-grow overflow-hidden">
-        <Header currentPage={pageTitles[currentPage] || "Blueprint"} />
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main content area */}
-          <div className="flex-grow p-6 overflow-y-auto">
-            {renderPage()}
-          </div>
-
-          {/* Right sidebar with course search & assistant */}
-          <RightSidebar />
-
+        <Header />
+        <div className="flex-grow p-6 overflow-y-auto">
+          {renderPage()}
         </div>
       </div>
+
+      {/* Right sidebar — full height, outside the header column */}
+      <RightSidebar
+        plannerCourse={plannerCourse}
+        parsedCourseData={parsedCourseData}
+      />
     </div>
   );
 };

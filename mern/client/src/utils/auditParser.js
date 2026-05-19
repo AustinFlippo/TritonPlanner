@@ -97,7 +97,7 @@ export async function uploadAuditFile(file) {
   formData.append('html', file); // Match existing server endpoint
   
   try {
-    const response = await fetch('http://localhost:5050/upload-degree-audit', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/upload-degree-audit`, {
       method: 'POST',
       body: formData
     });

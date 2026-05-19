@@ -1,0 +1,90 @@
+<h2>How should the progress summary look?</h2>
+<p class="subtitle">Replacing the 4 stacked colored cards. Pick your preferred style.</p>
+
+<div class="cards">
+
+  <!-- Option A: Compact bar + pills -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;">
+      <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Overall Progress</div>
+      <div style="background:#e2e8f0;border-radius:999px;height:8px;margin-bottom:10px;overflow:hidden;">
+        <div style="width:62%;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:999px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:11px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 9px;font-weight:600;">✓ 5 done</span>
+        <span style="font-size:11px;background:#fef9c3;color:#854d0e;border-radius:999px;padding:2px 9px;font-weight:600;">⏳ 2 in progress</span>
+        <span style="font-size:11px;background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 9px;font-weight:600;">✗ 3 remaining</span>
+        <span style="font-size:11px;background:#ede9fe;color:#5b21b6;border-radius:999px;padding:2px 9px;font-weight:600;">📚 132 units</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Bar + Pills</h3>
+      <p>Single progress bar with compact colored pill badges below. Everything in one tight block.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Compact 2x2 grid of mini-stats -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#22c55e;">5</div>
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Done</div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#eab308;">2</div>
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">In Progress</div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#ef4444;">3</div>
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Remaining</div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#8b5cf6;">132</div>
+          <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Units</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — 2×2 Mini Grid</h3>
+      <p>Compact grid of 4 small stat tiles. Numbers are prominent, takes less vertical space than current.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Single-line inline row -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;">
+      <div style="background:#e2e8f0;border-radius:999px;height:8px;margin-bottom:12px;overflow:hidden;">
+        <div style="width:62%;height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:999px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#22c55e;">5</div>
+          <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;">Done</div>
+        </div>
+        <div style="width:1px;height:28px;background:#e2e8f0;"></div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#eab308;">2</div>
+          <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;">In Prog</div>
+        </div>
+        <div style="width:1px;height:28px;background:#e2e8f0;"></div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#ef4444;">3</div>
+          <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;">Left</div>
+        </div>
+        <div style="width:1px;height:28px;background:#e2e8f0;"></div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#8b5cf6;">132</div>
+          <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;">Units</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Single Row</h3>
+      <p>Progress bar + 4 stats in one horizontal row with dividers. Most compact — minimal vertical space.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Click to select, then reply in the terminal.</p>
