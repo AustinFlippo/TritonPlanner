@@ -17,7 +17,11 @@ const EMPTY_SCHEDULE = () =>
 const MainLayout = () => {
   const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState("planner");
-  const [parsedCourseData, setParsedCourseData] = useState({ sections: [], metadata: {} });
+  // auditDataForSidebar: shown in the requirements sidebar (updated on upload AND on schedule load)
+  const [auditDataForSidebar, setAuditDataForSidebar] = useState({ sections: [], metadata: {} });
+  // auditDataForPlanner: drives the schedule-population effect in CoursePlannerContainer
+  // Only updated on a fresh audit upload — NOT on schedule load — to avoid overwriting the loaded grid
+  const [auditDataForPlanner, setAuditDataForPlanner] = useState({ sections: [], metadata: {} });
   const [plannerCourse, setPlannerCourse] = useState(null);
 
   // Schedule state lifted here so Header and ScheduleManager can access it
@@ -33,11 +37,28 @@ const MainLayout = () => {
       JSON.stringify(schedule) !== JSON.stringify(savedSchedule)
     );
 
-  const handleLoadSchedule = (id, name, grid) => {
+  const handleAuditUpload = (data) => {
+    setAuditDataForSidebar(data);
+    setAuditDataForPlanner(data);
+  };
+
+  const handleNewSchedule = () => {
+    setSchedule(EMPTY_SCHEDULE());
+    setCurrentScheduleId(null);
+    setCurrentScheduleName("My Schedule");
+    setSavedSchedule(null);
+    setAuditDataForSidebar({ sections: [], metadata: {} });
+    setAuditDataForPlanner({ sections: [], metadata: {} });
+  };
+
+  const handleLoadSchedule = (id, name, grid, auditData) => {
     setSchedule(grid);
     setCurrentScheduleId(id);
     setCurrentScheduleName(name);
-    setSavedSchedule(grid);
+    setSavedSchedule(JSON.parse(JSON.stringify(grid)));
+    // Only update the sidebar — do NOT update auditDataForPlanner so the
+    // CoursePlannerContainer effect doesn't overwrite the loaded grid.
+    if (auditData) setAuditDataForSidebar(auditData);
   };
 
   const renderPage = () => {
@@ -45,7 +66,7 @@ const MainLayout = () => {
       case "planner":
         return (
           <CoursePlannerContainer
-            parsedCourseData={parsedCourseData}
+            parsedCourseData={auditDataForPlanner}
             onCourseClick={setPlannerCourse}
             schedule={schedule}
             setSchedule={setSchedule}
@@ -58,7 +79,7 @@ const MainLayout = () => {
       default:
         return (
           <CoursePlannerContainer
-            parsedCourseData={parsedCourseData}
+            parsedCourseData={auditDataForPlanner}
             onCourseClick={setPlannerCourse}
             schedule={schedule}
             setSchedule={setSchedule}
@@ -69,23 +90,25 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <LeftSidebar onParsedDataUpdate={setParsedCourseData} />
+      <LeftSidebar onParsedDataUpdate={handleAuditUpload} auditData={auditDataForSidebar} />
       <div className="flex flex-col flex-grow overflow-hidden">
         <Header
           currentScheduleName={currentScheduleName}
           setCurrentScheduleName={setCurrentScheduleName}
           hasUnsavedChanges={hasUnsavedChanges}
           schedule={schedule}
+          parsedCourseData={auditDataForSidebar}
           currentScheduleId={currentScheduleId}
           setCurrentScheduleId={setCurrentScheduleId}
           setSavedSchedule={setSavedSchedule}
           onLoadSchedule={handleLoadSchedule}
+          onNewSchedule={handleNewSchedule}
         />
         <div className="flex-grow p-6 overflow-y-auto">
           {renderPage()}
         </div>
       </div>
-      <RightSidebar plannerCourse={plannerCourse} parsedCourseData={parsedCourseData} />
+      <RightSidebar plannerCourse={plannerCourse} parsedCourseData={auditDataForSidebar} />
     </div>
   );
 };

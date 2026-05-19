@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import useSchedules from "../../hooks/useSchedules";
 
-const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
+const ScheduleManager = ({ onLoad, onClose, currentScheduleId, onNewSchedule }) => {
   const { schedules, loading, renameSchedule, deleteSchedule } = useSchedules();
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
@@ -9,7 +9,7 @@ const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
   const skipBlurRef = useRef(false);
 
   const handleLoad = (s) => {
-    onLoad(s.id, s.name, s.schedule);
+    onLoad(s.id, s.name, s.schedule, s.auditData || null);
     onClose();
   };
 
@@ -153,10 +153,19 @@ const ScheduleManager = ({ onLoad, onClose, currentScheduleId }) => {
         {/* Footer */}
         <div className="px-4 py-3" style={{ borderTop: "1px solid #e2e8f0" }}>
           <button
-            onClick={onClose}
-            style={{ fontSize: "12px", color: "#64748b", background: "none", border: "none", cursor: "pointer" }}
+            onClick={() => { onNewSchedule?.(); onClose(); }}
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "white",
+              background: "#0066cc",
+              border: "none",
+              borderRadius: "4px",
+              padding: "5px 12px",
+              cursor: "pointer",
+            }}
           >
-            Close
+            + New Schedule
           </button>
         </div>
       </div>

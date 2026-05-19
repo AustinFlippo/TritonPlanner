@@ -41,7 +41,7 @@ const useSchedules = () => {
   }, [currentUser]);
 
   // Creates or updates a schedule. Returns the document id.
-  const saveSchedule = async (name, grid, existingId = null) => {
+  const saveSchedule = async (name, grid, existingId = null, auditData = null) => {
     const ref = getRef();
     if (!ref) throw new Error("Not signed in");
     const docRef = existingId ? doc(ref, existingId) : doc(ref);
@@ -50,6 +50,7 @@ const useSchedules = () => {
       {
         name,
         schedule: grid,
+        ...(auditData ? { auditData } : {}),
         updatedAt: serverTimestamp(),
         ...(existingId ? {} : { createdAt: serverTimestamp() }),
       },

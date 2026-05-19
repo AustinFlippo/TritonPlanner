@@ -1,15 +1,13 @@
 import React, { useState, useRef } from "react";
 import SidebarAuditTracker from "./audit/SidebarAuditTracker";
 
-const LeftSidebar = ({ onParsedDataUpdate }) => {
-  const [auditData, setAuditData] = useState({ sections: [], metadata: {} });
+const LeftSidebar = ({ onParsedDataUpdate, auditData = { sections: [], metadata: {} } }) => {
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [isResizing, setIsResizing] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const sidebarRef = useRef(null);
 
   const handleAuditDataUpdate = (newAuditData) => {
-    setAuditData(newAuditData);
     if (onParsedDataUpdate) onParsedDataUpdate(newAuditData);
   };
 

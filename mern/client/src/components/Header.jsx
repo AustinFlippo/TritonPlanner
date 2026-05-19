@@ -3,16 +3,19 @@ import SignInButton from "./auth/SignInButton";
 import ScheduleManager from "./schedules/ScheduleManager";
 import useSchedules from "../hooks/useSchedules";
 import { useAuth } from "../context/AuthContext";
+import tritonLogo from "../assets/tritonplannerlogo.png";
 
 const Header = ({
   currentScheduleName,
   setCurrentScheduleName,
   hasUnsavedChanges,
   schedule,
+  parsedCourseData,
   currentScheduleId,
   setCurrentScheduleId,
   setSavedSchedule,
   onLoadSchedule,
+  onNewSchedule,
 }) => {
   const { currentUser } = useAuth();
   const { saveSchedule } = useSchedules();
@@ -23,9 +26,10 @@ const Header = ({
     if (!currentUser) return;
     setSaving(true);
     try {
-      const id = await saveSchedule(currentScheduleName, schedule, currentScheduleId);
+      const auditToSave = parsedCourseData?.sections?.length ? parsedCourseData : null;
+      const id = await saveSchedule(currentScheduleName, schedule, currentScheduleId, auditToSave);
       setCurrentScheduleId(id);
-      setSavedSchedule(schedule);
+      setSavedSchedule(JSON.parse(JSON.stringify(schedule)));
     } catch (err) {
       console.error("Failed to save schedule:", err);
     } finally {
@@ -41,15 +45,29 @@ const Header = ({
       >
         {/* Left: logo + brand name */}
         <div className="flex items-center gap-3">
-          <svg width="22" height="28" viewBox="0 0 22 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="11,0 8.5,5.5 13.5,5.5" fill="white"/>
-            <polygon points="2.5,3.5 0,9 5,9" fill="#7db8e8" opacity="0.85"/>
-            <polygon points="19.5,3.5 17,9 22,9" fill="#7db8e8" opacity="0.85"/>
-            <rect x="9" y="4" width="4" height="21" rx="2" fill="white"/>
-            <rect x="0.5" y="7" width="3.5" height="15" rx="1.75" fill="#7db8e8"/>
-            <rect x="18" y="7" width="3.5" height="15" rx="1.75" fill="#7db8e8"/>
-            <rect x="0.5" y="8.5" width="21" height="2.5" rx="1.25" fill="#7db8e8" opacity="0.6"/>
-            <rect x="9" y="25" width="4" height="3" rx="1" fill="#7db8e8" opacity="0.5"/>
+          <svg width="40" height="40" style={{ flexShrink: 0 }}>
+            <defs>
+              <filter id="triton-white-base" colorInterpolationFilters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values="0 0 0 0 1
+                          0 0 0 0 1
+                          0 0 0 0 1
+                          -2 -2 -2 0 5"
+                />
+              </filter>
+              <filter id="triton-gold" colorInterpolationFilters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values="0 0 0 0 1.0
+                          0 0 0 0 1.0
+                          0 0 0 0 0.0
+                          3 0 -3 0 -0.3"
+                />
+              </filter>
+            </defs>
+            <image href={tritonLogo} width="40" height="40" filter="url(#triton-white-base)" preserveAspectRatio="xMidYMid meet" />
+            <image href={tritonLogo} width="40" height="40" filter="url(#triton-gold)" preserveAspectRatio="xMidYMid meet" />
           </svg>
           <div>
             <span style={{ color: "white", fontSize: "17px", fontWeight: 800, letterSpacing: "-0.3px" }}>Triton</span>
@@ -117,6 +135,7 @@ const Header = ({
           onLoad={onLoadSchedule}
           onClose={() => setShowManager(false)}
           currentScheduleId={currentScheduleId}
+          onNewSchedule={onNewSchedule}
         />
       )}
     </>
