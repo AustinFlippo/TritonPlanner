@@ -13,4 +13,4 @@ uvicorn
 anthropic
 python-dotenv
 python-multipart
-langchain-hub
+langchainhub
