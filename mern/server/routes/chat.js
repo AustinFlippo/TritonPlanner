@@ -6,7 +6,7 @@ const router = express.Router();
 // Proxy endpoint for chat
 router.post("/", async (req, res) => {
   try {
-    const response = await fetch("http://localhost:8000/chat", {
+    const response = await fetch(`${process.env.FASTAPI_URL || "http://localhost:8000"}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
