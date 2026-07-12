@@ -12,8 +12,8 @@ from pinecone import Pinecone
 import os
 from dotenv import load_dotenv
 from typing_extensions import TypedDict, List
-from langchain import hub
-from langchain.schema import Document
+import langchainhub as hub
+from langchain_core.documents import Document
 from langgraph.graph import StateGraph, START, END
 
 

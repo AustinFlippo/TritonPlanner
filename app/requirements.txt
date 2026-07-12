@@ -14,4 +14,3 @@ anthropic
 python-dotenv
 python-multipart
 langchainhub
-langchain
