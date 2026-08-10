@@ -12,17 +12,26 @@ app/.env
 mern/server/config.env
 mern/client/.env
 
-# Google Service Account Keys (CRITICAL - Contains Private Keys)
+# Credentials / Service Account Keys (CRITICAL - Contains Private Keys)
+#
+# Do NOT reintroduce a blanket `*.json` rule here. It silently excluded every
+# course-data file under mern/server/scripts/data/ — including
+# offerings-history.json, which CANNOT be regenerated (the legacy Schedule of
+# Classes it was harvested from was retired in July 2026; see the header of
+# mern/server/scripts/scrape-offerings.mjs). Ignore the secret-bearing paths
+# by name instead.
 credentials/
-*.json
-!package.json
-!package-lock.json
-!*.config.json
-!tsconfig.json
-!cypress.json
+*service-account*.json
+*service_account*.json
+*credentials*.json
+*-secret.json
+*secrets.json
 # Specifically ignore the service account file
 academic-planner-463804-202e89b2e5e4.json
 mern/server/academic-planner-463804-202e89b2e5e4.json
+
+# Local MCP server config (may contain server tokens)
+.mcp.json
 
 # Logs and Debug Files
 logs/
