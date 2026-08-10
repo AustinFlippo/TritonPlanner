@@ -1,4 +1,5 @@
 // Course card component for displaying individual courses in the planner
+import { X, TriangleAlert } from "lucide-react";
 
 const CourseCard = ({
   course,
@@ -6,36 +7,21 @@ const CourseCard = ({
   onDragStart,
   onDragEnd,
   isPreviewing = false,
+  warning = null,
 }) => {
   if (!course) return null;
 
-  // Determine styling based on course status
+  // Status maps to a left accent + small label, keeping the card itself white
   const getStatusStyling = (status) => {
     switch (status) {
       case 'completed':
-        return {
-          container: 'bg-green-100 border-green-300 text-green-800',
-          badge: 'bg-green-200 text-green-800',
-          statusIndicator: '✓'
-        };
+        return { accent: 'border-l-emerald-500', label: 'Completed', labelStyle: 'text-emerald-600' };
       case 'current':
-        return {
-          container: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-          badge: 'bg-yellow-200 text-yellow-800',
-          statusIndicator: '⟳'
-        };
+        return { accent: 'border-l-amber-500', label: 'In progress', labelStyle: 'text-amber-600' };
       case 'planned':
-        return {
-          container: 'bg-blue-100 border-blue-300 text-blue-800',
-          badge: 'bg-blue-200 text-blue-800',
-          statusIndicator: '📅'
-        };
+        return { accent: 'border-l-navy-500', label: 'Planned', labelStyle: 'text-navy-500' };
       default:
-        return {
-          container: 'bg-gray-100 border-gray-300 text-gray-800',
-          badge: 'bg-gray-200 text-gray-700',
-          statusIndicator: ''
-        };
+        return { accent: 'border-l-slate-300', label: null, labelStyle: '' };
     }
   };
 
@@ -43,41 +29,52 @@ const CourseCard = ({
 
   return (
     <div
-      className={`flex justify-between items-center cursor-move p-2 rounded border ${styling.container} ${
-        isPreviewing ? 'opacity-60' : ''
+      className={`group flex justify-between items-center gap-2 cursor-grab active:cursor-grabbing px-3 py-2 rounded-lg bg-white border border-slate-200 border-l-[3px] ${styling.accent} shadow-card hover:shadow-panel hover:border-slate-300 transition-all ${
+        isPreviewing ? 'opacity-50' : ''
       }`}
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <div className="flex items-center">
-        {course.status && (
-          <span className="mr-2 text-xs font-bold">
-            {styling.statusIndicator}
-          </span>
-        )}
-        <div>
-          <div className="font-medium text-sm">
-            {course.course_id}
-            {isPreviewing && (
-              <span className="ml-2 text-yellow-600 text-xs">(Moving)</span>
-            )}
-          </div>
+      <div className="min-w-0">
+        <div className="text-[13px] font-semibold text-slate-800 truncate">
+          {course.course_id}
+          {isPreviewing && (
+            <span className="ml-2 text-gold-600 text-xs font-normal">(moving)</span>
+          )}
+        </div>
+        <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+          {styling.label && (
+            <span className={`font-medium ${styling.labelStyle}`}>
+              {styling.label}
+            </span>
+          )}
           {course.grade && course.status === 'completed' && (
-            <div className="text-xs opacity-75">Grade: {course.grade}</div>
+            <span>· {course.grade}</span>
           )}
         </div>
       </div>
-      <div className="flex items-center">
-        <span className={`${styling.badge} rounded-full px-2 py-1 text-xs mr-2 font-medium`}>
-          {course.credits.toFixed(1)}u
+
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {warning && (
+          <span
+            title={`${warning.message} Based on past schedules — not a guarantee.`}
+            className="cursor-help"
+            aria-label={warning.message}
+          >
+            <TriangleAlert className="w-3.5 h-3.5 text-amber-500" />
+          </span>
+        )}
+        <span className="text-xs tabular-nums text-slate-500">
+          {course.credits.toFixed(1)} u
         </span>
         <button
           onClick={onRemove}
-          className="text-red-500 hover:text-red-700 text-xs font-bold"
+          className="p-0.5 rounded text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50 transition-all focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400"
           title="Remove course"
+          aria-label={`Remove ${course.course_id}`}
         >
-          ×
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

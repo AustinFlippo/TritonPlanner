@@ -2,23 +2,22 @@ import React, { useState, useRef } from "react";
 import SidebarAuditTracker from "./audit/SidebarAuditTracker";
 
 // Main LeftSidebar Component
-const LeftSidebar = ({ onParsedDataUpdate }) => {
-  // State for parsed data from uploaded degree audit
-  const [auditData, setAuditData] = useState({
-    sections: [],
-    metadata: {}
-  });
-
+// auditData is owned by MainLayout (parsedCourseData) so restored sessions —
+// including the reload after the Google OAuth redirect — show up here too
+const LeftSidebar = ({
+  auditData = { sections: [], metadata: {} },
+  schedule = [],
+  onParsedDataUpdate,
+  expanded = false,
+  onToggleExpand,
+}) => {
   // State for sidebar width
   const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
 
-  // Handle audit data updates from the SidebarAuditTracker
+  // A fresh upload parsed by SidebarAuditTracker — report it up
   const handleAuditDataUpdate = (newAuditData) => {
-    setAuditData(newAuditData);
-    
-    // Update the parent component with all parsed data
     if (onParsedDataUpdate) {
       onParsedDataUpdate(newAuditData);
     }
@@ -71,19 +70,26 @@ const LeftSidebar = ({ onParsedDataUpdate }) => {
     <div 
       ref={sidebarRef}
       className="bg-white border-r border-gray-200 h-full flex flex-col overflow-hidden relative"
-      style={{ width: `${sidebarWidth}px` }}
+      style={{
+        width: expanded ? "100%" : `${sidebarWidth}px`,
+      }}
     >
       <SidebarAuditTracker 
         auditData={auditData}
+        schedule={schedule}
         onAuditDataUpdate={handleAuditDataUpdate}
+        expandState={expanded ? "expanded" : null}
+        onToggleExpand={onToggleExpand}
       />
       
-      {/* Resize Handle */}
-      <div
-        className="absolute top-0 right-0 w-1 h-full bg-gray-300 hover:bg-blue-400 cursor-col-resize opacity-0 hover:opacity-100 transition-opacity"
-        onMouseDown={handleMouseDown}
-        title="Drag to resize sidebar"
-      />
+      {/* Resize Handle — hidden while near-fullscreen */}
+      {!expanded && (
+        <div
+          className="absolute top-0 right-0 w-1 h-full bg-gray-300 hover:bg-blue-400 cursor-col-resize opacity-0 hover:opacity-100 transition-opacity"
+          onMouseDown={handleMouseDown}
+          title="Drag to resize sidebar"
+        />
+      )}
     </div>
   );
 };

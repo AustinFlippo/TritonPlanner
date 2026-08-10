@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Import the new RAG system
 from rag_pipeline import create_rag_system
+from planner_agent import plan_chat
 
 # Load environment variables from root .env file
 root_env_path = Path(__file__).parent.parent / '.env'
@@ -39,7 +40,7 @@ def get_rag_system():
                 pinecone_api_key=os.getenv("PINECONE_API_KEY"),
                 pinecone_index_name=os.getenv("PINECONE_INDEX_NAME", "openaicourses"),
                 llm_provider=os.getenv("LLM_PROVIDER", "openai"),
-                llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini-2024-07-18")
+                llm_model=os.getenv("LLM_MODEL", "gpt-5.6-terra")
             )
         except Exception as e:
             return None
@@ -48,6 +49,11 @@ def get_rag_system():
 class ChatRequest(BaseModel):
     message: str
     thread_id: str
+    # Optional planner context sent by the frontend: parsed degree audit
+    # sections and the current 4-year grid. When present, the planner-aware
+    # agent (local catalog, no Pinecone) handles the message instead of RAG.
+    audit_sections: list | None = None
+    schedule: list | None = None
 
 
 # Dummy schedule data
@@ -74,16 +80,33 @@ async def chat(request: ChatRequest):
     - Other queries: Processed through RAG pipeline
     """
     
-    # Handle special schedule command
-    if request.message.lower().strip() == "schedule":
-        return {
-            "messages": [{
-                "type": "ai",
-                "content": "Here's a recommended course schedule for your data science major:",
-                "schedule": DUMMY_SCHEDULE
-            }]
-        }
-    
+    # Planner-aware path: uses the local-catalog planning agent (only needs
+    # OPENAI_API_KEY). Used when the frontend sends audit/schedule context,
+    # and as the fallback whenever the Pinecone RAG system isn't configured.
+    if request.audit_sections or request.schedule or get_rag_system() is None:
+        try:
+            result = await plan_chat(
+                request.message,
+                request.audit_sections or [],
+                request.schedule or [],
+            )
+            message = {"type": "ai", "content": result["content"]}
+            for key in ("proposed_schedule", "placements", "warnings"):
+                if result.get(key) is not None:
+                    message[key] = result[key]
+            return {"messages": [message]}
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            return {
+                "messages": [{
+                    "type": "ai",
+                    "content": "Sorry — the planning assistant hit an error. "
+                               "Make sure OPENAI_API_KEY is set for the FastAPI server."
+                }]
+            }
+
+
     # Process query through RAG pipeline
     try:
         rag = get_rag_system()

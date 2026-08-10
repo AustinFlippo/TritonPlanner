@@ -46,7 +46,8 @@ class RAGConfig:
     
     # LLM settings
     llm_provider: str = "openai"  # "openai" or "anthropic"
-    llm_model: str = "gpt-4o-mini-2024-07-18"
+    llm_model: str = "gpt-5.6-terra"
+    # GPT-5.6 rejects non-default temperature; Anthropic still uses this.
     temperature: float = 0.1
     max_tokens: int = 1500
     
@@ -139,12 +140,15 @@ class PineconeRAG:
                 )
                 logger.info(f"Anthropic LLM initialized: {self.config.llm_model}")
             else:
-                self.llm = ChatOpenAI(
-                    model=self.config.llm_model,
-                    temperature=self.config.temperature,
-                    max_tokens=self.config.max_tokens,
-                    openai_api_key=os.getenv("OPENAI_API_KEY")
-                )
+                # Omit temperature for GPT-5.x — custom values are rejected.
+                openai_kwargs = {
+                    "model": self.config.llm_model,
+                    "max_tokens": self.config.max_tokens,
+                    "openai_api_key": os.getenv("OPENAI_API_KEY"),
+                }
+                if not self.config.llm_model.lower().startswith("gpt-5"):
+                    openai_kwargs["temperature"] = self.config.temperature
+                self.llm = ChatOpenAI(**openai_kwargs)
                 logger.info(f"OpenAI LLM initialized: {self.config.llm_model}")
         except Exception as e:
             logger.error(f"Failed to initialize LLM: {e}")
@@ -365,7 +369,7 @@ def create_rag_system(
     pinecone_api_key: str,
     pinecone_index_name: str,
     llm_provider: str = "openai",
-    llm_model: str = "gpt-4o-mini-2024-07-18"
+    llm_model: str = "gpt-5.6-terra"
 ) -> PineconeRAG:
     """
     Factory function to create a RAG system with common configurations.

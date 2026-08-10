@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import TermBlock from "./TermBlock";
+import { isFutureYear, yearHasPlannedCourses } from "../../utils/scheduleOps";
 
 const YearBlock = ({
   year,
@@ -14,35 +16,115 @@ const YearBlock = ({
   handleDragStart,
   handleDragEnd,
   handleRemoveCourse,
+  handleClearYear,
   getSlotClassName,
   previewState,
   dragTarget,
-  invalidDrop
+  dropWarning,
+  getCourseWarning,
 }) => {
+  const annualUnits = calculateAnnualUnits(yearIndex);
+  const canClear =
+    typeof handleClearYear === "function" &&
+    isFutureYear(year) &&
+    yearHasPlannedCourses(year);
+
+  const [confirming, setConfirming] = useState(false);
+  const confirmTimer = useRef(null);
+  useEffect(() => () => clearTimeout(confirmTimer.current), []);
+
+  // Drop confirm state when the year becomes non-clearable (e.g. already wiped)
+  useEffect(() => {
+    if (!canClear) setConfirming(false);
+  }, [canClear]);
+
+  const startConfirm = (e) => {
+    e.stopPropagation();
+    setConfirming(true);
+    clearTimeout(confirmTimer.current);
+    confirmTimer.current = setTimeout(() => setConfirming(false), 4000);
+  };
+
+  const cancelConfirm = (e) => {
+    e.stopPropagation();
+    clearTimeout(confirmTimer.current);
+    setConfirming(false);
+  };
+
+  const confirmClear = (e) => {
+    e.stopPropagation();
+    clearTimeout(confirmTimer.current);
+    setConfirming(false);
+    handleClearYear(yearIndex);
+  };
+
   return (
-    <div className="mb-6 border rounded-lg overflow-hidden shadow-md">
+    <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
       {/* Year header */}
-      <div
-        className="bg-blue-500 text-white p-3 flex justify-between items-center cursor-pointer"
-        onClick={() => toggleCollapse(yearIndex)}
-      >
-        <div className="flex items-center">
-          <span className="mr-2">{collapsed ? "▶" : "▼"}</span>
-          <span className="font-bold">{yearLabel}</span>
-        </div>
-        <div className="flex items-center">
-          <span className="mr-2">annual units</span>
-          <span className="bg-white text-blue-500 rounded-full px-3 py-1 font-bold">
-            {calculateAnnualUnits(yearIndex).toFixed(1)}
+      <div className="w-full px-4 py-3 flex justify-between items-center bg-white border-b border-slate-200">
+        <button
+          type="button"
+          className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 rounded"
+          onClick={() => toggleCollapse(yearIndex)}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          )}
+          <span className="text-sm font-semibold text-slate-800">
+            Year {yearIndex + 1}
+          </span>
+          <span className="text-sm text-slate-400 truncate">{yearLabel}</span>
+        </button>
+
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {canClear &&
+            (confirming ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={confirmClear}
+                  className="px-2 py-1 text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                >
+                  Clear year?
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelConfirm}
+                  className="px-2 py-1 text-xs font-medium rounded-md text-slate-500 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startConfirm}
+                className="px-2 py-1 text-xs font-medium rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                title={`Clear all courses from Year ${yearIndex + 1}`}
+                aria-label={`Clear Year ${yearIndex + 1}`}
+              >
+                Clear
+              </button>
+            ))}
+          <span
+            className={`text-xs tabular-nums ${
+              annualUnits > 0 ? "font-medium text-slate-600" : "text-slate-400"
+            }`}
+          >
+            {annualUnits.toFixed(1)} units
           </span>
         </div>
       </div>
 
       {/* Terms */}
       {!collapsed && (
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col md:flex-row md:divide-x divide-slate-100">
           {['fall', 'winter', 'spring'].map((term) => (
             <TermBlock
+              key={term}
               termKey={term}
               termName={term.charAt(0).toUpperCase() + term.slice(1)}
               courses={year[term]}
@@ -56,7 +138,8 @@ const YearBlock = ({
               getSlotClassName={getSlotClassName}
               previewState={previewState}
               dragTarget={dragTarget}
-              invalidDrop={invalidDrop}
+              dropWarning={dropWarning}
+              getCourseWarning={getCourseWarning}
             />
           ))}
         </div>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TritonPlanner Booking Bridge</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>TritonPlanner</h1>
+      <span class="sub">Booking Bridge</span>
+    </header>
+
+    <section id="status" class="card">
+      <div class="row"><span class="label">Plan</span><span id="plan-status" class="value">—</span></div>
+      <div class="row"><span class="label">Sections cached</span><span id="section-status" class="value">—</span></div>
+      <div class="row"><span class="label">Selectors</span><span id="selector-status" class="value">unverified</span></div>
+    </section>
+
+    <section id="plan-detail" class="card hidden">
+      <div id="plan-summary" class="summary"></div>
+      <ol id="plan-steps"></ol>
+    </section>
+
+    <section class="actions">
+      <button id="open-tss" class="primary">Open TSS</button>
+      <button id="clear">Clear stored data</button>
+    </section>
+
+    <p class="footnote">
+      Everything stays in this browser. The extension makes no network requests
+      of its own and never sees your password or Duo code.
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

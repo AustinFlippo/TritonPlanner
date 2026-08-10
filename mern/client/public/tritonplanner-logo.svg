@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 64" width="288" height="64">
+  <title>TritonPlanner</title>
+  <!-- Mark: same 32-unit trident geometry as src/components/TritonMark.jsx -->
+  <path transform="translate(-3.6 8) scale(1.5)" fill="#12213A" d="M16 2 17.7 8V30H14.3V8ZM6.8 5 8.5 11V17H5.1V11ZM25.2 5 26.9 11V17H23.5V11ZM5.1 13.6H26.9V17H5.1Z"/>
+  <!-- Wordmark: matches the app's serif stack (tailwind.config.js fontFamily.serif) -->
+  <text x="52" y="43" fill="#12213A"
+        font-family="ui-serif, Charter, Georgia, Cambria, 'Times New Roman', serif"
+        font-size="34" font-weight="600" letter-spacing="-0.6">TritonPlanner<tspan fill="#FFCD00">.</tspan></text>
+</svg>

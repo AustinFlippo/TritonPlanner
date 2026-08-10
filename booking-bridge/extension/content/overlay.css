@@ -1,0 +1,168 @@
+/* Scoped under .tpbb-* so nothing leaks into Fiori's own styling, and
+   isolation:isolate keeps TSS's aggressive z-index stacking out of the panel. */
+
+.tpbb-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 340px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  z-index: 2147483000;
+  isolation: isolate;
+  background: #ffffff;
+  color: #182b49; /* UCSD navy */
+  border: 1px solid #d5dbe3;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(24, 43, 73, 0.18);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+.tpbb-panel.tpbb-collapsed { width: 180px; }
+
+.tpbb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #182b49;
+  color: #ffcd00; /* UCSD gold */
+  border-radius: 9px 9px 0 0;
+  font-weight: 600;
+}
+
+.tpbb-toggle {
+  background: none;
+  border: none;
+  color: #ffcd00;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.tpbb-banner {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #4a5568;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.tpbb-banner.tpbb-warn {
+  background: #fff8e1;
+  color: #7a5b00;
+}
+
+.tpbb-summary {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.tpbb-summary-line { font-weight: 600; }
+.tpbb-summary-sub { font-size: 12px; color: #6b7688; margin-top: 2px; }
+
+.tpbb-steps { max-height: 320px; overflow-y: auto; }
+
+.tpbb-step {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f2f4f7;
+  cursor: pointer;
+}
+
+.tpbb-step:hover { background: #f7f9fc; }
+
+.tpbb-step-current {
+  background: #fffbe6;
+  box-shadow: inset 3px 0 0 #ffcd00;
+}
+
+.tpbb-rank {
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #182b49;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.tpbb-step-body { flex: 1; min-width: 0; }
+.tpbb-course { font-weight: 600; }
+.tpbb-title { font-size: 12px; color: #4a5568; }
+.tpbb-section { font-size: 12px; color: #182b49; margin-top: 3px; }
+.tpbb-fallback { font-size: 11px; color: #6b7688; }
+.tpbb-muted { color: #98a2b3; font-style: italic; }
+.tpbb-why { font-size: 11px; color: #6b7688; margin-top: 4px; font-style: italic; }
+
+.tpbb-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-top: 1px solid #edf0f4;
+}
+
+.tpbb-btn {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d5dbe3;
+  background: #fff;
+  color: #182b49;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tpbb-btn:hover { background: #f2f5f9; }
+
+.tpbb-btn.tpbb-primary {
+  background: #182b49;
+  border-color: #182b49;
+  color: #ffcd00;
+}
+
+.tpbb-btn.tpbb-primary:hover { background: #23395f; }
+
+.tpbb-btn.tpbb-ghost {
+  background: transparent;
+  color: #6b7688;
+  font-weight: 500;
+}
+
+.tpbb-message {
+  margin: 0 12px 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.tpbb-message.tpbb-ok { background: #e8f5ec; color: #1b5e33; }
+.tpbb-message.tpbb-error { background: #fdecea; color: #8a1c13; }
+.tpbb-message.tpbb-warn { background: #fff8e1; color: #7a5b00; }
+.tpbb-message.tpbb-info { background: #eef2f8; color: #33415c; }
+
+.tpbb-footnote {
+  padding: 0 12px 12px;
+  font-size: 11px;
+  color: #98a2b3;
+  line-height: 1.4;
+}
+
+/* Applied to the live TSS control the student should press next. */
+.tpbb-highlight {
+  outline: 3px solid #ffcd00 !important;
+  outline-offset: 2px !important;
+  animation: tpbb-pulse 1.2s ease-in-out 3;
+}
+
+@keyframes tpbb-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 205, 0, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 205, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tpbb-highlight { animation: none; }
+}

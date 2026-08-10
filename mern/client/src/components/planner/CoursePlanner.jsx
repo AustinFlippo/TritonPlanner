@@ -1,5 +1,7 @@
 import React from "react";
+import { FileSpreadsheet, Loader2 } from "lucide-react";
 import YearBlock from "./YearBlock";
+import SavePlanControl from "./SavePlanControl";
 
 const CoursePlanner = ({
   schedule,
@@ -13,16 +15,24 @@ const CoursePlanner = ({
   handleDragStart,
   handleDragEnd,
   handleRemoveCourse,
+  handleClearYear,
   previewState,
+  dragTarget,
+  dropWarning,
+  getCourseWarning,
   getSlotClassName,
   onExportToSheets,
+  onNavigate,
   loading = false,
 }) => {
-  
+
   return (
-    <div className="[&>*]:m-4">
+    <div className="max-w-5xl mx-auto">
+      <SavePlanControl schedule={schedule} onNavigate={onNavigate} />
+
       {schedule.map((year, yearIndex) => (
         <YearBlock
+          key={yearIndex}
           year={year}
           yearIndex={yearIndex}
           yearLabel={yearLabels[yearIndex]}
@@ -35,39 +45,42 @@ const CoursePlanner = ({
           handleDragStart={handleDragStart}
           handleDragEnd={handleDragEnd}
           handleRemoveCourse={handleRemoveCourse}
+          handleClearYear={handleClearYear}
           previewState={previewState}
+          dragTarget={dragTarget}
+          dropWarning={dropWarning}
+          getCourseWarning={getCourseWarning}
           getSlotClassName={getSlotClassName}
         />
       ))}
       
-      {/* Export to Google Sheets Button */}
-      <div className="mt-6 px-4">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-gray-50 transition-colors">
-          <svg className="w-8 h-8 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <button
-            onClick={onExportToSheets}
-            disabled={loading}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-              loading 
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
-                : 'bg-green-500 text-white hover:bg-green-600'
-            }`}
-          >
-            {loading ? (
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Exporting...
-              </div>
-            ) : (
-              'Export to Google Sheets'
-            )}
-          </button>
-          <p className="text-sm text-gray-500 mt-2">
-            Create a shareable Google Sheets version of your 4-year plan
-          </p>
+      {/* Export to Google Sheets */}
+      <div className="mt-6 mb-2 bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 flex-shrink-0">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+          </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-slate-800">
+              Export your plan
+            </div>
+            <div className="text-xs text-slate-500 truncate">
+              Create a shareable Google Sheets version of your 4-year plan
+            </div>
+          </div>
         </div>
+        <button
+          onClick={onExportToSheets}
+          disabled={loading}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2 ${
+            loading
+              ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+              : 'bg-navy-700 text-white hover:bg-navy-600'
+          }`}
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {loading ? 'Exporting…' : 'Export to Sheets'}
+        </button>
       </div>
     </div>
   );

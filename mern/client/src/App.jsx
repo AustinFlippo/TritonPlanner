@@ -1,10 +1,13 @@
 import MainLayout from "./components/MainLayout";
+import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
   return (
-    <div className="w-full">
-      <MainLayout />
-    </div>
+    <AuthProvider>
+      <div className="w-full">
+        <MainLayout />
+      </div>
+    </AuthProvider>
   );
 };
 export default App;

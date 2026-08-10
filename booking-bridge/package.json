@@ -1,0 +1,10 @@
+{
+  "name": "tritonplanner-booking-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bridges a TritonPlanner schedule into TSS (UCSD's SAP-based Triton Student System) for course booking.",
+  "scripts": {
+    "test": "node --test core/*.test.mjs"
+  }
+}
