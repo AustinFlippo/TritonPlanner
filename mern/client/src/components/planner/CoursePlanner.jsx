@@ -1,7 +1,7 @@
-import React from "react";
 import { FileSpreadsheet, Loader2 } from "lucide-react";
 import YearBlock from "./YearBlock";
 import SavePlanControl from "./SavePlanControl";
+import OmittedCreditsNote from "./OmittedCreditsNote";
 
 const CoursePlanner = ({
   schedule,
@@ -22,13 +22,26 @@ const CoursePlanner = ({
   getCourseWarning,
   getSlotClassName,
   onExportToSheets,
+  activeSavedPlan,
+  onSavedPlanChange,
+  onResetSchedule,
+  buildFreshSchedule,
   onNavigate,
   loading = false,
+  onOpenCourse,
+  omittedCourses = [],
 }) => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <SavePlanControl schedule={schedule} onNavigate={onNavigate} />
+      <SavePlanControl
+        schedule={schedule}
+        activeSavedPlan={activeSavedPlan}
+        onSavedPlanChange={onSavedPlanChange}
+        onResetSchedule={onResetSchedule}
+        buildFreshSchedule={buildFreshSchedule}
+        onNavigate={onNavigate}
+      />
 
       {schedule.map((year, yearIndex) => (
         <YearBlock
@@ -51,8 +64,11 @@ const CoursePlanner = ({
           dropWarning={dropWarning}
           getCourseWarning={getCourseWarning}
           getSlotClassName={getSlotClassName}
+          onOpenCourse={onOpenCourse}
         />
       ))}
+
+      <OmittedCreditsNote courses={omittedCourses} />
       
       {/* Export to Google Sheets */}
       <div className="mt-6 mb-2 bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex items-center justify-between gap-4">

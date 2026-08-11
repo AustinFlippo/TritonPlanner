@@ -105,8 +105,23 @@ function parseCourseName(raw) {
   // that searchController and build-prereq-graph already expand.
   courseId = courseId.replace(/(\d+[A-Z-]*)\/([A-Z]+)(?=\/|$)/g, "$1/$1$2");
   if (!COURSE_ID_RE.test(courseId)) return null;
-  const credits = m[3] ? m[3].replace(/–|—/g, "-").trim() : "N/A";
-  return { courseId, title: m[2].trim(), credits };
+  let credits = m[3] ? m[3].replace(/–|—/g, "-").trim() : "N/A";
+  let title = m[2].trim();
+  // Some departments print a curriculum annotation AFTER the unit count —
+  // "Theory of Computability (4) Tag: Theory/Abstraction". The optional group
+  // above only matches units at the very end of the string, so those entries
+  // came through with units "N/A" and the whole tail glued into the title.
+  // That cost 55 real courses (CSE 105, CSE 120, CSE 130 …) their unit count
+  // and made the planner show them as "?" units. Recover from the first
+  // unit-shaped parenthetical and drop the annotation with it.
+  if (credits === "N/A") {
+    const inline = title.match(/\(([\d.]+(?:\s*[-/]\s*[\d.]+)*)\)/);
+    if (inline) {
+      credits = inline[1].replace(/\s+/g, "");
+      title = title.slice(0, inline.index).trim();
+    }
+  }
+  return { courseId, title, credits };
 }
 
 function splitPrereqs(description) {

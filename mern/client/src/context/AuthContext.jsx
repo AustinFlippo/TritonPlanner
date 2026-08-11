@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase, supabaseConfigured } from "../utils/supabase";
+import {
+  SIGN_IN_MIGRATION_KEY,
+  clearDeviceLocalPlanState,
+} from "../utils/plannerStateStore";
 
 const AuthContext = createContext(null);
 
@@ -46,15 +50,29 @@ export const AuthProvider = ({ children }) => {
         "Supabase isn't configured yet — add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to mern/client/.env and restart the dev server."
       );
     }
+
+    // OAuth reloads the app. Remember that this sign-in started from the
+    // current browser session so MainLayout can keep its local plan instead
+    // of replacing it with an older plan already stored on the account.
+    localStorage.setItem(SIGN_IN_MIGRATION_KEY, "pending");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-    if (error) throw error;
+    if (error) {
+      localStorage.removeItem(SIGN_IN_MIGRATION_KEY);
+      throw error;
+    }
   };
 
   const logout = async () => {
     if (supabase) await supabase.auth.signOut();
+    // The device copies of the plan and the saved-plan library are anonymous
+    // browser state, not account state — the account's own copies are safe in
+    // Supabase. Leaving them behind handed the next person on a shared machine
+    // this student's degree audit, and let their first edit be uploaded over
+    // their own account plan.
+    clearDeviceLocalPlanState();
     setUser(null);
   };
 
@@ -67,4 +85,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// The standard context pattern: the hook belongs beside the provider it reads.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

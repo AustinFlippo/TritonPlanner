@@ -13,11 +13,18 @@ const router = express.Router();
 // Empty query + filters = browse mode.
 router.post("/", async (req, res) => {
   try {
-    const { query = "", filters = {} } = req.body;
+    // vouchedCodes: course codes the caller's own degree audit names. Ones the
+    // catalog cannot resolve are searchable as unverified rather than being
+    // invisible — see unverifiedEntry in the controller.
+    const { query = "", filters = {}, vouchedCodes = [] } = req.body;
     if (!query.trim() && !Object.values(filters).some((v) => v?.length)) {
       return res.json({ results: [], total: 0 });
     }
-    const { results, total } = searchCourses(query, filters);
+    const { results, total } = searchCourses(
+      query,
+      filters,
+      Array.isArray(vouchedCodes) ? vouchedCodes : []
+    );
     res.json({ results, total });
   } catch (err) {
     console.error("❌ Search failed:", err);
@@ -37,16 +44,37 @@ router.get("/departments", (req, res) => {
 });
 
 // Resolve degree-audit course tokens to catalog courses for recommendations.
-// Body: { codes: string[], taken: string[] } — taken = completed + planned.
+// Body: { codes, taken, exclude? } — taken = completed + planned (prereqs);
+// exclude defaults to taken. Pass completed-only as exclude to keep planned
+// courses visible in requirement search.
+// A whole audit's worth of requirement codes, with room to spare. The old cap
+// of 500 was both too low and applied to the TAIL of a flat list built by
+// concatenating every requirement's options in order, so overflow did not thin
+// the list evenly — it deleted the last requirements' options outright, and the
+// sidebar drops a requirement with no courses from "Recommended for you"
+// without saying why. If it ever does bind, the response says so.
+const MAX_CODES = 3000;
+const MAX_TRANSCRIPT = 1000;
+
 router.post("/recommendations", (req, res) => {
   try {
-    const { codes = [], taken = [] } = req.body;
+    const { codes = [], taken = [], exclude } = req.body;
     if (!Array.isArray(codes) || codes.length === 0) {
       return res.json({ results: [] });
     }
-    // Audits can list hundreds of tokens across requirements; cap defensively
-    const results = recommendCourses(codes.slice(0, 500), taken.slice(0, 500));
-    res.json({ results });
+    const truncated = codes.length > MAX_CODES;
+    if (truncated) {
+      console.warn(
+        `⚠️ Recommendations: ${codes.length} codes exceeds the ${MAX_CODES} cap — ` +
+          `${codes.length - MAX_CODES} dropped from the end of the list`
+      );
+    }
+    const results = recommendCourses(
+      codes.slice(0, MAX_CODES),
+      taken.slice(0, MAX_TRANSCRIPT),
+      Array.isArray(exclude) ? exclude.slice(0, MAX_TRANSCRIPT) : null
+    );
+    res.json({ results, truncated, dropped: Math.max(0, codes.length - MAX_CODES) });
   } catch (err) {
     console.error("❌ Recommendations failed:", err);
     res.status(500).json({ error: "Recommendations failed" });

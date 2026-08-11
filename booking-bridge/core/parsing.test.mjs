@@ -27,7 +27,6 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 
 const parseDays = (...args) => plain(raw.parseDays(...args));
 const parseTimeRange = (...args) => plain(raw.parseTimeRange(...args));
-const parseSeats = (...args) => plain(raw.parseSeats(...args));
 const { normalizeStatus, normalizeCourseId } = raw;
 
 // Mirrors extension/content/selectors.js statusText.
@@ -63,17 +62,6 @@ test("parseTimeRange handles the formats TSS renders", () => {
   assert.deepEqual(parseTimeRange("TBA"), { start: null, end: null });
 });
 
-test("parseSeats reads taken-of-total and bare availability", () => {
-  assert.deepEqual(parseSeats("45 of 200"), { seatsTaken: 45, seatsTotal: 200, seatsAvailable: 155 });
-  assert.deepEqual(parseSeats("155/200"), { seatsTaken: 155, seatsTotal: 200, seatsAvailable: 45 });
-  // Inverted ordering must not produce a negative availability.
-  assert.deepEqual(parseSeats("200 of 45"), { seatsTaken: 45, seatsTotal: 200, seatsAvailable: 155 });
-  assert.deepEqual(parseSeats("12 available"), {
-    seatsTaken: null, seatsTotal: null, seatsAvailable: 12,
-  });
-  assert.deepEqual(parseSeats("TBA"), { seatsTaken: null, seatsTotal: null, seatsAvailable: null });
-});
-
 test("normalizeStatus prefers the longest matching phrase", () => {
   // These are the ambiguous pairs that a naive substring match gets wrong.
   assert.equal(normalizeStatus("Waitlist Inactive", STATUS_TEXT), "waitlist-inactive");
@@ -91,11 +79,18 @@ test("normalizeCourseId matches the core module's canonical form", () => {
   assert.equal(normalizeCourseId("cse 101"), "CSE 101");
   assert.equal(normalizeCourseId("MATH20A"), "MATH 20A");
   assert.equal(normalizeCourseId(""), null);
+  // TSS OData zero-pads course numbers; the catalog does not.
+  assert.equal(normalizeCourseId("AAS-010R"), "AAS 10R");
+  assert.equal(normalizeCourseId("CSE-008A"), "CSE 8A");
+  assert.equal(normalizeCourseId("CSE-100"), "CSE 100");
 });
 
 test("extension and core agree on course id normalization", async () => {
   const core = await import("./catalog.js");
-  for (const raw of ["CSE-101", "cse 101", "MATH20A", "  CHEM 6A ", "CSE 8A"]) {
+  for (const raw of [
+    "CSE-101", "cse 101", "MATH20A", "  CHEM 6A ", "CSE 8A",
+    "AAS-010R", "CSE-008A", "CSE-100",
+  ]) {
     assert.equal(
       normalizeCourseId(raw),
       core.normalizeCourseId(raw),

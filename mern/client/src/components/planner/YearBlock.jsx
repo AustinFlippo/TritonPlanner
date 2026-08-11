@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import TermBlock from "./TermBlock";
 import { isFutureYear, yearHasPlannedCourses } from "../../utils/scheduleOps";
+import { hasUnknownCredits } from "../../utils/courseCredits";
 
 const YearBlock = ({
   year,
@@ -22,8 +23,16 @@ const YearBlock = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  onOpenCourse,
 }) => {
   const annualUnits = calculateAnnualUnits(yearIndex);
+  // Mirrors TermBlock: courses with no published unit count are left out of the
+  // total, so name them rather than letting the number imply they are worth 0.
+  const unknownUnitCourses = ["fall", "winter", "spring"].reduce(
+    (n, term) =>
+      n + (year?.[term] || []).filter((c) => c && hasUnknownCredits(c)).length,
+    0
+  );
   const canClear =
     typeof handleClearYear === "function" &&
     isFutureYear(year) &&
@@ -115,6 +124,16 @@ const YearBlock = ({
             }`}
           >
             {annualUnits.toFixed(1)} units
+            {unknownUnitCourses > 0 && (
+              <span
+                className="ml-1 text-amber-600"
+                title={`${unknownUnitCourses} course${
+                  unknownUnitCourses === 1 ? "" : "s"
+                } this year have no published unit count, so they aren't in this total.`}
+              >
+                + {unknownUnitCourses} ?
+              </span>
+            )}
           </span>
         </div>
       </div>
@@ -140,6 +159,7 @@ const YearBlock = ({
               dragTarget={dragTarget}
               dropWarning={dropWarning}
               getCourseWarning={getCourseWarning}
+              onOpenCourse={onOpenCourse}
             />
           ))}
         </div>

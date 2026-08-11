@@ -1,29 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { TriangleAlert } from "lucide-react";
 import CoursePlanner from "./CoursePlanner";
-import { processAuditForPlanner } from "../../utils/auditCoursePlanner";
+import ConfirmDialog from "../ConfirmDialog";
+import {
+  outOfWindowAuditCourses,
+  processAuditForPlanner,
+} from "../../utils/auditCoursePlanner";
 import { API_URL } from "../../utils/api";
-import { clearYear } from "../../utils/scheduleOps";
-
-// Coerce an AI-proposed grid into valid planner shape: 4 years, each term an
-// array of course objects with at least 3 slots and one trailing empty slot
-const normalizePlanGrid = (plan) =>
-  Array(4)
-    .fill()
-    .map((_, yearIndex) => {
-      const source = (plan && plan[yearIndex]) || {};
-      const year = {};
-      ["fall", "winter", "spring"].forEach((term) => {
-        const courses = (source[term] || []).filter(
-          (c) => c && typeof c === "object" && c.course_id
-        );
-        const slots = [...courses];
-        while (slots.length < 2) slots.push(null);
-        slots.push(null);
-        year[term] = slots;
-      });
-      return year;
-    });
+import { hasUnknownCredits, parseCredits } from "../../utils/courseCredits";
+import {
+  clearYear,
+  normalizePlanGrid,
+  placeCourseAt,
+  removeCourseAt,
+} from "../../utils/scheduleOps";
 
 // Grid terms -> catalog quarter codes, for offering warnings
 const QUARTER_OF_TERM = { fall: "FA", winter: "WI", spring: "SP" };
@@ -34,18 +24,30 @@ const CoursePlannerContainer = ({
   setSchedule,
   parsedCourseData = { sections: [], metadata: {} },
   auditUploadKey = 0,
+  planWindow = null,
+  yearLabels = [],
   externalPlan = null,
   restoredPlan = null,
+  activeSavedPlan = null,
+  onSavedPlanChange,
   onNavigate,
+  onOpenCourse,
+  buildFreshSchedule = null,
 }) => {
-  const [yearLabels] = useState([
-    "2024-2025",
-    "2025-2026",
-    "2026-2027",
-    "2027-2028",
-  ]);
+  // yearLabels and the grid's length both come from the student's plan window
+  // (MainLayout), derived from the audit's Catalog Year — never hardcoded.
+  const yearCount = yearLabels.length || 4;
 
-  const [collapsedYears, setCollapsedYears] = useState(Array(4).fill(false));
+  // Transfer/AP credit posted before Year 1 still counts in the sidebar but
+  // has no UCSD term on the grid — surface the list so it doesn't vanish.
+  const omittedCourses = outOfWindowAuditCourses(
+    parsedCourseData?.sections || [],
+    planWindow
+  );
+
+  const [collapsedYears, setCollapsedYears] = useState(() =>
+    Array(yearCount).fill(false)
+  );
   const [previewState, setPreviewState] = useState(null);
   const [dragTarget, setDragTarget] = useState({
     yearIndex: null,
@@ -53,6 +55,8 @@ const CoursePlannerContainer = ({
     courseIndex: null,
   });
   const [loading, setLoading] = useState(false);
+  // Custom alert dialog (replaces window.alert for export feedback)
+  const [alertDialog, setAlertDialog] = useState(null);
 
   // Offering warnings. offeringsMap holds catalog offerings for every course
   // on the grid ({ "CSE 100": { known, offerings } }); dropWarning is the
@@ -152,29 +156,40 @@ const CoursePlannerContainer = ({
     }
 
     // Create fresh schedule
-    const emptySchedule = Array(4).fill().map(() => ({
+    const emptySchedule = Array(yearCount).fill().map(() => ({
       fall: Array(3).fill(null),
       winter: Array(3).fill(null),
       spring: Array(3).fill(null),
     }));
 
     // Process audit sections and populate schedule
-    const updatedSchedule = processAuditForPlanner(parsedCourseData.sections, emptySchedule);
+    const updatedSchedule = processAuditForPlanner(
+      parsedCourseData.sections, emptySchedule, planWindow);
     setSchedule(updatedSchedule);
-  }, [auditUploadKey, parsedCourseData]);
+  }, [auditUploadKey, parsedCourseData, yearCount, planWindow, setSchedule]);
 
   // Apply a saved schedule being restored (from localStorage or the account)
   useEffect(() => {
     if (restoredPlan && restoredPlan.grid) {
-      setSchedule(normalizePlanGrid(restoredPlan.grid));
+      setSchedule(normalizePlanGrid(restoredPlan.grid, yearCount));
     }
+    // Intentionally keyed on restoredPlan alone. Adding yearCount would
+    // re-apply the restore every time the plan window changes (an audit upload
+    // moves it), overwriting edits made since the restore.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoredPlan]);
 
-  // Apply an AI-proposed plan accepted from the chat assistant
+  // Apply an AI-proposed plan accepted from the chat assistant. yearCount is
+  // as load-bearing here as on the restore path above: without it the grid is
+  // rebuilt at the default four years and a fifth-year student's Year 5 is
+  // truncated away by the plan they just accepted.
   useEffect(() => {
     if (externalPlan && externalPlan.grid) {
-      setSchedule(normalizePlanGrid(externalPlan.grid));
+      setSchedule(normalizePlanGrid(externalPlan.grid, yearCount));
     }
+    // Same reasoning as the restore effect above: an accepted AI plan is
+    // applied once, when it arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalPlan]);
 
   const toggleYearCollapse = (yearIndex) => {
@@ -183,9 +198,18 @@ const CoursePlannerContainer = ({
     setCollapsedYears(newState);
   };
 
-  const calculateTermUnits = (courses) => {
-    return courses.reduce((total, course) => total + (course ? course.credits : 0), 0);
-  };
+  // Sum of the units we actually know. A course with no published unit count
+  // contributes nothing here rather than a made-up 0 — TermBlock counts those
+  // separately and shows them beside the total, so the number never quietly
+  // claims to cover courses it can't measure.
+  const calculateTermUnits = (courses) =>
+    (courses || []).reduce(
+      (total, course) =>
+        !course || hasUnknownCredits(course)
+          ? total
+          : total + parseCredits(course.credits),
+      0
+    );
 
   const calculateAnnualUnits = (yearIndex) => {
     const year = schedule[yearIndex];
@@ -224,50 +248,55 @@ const CoursePlannerContainer = ({
 
   const handleDrop = (e, yearIndex, term, courseIndex) => {
     e.preventDefault();
-  
+
     const courseData = e.dataTransfer.getData("course");
     const isFromSidebar = e.dataTransfer.getData("isFromSidebar") === "true";
-  
     if (!courseData) return;
-  
-    const course = JSON.parse(courseData);
-    const newSchedule = [...schedule];
-    const targetYear = newSchedule[yearIndex];
-    if (!targetYear || !targetYear[term]) return; // ✅ defensive check
-  
-    const targetSlot = targetYear[term];
-    const existingCourse = targetSlot[courseIndex];
-  
+
+    let course;
+    try {
+      course = JSON.parse(courseData);
+    } catch {
+      return;
+    }
+    if (!course?.course_id) return;
+
+    let source = null;
     if (!isFromSidebar) {
-      
-      const sourceYearIndex = parseInt(e.dataTransfer.getData("sourceYearIndex"));
+      const sourceYearIndex = parseInt(
+        e.dataTransfer.getData("sourceYearIndex"),
+        10
+      );
       const sourceTerm = e.dataTransfer.getData("sourceTerm");
-      const sourceCourseIndex = parseInt(e.dataTransfer.getData("sourceCourseIndex"));
-      
+      const sourceCourseIndex = parseInt(
+        e.dataTransfer.getData("sourceCourseIndex"),
+        10
+      );
       if (
-        sourceYearIndex === yearIndex &&
-        sourceTerm === term &&
-        sourceCourseIndex === courseIndex
-      ) return;
-  
-      // const sourceCourse = newSchedule[sourceYearIndex]?.[sourceTerm]?.[sourceCourseIndex];
-  
-      // Swap or clear source
-      if (existingCourse) {
-        newSchedule[sourceYearIndex][sourceTerm][sourceCourseIndex] = existingCourse;
-      } else {
-        newSchedule[sourceYearIndex][sourceTerm][sourceCourseIndex] = null;
+        Number.isNaN(sourceYearIndex) ||
+        !QUARTER_OF_TERM[sourceTerm] ||
+        Number.isNaN(sourceCourseIndex)
+      ) {
+        return;
       }
+      source = {
+        yearIndex: sourceYearIndex,
+        term: sourceTerm,
+        courseIndex: sourceCourseIndex,
+      };
     }
-    
-    {/* Ensure one empty slot remains */}
-    targetSlot[courseIndex] = course;
-  
-    if (!targetSlot.some((c) => c === null)) {
-      targetSlot.push(null);
-    }
-  
-    setSchedule(newSchedule);
+
+    const next = placeCourseAt(
+      schedule,
+      yearIndex,
+      term,
+      courseIndex,
+      course,
+      source
+    );
+    if (next === schedule) return;
+
+    setSchedule(next);
     setPreviewState(null);
 
     // Non-blocking heads-up when the placement disagrees with offering history.
@@ -285,27 +314,7 @@ const CoursePlannerContainer = ({
   };
 
   const handleRemoveCourse = (yearIndex, term, courseIndex) => {
-    const newSchedule = [...schedule];
-    const termCourses = newSchedule[yearIndex][term];
-  
-    // Remove the course
-    termCourses[courseIndex] = null;
-  
-    // Count nulls
-    const nullCount = termCourses.filter((c) => c === null).length;
-  
-    // Trim excess nulls if more than 1 null and total > 3 slots
-    if (termCourses.length > 3 && nullCount > 1) {
-      const trimmed = termCourses.filter((c) => c !== null); // keep non-null courses
-  
-      // Ensure 3 slots minimum + 1 empty
-      while (trimmed.length < 2) trimmed.push(null);
-      trimmed.push(null); // one empty slot
-  
-      newSchedule[yearIndex][term] = trimmed;
-    }
-  
-    setSchedule(newSchedule);
+    setSchedule((prev) => removeCourseAt(prev, yearIndex, term, courseIndex));
   };
 
   const handleClearYear = (yearIndex) => {
@@ -363,14 +372,23 @@ const CoursePlannerContainer = ({
       if (data.success) {
         // Open the Google Sheets URL in a new tab
         window.open(data.url, '_blank');
-        alert('Schedule exported successfully! Opening Google Sheets...');
+        setAlertDialog({
+          title: "Export complete",
+          message: "Your schedule was exported. Google Sheets is opening in a new tab.",
+        });
       } else {
         console.error('Export failed:', data.error);
-        alert(`Export failed: ${data.error}`);
+        setAlertDialog({
+          title: "Export failed",
+          message: data.error || "Something went wrong while exporting.",
+        });
       }
     } catch (error) {
       console.error('Export error:', error);
-      alert('Failed to export schedule. Please try again.');
+      setAlertDialog({
+        title: "Export failed",
+        message: "Couldn't export your schedule. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -403,8 +421,14 @@ const CoursePlannerContainer = ({
         getCourseWarning={getCourseWarning}
         getSlotClassName={getSlotClassName}
         onExportToSheets={handleExportToSheets}
+        activeSavedPlan={activeSavedPlan}
+        onSavedPlanChange={onSavedPlanChange}
+        onResetSchedule={setSchedule}
+        buildFreshSchedule={buildFreshSchedule}
         onNavigate={onNavigate}
         loading={loading}
+        onOpenCourse={onOpenCourse}
+        omittedCourses={omittedCourses}
       />
 
       {/* Offering warning toast — non-blocking, auto-dismisses */}
@@ -430,6 +454,16 @@ const CoursePlannerContainer = ({
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(alertDialog)}
+        variant="alert"
+        title={alertDialog?.title}
+        message={alertDialog?.message}
+        confirmLabel="OK"
+        onConfirm={() => setAlertDialog(null)}
+        onCancel={() => setAlertDialog(null)}
+      />
     </div>
   );
 };

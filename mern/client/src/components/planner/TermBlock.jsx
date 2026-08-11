@@ -1,6 +1,6 @@
-import React from "react";
 import { Plus } from "lucide-react";
 import CourseCard from "./CourseCard";
+import { hasUnknownCredits } from "../../utils/courseCredits";
 
 const TermBlock = ({
   termName,
@@ -18,8 +18,14 @@ const TermBlock = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  onOpenCourse,
 }) => {
   const termUnits = calculateTermUnits(courses);
+  // Courses the catalog has no unit count for are excluded from the total on
+  // purpose — say so, rather than letting the total imply they're worth zero.
+  const unknownUnitCourses = (courses || []).filter(
+    (course) => course && hasUnknownCredits(course)
+  ).length;
 
   return (
     <div className="flex-1 px-3 py-3">
@@ -34,6 +40,16 @@ const TermBlock = ({
           }`}
         >
           {termUnits.toFixed(1)} units
+          {unknownUnitCourses > 0 && (
+            <span
+              className="ml-1 text-amber-600"
+              title={`${unknownUnitCourses} course${
+                unknownUnitCourses === 1 ? "" : "s"
+              } here have no published unit count, so they aren't in this total.`}
+            >
+              + {unknownUnitCourses} ?
+            </span>
+          )}
         </span>
       </div>
 
@@ -60,6 +76,7 @@ const TermBlock = ({
               }
               onDragEnd={handleDragEnd}
               onRemove={() => handleRemoveCourse(yearIndex, termKey, courseIndex)}
+              onOpen={onOpenCourse}
             />
           ) : (
             <div className="h-11 flex items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/60 text-slate-300">

@@ -1,11 +1,16 @@
+import { useState, useEffect } from "react";
 import { CircleUserRound, Check, CloudOff, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { isAdmin } from "../utils/termSections";
 import TritonMark from "./TritonMark";
+import ConfirmDialog from "./ConfirmDialog";
 
 const NAV_ITEMS = [
   { key: "planner", label: "Planner" },
-  { key: "storage", label: "Storage" },
+  { key: "storage", label: "Saved Plans" },
   { key: "quarter", label: "Quarter View" },
+  // Only rendered for accounts in `app_admins`; everyone else never sees it.
+  { key: "admin", label: "Admin", adminOnly: true },
 ];
 
 const GoogleIcon = () => (
@@ -61,74 +66,103 @@ const SyncBadge = ({ status }) => {
 
 const Header = ({ currentPage, onNavigate, syncStatus }) => {
   const { user, signInWithGoogle, logout } = useAuth();
+  // Membership of `app_admins` is what actually gates publishing — row-level
+  // security enforces it server-side. Hiding the tab is only so the other 99%
+  // of students never see a page that isn't theirs.
+  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdminUser(false);
+      return;
+    }
+    let cancelled = false;
+    isAdmin().then((ok) => !cancelled && setIsAdminUser(ok));
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleSignIn = async () => {
     try {
       await signInWithGoogle(); // redirects to Google, then back here
     } catch (err) {
-      alert(err.message);
+      setAlertMessage(err.message || "Sign-in failed. Please try again.");
     }
   };
 
   return (
-    <header className="bg-navy-800 flex items-center gap-8 px-5 h-14 flex-shrink-0">
-      {/* Logo lockup */}
-      <span className="flex items-center gap-2 select-none">
-        <TritonMark size={20} className="text-gold-400" title="TritonPlanner" />
-        <span className="font-serif text-[19px] font-semibold tracking-tight text-white">
-          TritonPlanner<span className="text-gold-400">.</span>
+    <>
+      <header className="bg-navy-800 flex items-center gap-8 px-5 h-14 flex-shrink-0">
+        {/* Logo lockup */}
+        <span className="flex items-center gap-2 select-none">
+          <TritonMark size={20} className="text-gold-400" title="TritonPlanner" />
+          <span className="font-serif text-[19px] font-semibold tracking-tight text-white">
+            TritonPlanner<span className="text-gold-400">.</span>
+          </span>
         </span>
-      </span>
 
-      {/* Page navigation */}
-      <nav className="flex items-center gap-1" aria-label="Pages">
-        {NAV_ITEMS.map((item) => {
-          const active = currentPage === item.key;
-          return (
+        {/* Page navigation */}
+        <nav className="flex items-center gap-1" aria-label="Pages">
+          {NAV_ITEMS.filter((item) => !item.adminOnly || isAdminUser).map((item) => {
+            const active = currentPage === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => onNavigate(item.key)}
+                className={`px-3.5 py-1.5 text-sm rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                  active
+                    ? "bg-white/15 text-white font-medium"
+                    : "text-navy-200 hover:text-white hover:bg-white/10"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right side: save status + account */}
+        <div className="ml-auto flex items-center gap-4">
+          <SyncBadge status={syncStatus} />
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-2 text-sm text-navy-100">
+                <CircleUserRound size={18} className="text-gold-400" />
+                {user.name || user.email}
+              </span>
+              <button
+                onClick={logout}
+                className="px-3 py-1.5 text-sm rounded-full text-navy-200 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
             <button
-              key={item.key}
-              onClick={() => onNavigate(item.key)}
-              className={`px-3.5 py-1.5 text-sm rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
-                active
-                  ? "bg-white/15 text-white font-medium"
-                  : "text-navy-200 hover:text-white hover:bg-white/10"
-              }`}
-              aria-current={active ? "page" : undefined}
+              onClick={handleSignIn}
+              className="flex items-center gap-2 px-4 py-1.5 text-sm rounded-full bg-white text-slate-700 font-medium hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
             >
-              {item.label}
+              <GoogleIcon />
+              Sign in with Google
             </button>
-          );
-        })}
-      </nav>
+          )}
+        </div>
+      </header>
 
-      {/* Right side: save status + account */}
-      <div className="ml-auto flex items-center gap-4">
-        <SyncBadge status={syncStatus} />
-
-        {user ? (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 text-sm text-navy-100">
-              <CircleUserRound size={18} className="text-gold-400" />
-              {user.name || user.email}
-            </span>
-            <button
-              onClick={logout}
-              className="px-3 py-1.5 text-sm rounded-full text-navy-200 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-            >
-              Sign out
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleSignIn}
-            className="flex items-center gap-2 px-4 py-1.5 text-sm rounded-full bg-white text-slate-700 font-medium hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-          >
-            <GoogleIcon />
-            Sign in with Google
-          </button>
-        )}
-      </div>
-    </header>
+      <ConfirmDialog
+        open={Boolean(alertMessage)}
+        variant="alert"
+        title="Sign-in failed"
+        message={alertMessage}
+        confirmLabel="OK"
+        onConfirm={() => setAlertMessage(null)}
+        onCancel={() => setAlertMessage(null)}
+      />
+    </>
   );
 };
 

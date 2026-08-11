@@ -51,7 +51,7 @@ TritonPlanner (localhost)                 Chrome extension                TSS (t
   │   depth, scarcity, seats                  ├──► on-page panel ──► highlights + prefills
   │                                           │                       grading, credit hours
   │                                           │
-  └──◄──── section data ◄──── merged ◄────────┴──◄─ scrapes Schedule of Classes
+  └──◄──── section data ◄──── merged ◄────────┴──◄─ OData: times, seats, staff
 ```
 
 **The ranking is the actual product.** Given a term's courses it computes, for each
@@ -98,11 +98,65 @@ speed at a refresh. Racing the clock optimizes a variable TSS already handles.
 
 | Piece | State |
 |---|---|
-| Plan builder + catalog logic | **Working**, 29 unit tests passing |
-| Text parsers (days, times, seats, status) | **Working**, tested against the shipped file |
-| Adapter (scrape, resolve, prefill) | **Working**, 25 assertions passing in a real browser DOM |
+| Plan builder + catalog logic | **Working**, 28 unit tests passing |
+| Text parsers (days, times, status) | **Working**, tested against the shipped file |
+| Adapter (resolve + prefill, booking screens) | **Working**, 10 assertions in a real browser DOM |
 | Extension skeleton, panel, storage | **Working** |
+| Admin page (refresh + freshness) | **Working** — `admin/admin.html` |
+| Quarter View week calendar | **Working** — reads sections live, verified in the app |
+| OData client | **Schema mapped from live TSS; 29 offline assertions passing** |
+| TSS panel | **Simplified** — prepare + check result; capture only while selectors unverified |
 | **TSS selectors** | **Placeholders — needs one capture from you** |
+
+### OData
+
+`content/odata.js` reads sections from TSS's own data service instead of its HTML.
+The service root is confirmed from a signed-in capture (2026-08-10):
+
+```
+/sap/opu/odata4/sap/yucsd_con_module_sb/srvd/sap/yucsd_con_module_servicedef/0001
+```
+
+It needs no results table on screen, so it works without a search or scrolling, and
+it returns typed JSON rather than markup that Fiori redesigns will break.
+
+Section data lives across three tables, joined on `ModuleID`:
+
+| Table | Carries |
+|---|---|
+| `YUCSD_CON_MODULE` | `CourseAbbr`, `CourseTitle`, credits, term → `ModuleID` |
+| `YUCSD_CON_EVENTS` | `TeachingMethod` (LE/DI/LA), `InstructorName`, `locationText`, package seat counts |
+| `YUCSD_CON_MODULE_SCHED` | numeric `DoW` + typed `BeginTime`/`EndTime`, joined by `SectionId` == `EventObjid` |
+
+Three things worth knowing, all learned the hard way:
+
+- **`ModuleID` is not a course code.** It is an internal sequence number (`"4"`).
+  The course code is `CourseAbbr`, and TSS zero-pads it (`AAS-010R`) while the
+  catalog does not (`AAS 10R`) — `normalizeCourseId` strips the padding, or
+  nothing matches a planned course.
+- **`YUCSD_CON_MODULE.seatsAvailable` is a `"Y"`/`"N"` flag**, not a count. Real
+  counts are `EventPkgLimit` / `EventPkgSeatsAvailable` / `EventPkgNumOnWaitl` on
+  the event row, and they belong to the *package*, so a lecture and its
+  discussion legitimately report the same numbers.
+- **Events sharing an `EventPkgOtjid` are one enrollable package.** That is how a
+  lecture is tied to its discussion — no same-letter heuristic needed.
+
+The term filter runs client-side on each row's own `AcademicYear_Text` /
+`AcademicPeriod_Text`, and the period code for the events query is taken from the
+course rows that matched. An earlier version filtered server-side on a period code
+looked up from another table, where the last "Fall" match won — one stray row made
+every query return empty while the courses plainly existed in that term.
+
+Offline coverage: `http://localhost:5188/fixtures/mock-odata.html` — 29 assertions
+over stubs copied verbatim from a live dump. Schema re-dumps (`selfTest` /
+`exploreAll`) stay in `odata.js` for console use if TSS changes; they are not
+in the panel.
+
+### Page scraping is retired
+
+`content/autoscrape.js` and the adapter's `scrapeSchedule()` are **deleted**.
+Section data comes only from OData. The service worker prunes termless leftover
+rows on install and on startup.
 
 Everything is verified except the one thing that can only come from a signed-in
 session. `selectors.js` currently guesses at Fiori conventions; those guesses are
@@ -110,20 +164,29 @@ isolated in that single file so filling them in touches no logic.
 
 ---
 
+## After every change to the extension
+
+Reload it in `chrome://extensions` (the ↻ on its card) **and reload any open TSS
+tab**. Chrome does not re-inject content scripts into pages that are already open;
+the old ones keep running with their extension bridge severed, so `chrome.runtime`
+becomes undefined and every call fails with a stack trace that says nothing useful.
+`content/runtime.js` detects that state and the panel says "reload the page" instead
+— but the page still has to be reloaded.
+
+---
+
 ## What I need from you
 
-**Run two captures inside TSS.** Takes about two minutes.
+**One capture on the booking screen.** Takes about a minute.
 
 1. Load the extension: Chrome → `chrome://extensions` → enable **Developer mode** →
    **Load unpacked** → select `booking-bridge/extension/`.
 2. Sign in at `sis.ucsd.edu` as normal (your password and Duo code never touch the
    extension).
-3. Open **Schedule of Classes**, search anything that returns rows.
-4. In the TritonPlanner panel (top-right), click **Capture page structure**, label it
-   `schedule-of-classes-results`.
-5. Click into a course and go to the booking screen. Capture again, label it
-   `booking-screen`.
-6. Two JSON files land in your Downloads. Send me both.
+3. Open a course’s **booking screen** (where Book/Save appears).
+4. In the TritonPlanner panel (top-right), click **Capture page structure**
+   (shown only while selectors are unverified). Label it `booking-screen`.
+5. The JSON file lands in your Downloads. Send it.
 
 **They contain no personal data.** The capture keeps structure — tags, element ids,
 SAP UI5 control types, and short UI labels like "Book/Save". It scrubs emails,
@@ -142,16 +205,20 @@ cd booking-bridge && npm test
 ```
 
 Browser-DOM adapter test: start the `booking-bridge-fixtures` preview server, open
-`http://localhost:5188/fixtures/mock-tss.html`, click **Run adapter assertions**. The
-fixture mimics Fiori's generated markup with columns deliberately out of order, to
-prove the adapter maps by header text rather than position.
+`http://localhost:5188/fixtures/mock-tss.html` (booking controls) and
+`http://localhost:5188/fixtures/mock-odata.html` (the OData client, 29 assertions
+over stubs copied from a live entity dump).
 
 ---
 
 ## Wiring it into the React app
 
-Not done yet — it needs a button in a component you're currently editing, so it's
-left for you. One import and one handler:
+**Section data is wired.** Quarter View imports `isBridgeInstalled`,
+`requestScrapedSections`, and `subscribeToSections`, and renders the week calendar
+from whatever the extension has captured. Nothing further is needed for that path.
+
+**Booking plans are not wired** — sending a plan still needs a button in the
+planner. One import and one handler:
 
 ```js
 import { planAndSend } from "../../../booking-bridge/core/plannerBridge.js";
@@ -204,10 +271,30 @@ booking-bridge/
 │   │   ├── parsing.js         # pure text parsers
 │   │   ├── capture.js         # privacy-safe structural capture
 │   │   ├── ui5-probe.js       # page-world SAP UI5 control tree reader
-│   │   ├── adapter.js         # scrape + resolve + prefill
+│   │   ├── adapter.js         # resolve + prefill (booking screens only)
+│   │   ├── odata.js           # section fetch: the three-table join
 │   │   ├── overlay.js         # the on-page panel
 │   │   └── planner-bridge.js  # relays events from localhost
-│   └── popup/
+│   ├── popup/                 # status + a way into the admin page
+│   └── admin/                 # refresh seat counts, freshness, activity log
 └── fixtures/
-    └── mock-tss.html          # Fiori-shaped DOM + 25 adapter assertions
+    ├── mock-tss.html          # booking-control assertions
+    └── mock-odata.html        # 29 assertions over the OData client
 ```
+
+---
+
+## Admin page
+
+`chrome://extensions` → **Details** → **Extension options**, or the popup's
+**Manage section data** button.
+
+It shows how old the stored section data is, one row per tracked course, and a
+recent activity log. **Refresh seat counts** re-reads every course already in
+storage, grouped by term. **Clear all** wipes the local copy (everything is
+re-fetchable).
+
+This exists for the two weeks a year that matter. Times and instructors barely
+move once a schedule publishes; seat counts change by the minute during
+enrollment. A course whose sections report no seat figure shows `—` rather than
+`0`, because those are different facts.

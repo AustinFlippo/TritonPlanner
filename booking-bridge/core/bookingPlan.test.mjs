@@ -82,6 +82,13 @@ test("toMinutes parses 12h and 24h forms", () => {
   assert.equal(toMinutes("2:00p"), 840);
   assert.equal(toMinutes("12:00a"), 0);
   assert.equal(toMinutes("12:30p"), 750);
+  // Both meridiem spellings, because this is now also the week grid's parser:
+  // TSS renders "3:30p" while hand-entered and OData values use "3:30pm".
+  assert.equal(toMinutes("3:30p"), 930);
+  assert.equal(toMinutes("3:30pm"), 930);
+  assert.equal(toMinutes("11:00am"), 660);
+  assert.equal(toMinutes("930am"), 570);
+  assert.equal(toMinutes("nonsense"), null);
 });
 
 test("meetingsConflict requires both a shared day and a time overlap", () => {

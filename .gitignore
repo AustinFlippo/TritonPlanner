@@ -33,6 +33,9 @@ mern/server/academic-planner-463804-202e89b2e5e4.json
 # Local MCP server config (may contain server tokens)
 .mcp.json
 
+# Planner-agent loop telemetry (local JSONL; no secrets, but noisy)
+app/data/planner_loop_metrics.jsonl
+
 # Logs and Debug Files
 logs/
 *.log
@@ -165,3 +168,4 @@ models/
 
 # Claude Code Generated Files
 .claude/
+.gstack/

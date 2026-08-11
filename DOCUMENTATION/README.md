@@ -26,7 +26,8 @@ This documentation folder contains comprehensive technical documentation for all
 ### 🔹 1. [DegreeAuditParser](./1_DegreeAuditParser.md)
 **HTML Upload and Parsing Logic**
 - **Primary File**: `/mern/client/src/components/audit/SidebarAuditTracker.jsx`
-- **Utilities**: `/mern/client/src/utils/auditParser.js`
+- **Parsing is client-side only**: there is no server audit-parsing endpoint. The dead `/mern/server/parseHtmlAuditSections.js` and `POST /upload-degree-audit` were deleted (no callers, and three parsing bugs).
+- **Utilities**: `/mern/client/src/utils/auditRequirements.js`, `/mern/client/src/utils/auditProgress.js`
 - **Purpose**: Converts HTML degree audit files into structured JavaScript objects
 - **Key Features**: 
   - HTML parsing using DOMParser
@@ -97,6 +98,14 @@ This documentation folder contains comprehensive technical documentation for all
 - **Previous Features**: Confirmation dialog, storage cleanup
 - **Current State**: No clear button - manual refresh required
 
+### 🔹 8. [PerStudentGridAnchor](./8_PerStudentGridAnchor.md) 📋 PROPOSED
+**Cohort-Correct 4-Year Grid**
+- **Status**: Scoping doc — not implemented
+- **Problem**: the grid is anchored to 2024-25 for every student, so other cohorts
+  lose coursework off the top and lose planning quarters off the bottom
+- **Also documents**: a latent Oct 2028 break in Quarter View, independent of cohorts
+- **Open**: transfer / fifth-year handling needs a product decision
+
 ## File Structure Reference
 
 ### Frontend Components (`/mern/client/src/`)
@@ -121,7 +130,8 @@ components/
 └── MainLayout.jsx                   # App layout manager
 
 utils/
-├── auditParser.js                   # Client-side audit parsing
+├── auditRequirements.js             # Requirement groups + course-to-group matching
+├── auditProgress.js                 # Requirement progress projection
 └── auditCoursePlanner.js            # Audit to planner conversion
 ```
 
@@ -217,7 +227,7 @@ HTML Audit → Parsed Sections → Course Objects → Schedule Grid → Export D
 - **Chat**: `POST /chat` (Express) → `POST /chat` (FastAPI)
 - **Search**: `POST /search-courses` (Express)
 - **Export**: `POST /api/export/google-sheets` (Express)
-- **Upload**: `POST /upload-degree-audit` (Express)
+- **Upload**: none — the degree audit is parsed in the browser and never sent to the server.
 
 ## Key Design Decisions
 

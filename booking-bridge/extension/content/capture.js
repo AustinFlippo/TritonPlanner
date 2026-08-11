@@ -181,8 +181,17 @@
       }
       window.addEventListener("message", onMessage);
 
+      const probeUrl = window.TPBB_runtime.getURL("content/ui5-probe.js");
+      if (!probeUrl) {
+        // Orphaned content script — the DOM half of the capture still works,
+        // so return without the UI5 tree rather than failing the whole capture.
+        window.removeEventListener("message", onMessage);
+        resolve({ available: false, reason: window.TPBB_runtime.STALE_MESSAGE });
+        return;
+      }
+
       const script = document.createElement("script");
-      script.src = chrome.runtime.getURL("content/ui5-probe.js");
+      script.src = probeUrl;
       script.dataset.token = token;
       script.onload = () => script.remove();
       (document.head || document.documentElement).appendChild(script);

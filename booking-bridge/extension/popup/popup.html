@@ -14,7 +14,7 @@
     <section id="status" class="card">
       <div class="row"><span class="label">Plan</span><span id="plan-status" class="value">—</span></div>
       <div class="row"><span class="label">Sections cached</span><span id="section-status" class="value">—</span></div>
-      <div class="row"><span class="label">Selectors</span><span id="selector-status" class="value">unverified</span></div>
+      <div class="row"><span class="label">Last refreshed</span><span id="freshness" class="value">—</span></div>
     </section>
 
     <section id="plan-detail" class="card hidden">
@@ -23,13 +23,13 @@
     </section>
 
     <section class="actions">
-      <button id="open-tss" class="primary">Open TSS</button>
-      <button id="clear">Clear stored data</button>
+      <button id="open-admin" class="primary">Manage section data</button>
+      <button id="open-tss">Open TSS</button>
     </section>
 
     <p class="footnote">
-      Everything stays in this browser. The extension makes no network requests
-      of its own and never sees your password or Duo code.
+      Reads TSS with your existing sign-in and stores results in this browser.
+      It never sees your password or Duo code.
     </p>
 
     <script src="popup.js"></script>

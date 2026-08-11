@@ -39,68 +39,6 @@ const TPBB_SELECTORS = {
   capturedAgainst: "TSS 2026-08-09, UI5 1.120.46, app customer.schedule.soc.yucsdsoc",
 
   targets: {
-    /** The Schedule of Classes results table (the <table> element itself). */
-    socResultsTable: {
-      description: "Schedule of Classes results grid (Fiori Elements List Report)",
-      candidates: [
-        // Most specific: the generated <table> inside the FE table control.
-        { kind: "css", value: "[id*='fe::table::'][id$='-innerTable-listUl']" },
-        // The MDC wrapper, in case the inner table id shifts.
-        { kind: "css", value: "[id*='fe::table::'][id$='-innerTable']" },
-        { kind: "css", value: "[id*='::LineItem-innerTable']" },
-      ],
-    },
-
-    /** One row of the results table. */
-    socResultRow: {
-      description: "A section row within the results table",
-      candidates: [
-        // Scoped to the results tbody so filter popup rows can never match.
-        { kind: "css", value: "[id*='fe::table::'][id$='-innerTable-tblBody'] .sapMListTblRow" },
-        { kind: "css", value: "tbody.sapMTableTBody > .sapMListTblRow" },
-        { kind: "css", value: ".sapMListTblRow" },
-      ],
-    },
-
-    /** Cells within a row, keyed by the column they belong to. */
-    socRowCells: {
-      description: "Column cells inside a results row",
-      // Column order is discovered from headers at runtime rather than
-      // hardcoded, since Fiori lets users reorder and hide columns.
-      headerCandidates: [
-        // Responsive-table header cells; ".sapMListTblHighlightCol" and
-        // ".sapMListTblNavigatedCol" are presentational spacers with no label,
-        // so require the real header class.
-        { kind: "css", value: "thead .sapMListTblHeaderCell" },
-        { kind: "css", value: ".sapMListTblHeaderCell" },
-        { kind: "role", value: "columnheader" },
-      ],
-      cellCandidates: [
-        { kind: "css", value: "td.sapMListTblCell" },
-        { kind: "css", value: ".sapMListTblCell" },
-        { kind: "role", value: "gridcell" },
-      ],
-      /**
-       * Maps our field names to the header text TSS renders. Header labels are
-       * more stable than positions, and TSS uses SAP vocabulary here ("Module"
-       * for course, "Event" for section).
-       */
-      // Labels confirmed from the live filter bar are listed first, since the
-      // result columns are derived from the same OData entity.
-      headerAliases: {
-        courseId: ["module", "course", "course id", "module id", "catalog"],
-        sectionId: ["section id", "event id", "section", "event", "class nbr"],
-        component: ["event type", "type", "component", "category"],
-        days: ["day of the week", "meeting days", "days", "day"],
-        time: ["meeting time", "time", "times"],
-        instructor: ["instructor", "lecturer", "teaching staff"],
-        location: ["location", "room", "building"],
-        seats: ["seats available", "seats", "available", "enrollment", "capacity"],
-        status: ["status", "availability", "booking status"],
-        units: ["credits", "units", "credit hours"],
-        modality: ["modality", "delivery mode"],
-      },
-    },
 
     /** The button that opens the booking screen for a selected section. */
     goToBookingButton: {
@@ -152,28 +90,6 @@ const TPBB_SELECTORS = {
       ],
     },
 
-    /**
-     * Search field on the Schedule of Classes screen.
-     * Confirmed: sap.ui.mdc.FilterField, placeholder "E.g. BILD, BILD-001".
-     */
-    socSearchInput: {
-      description: "Course code / keyword search input (BasicSearchField)",
-      candidates: [
-        { kind: "css", value: "[id$='::BasicSearchField'] input" },
-        { kind: "css", value: "[id*='BasicSearchField'] input" },
-        { kind: "css", value: "input[placeholder*='BILD' i]" },
-        { kind: "css", value: "input[type='search']" },
-      ],
-    },
-
-    /** The "Go" button that runs the filter bar search. Confirmed id suffix. */
-    socGoButton: {
-      description: "'Go' button on the Schedule of Classes filter bar",
-      candidates: [
-        { kind: "css", value: "[id*='FilterBar'][id$='-btnSearch']" },
-        { kind: "text", tag: "button", text: "Go" },
-      ],
-    },
   },
 
   /**

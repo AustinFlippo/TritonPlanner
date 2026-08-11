@@ -9,7 +9,13 @@ Replaced the complex Claude-powered PDF parsing system with a fast, visual-first
 
 ## 🏗️ **Architecture Overview**
 
-### **Backend: Node.js Parser (`parseHtmlAuditSections.js`)**
+### **Backend: Node.js Parser (`parseHtmlAuditSections.js`) — DELETED 2026-08-11**
+> This parser and its `POST /upload-degree-audit` route were removed: nothing
+> ever called them, and the code was broken three ways (line splits on a
+> literal `\n`, "Requirement not complete" classified as FULFILLED, and any
+> 15–100 character string accepted as a requirement title). All audit parsing
+> happens client-side in `SidebarAuditTracker.jsx`. The section below is kept
+> for historical context only.
 - **Technology**: Cheerio (jQuery-like server-side DOM manipulation)
 - **Input**: HTML degree audit file  
 - **Output**: Simple structured sections array

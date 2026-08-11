@@ -1,7 +1,150 @@
 import { useState, useEffect } from 'react';
-import { UploadCloud, Loader2, Maximize2, Minimize2, ChevronDown } from 'lucide-react';
+import { UploadCloud, Loader2, Maximize2, Minimize2, ChevronDown, PanelLeftClose } from 'lucide-react';
 import AuditAccordionSection from './AuditAccordionSection';
 import { calculateAuditProgress } from '../../utils/auditProgress';
+import { requirementMode } from '../../utils/auditRequirements';
+
+/**
+ * Read one subrequirement's course options as OR-groups.
+ *
+ * Each option in the audit looks like
+ *   <span class="course draggable" number="100" department="DSC ">
+ *     <span class="number">100</span>          <-- bare: the run continues DSC
+ *   </span>
+ * so the attributes are authoritative and the visible text is not. Options
+ * joined by the literal word "OR" are alternatives for a single slot:
+ *   [MATH 189] OR [DSC 152], [DSC 100], ... , [DSC 140A] OR [CSE 150A]
+ * is seven slots, four of which offer a choice.
+ */
+// Exported for its unit tests; splitting it into another file would separate
+// the parser from the component it exists to serve.
+// eslint-disable-next-line react-refresh/only-export-components
+export const readCourseGroups = (container) => {
+  if (!container) return [];
+
+  const codeOf = (el) => {
+    const dept = (el.getAttribute?.('department') || '').trim();
+    const number = (el.getAttribute?.('number') || '').trim();
+    if (dept && number) return `${dept} ${number}`.replace(/\s+/g, ' ');
+    // No attributes (older audit exports): fall back to the visible text.
+    const text = (el.querySelector?.('.number')?.textContent || el.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return text || null;
+  };
+
+  // Read options and the text between them in document order.
+  //
+  // Sibling-walking is NOT enough: long lists wrap onto new table rows, so an
+  // "OR" can sit after </td></tr> in a different row from the option it joins.
+  // That silently split DS25 Core into 8 slots instead of 7, which made the
+  // slot count stop matching NEEDS and demoted the whole requirement to
+  // "pick any 7 of 11" — the exact bug this parser exists to prevent.
+  //
+  // Descendants of an option are skipped so its own label never counts as
+  // separator text.
+  const tokens = []; // {code} for options, {text} for everything between
+  const walk = (node) => {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) {
+        tokens.push({ text: child.nodeValue || '' });
+      } else if (child.nodeType === 1) {
+        if (child.classList?.contains('course')) {
+          const code = codeOf(child);
+          if (code) tokens.push({ code });
+        } else {
+          walk(child);
+        }
+      }
+    }
+  };
+  walk(container);
+
+  const groups = [];
+  let current = [];
+  let between = '';
+  for (const token of tokens) {
+    if (token.text !== undefined) {
+      between += token.text;
+      continue;
+    }
+    if (current.length && !/\bOR\b/i.test(between)) {
+      groups.push(current);
+      current = [];
+    }
+    current.push(token.code);
+    between = '';
+  }
+  if (current.length) groups.push(current);
+  return groups;
+};
+
+const normalizeTitle = (value) =>
+  String(value || '')
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, ' ')
+    .replace(/^[>\s]+|[<\s]+$/g, '')
+    .trim()
+    .toUpperCase();
+
+/**
+ * The degree/major exactly as the audit's own header states it.
+ *
+ * Returns two lists because they are matched differently:
+ *   prefixes — the "MAJOR - DEGREE" form the degree banner prints
+ *              ("DATA SCIENCE - BS"). Prefix-matched, since the banner often
+ *              carries a catalog year or plan code after it.
+ *   exact    — the bare header values ("DATA SCIENCE", "BS"). Exact-only,
+ *              because "Data Science BS Upper Division Requirements and Major
+ *              GPA" is a REAL section and must survive.
+ *
+ * Read from the audit instead of hardcoded so it works for any major. Only
+ * Degree/Major/Program labels are used — matching the College entry would
+ * swallow the real "Eighth College General Education" section.
+ */
+const degreeBannerTitles = (doc) => {
+  const header = doc.querySelector('.auditHeaderEntryLabel')?.parentElement;
+  if (!header) return { prefixes: [], exact: [] };
+  const nodes = Array.from(
+    header.querySelectorAll('.auditHeaderEntryLabel, .auditHeaderEntry')
+  );
+  const values = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    if (!nodes[i].classList.contains('auditHeaderEntryLabel')) continue;
+    const label = (nodes[i].textContent || '').trim().toLowerCase();
+    if (!/\b(degree|major|program)\b/.test(label) || label.includes('gpa')) {
+      continue;
+    }
+    const value = normalizeTitle(nodes[i + 1].textContent);
+    if (value) values.push(value);
+  }
+  const prefixes = new Set();
+  for (const a of values) {
+    for (const b of values) {
+      if (a !== b) prefixes.add(`${a} - ${b}`);
+    }
+  }
+  return { prefixes: [...prefixes], exact: values };
+};
+
+/**
+ * True for the degree/major banner that announces the sections below it.
+ *
+ * This used to be `title.includes('DATA SCIENCE - BS')` — the banner was
+ * skipped for exactly one major, so every CSE, bioengineering or other student
+ * had it rendered as a bogus requirement section whose course codes then leaked
+ * into codesNamedByAudit. Recognise the block by what it IS instead: either it
+ * lists no `.subrequirement` rows (nothing in it to track) or its title is the
+ * degree the audit's own header names.
+ */
+const isBannerBlock = (reqElement, title, banners = {}) => {
+  if (!reqElement.querySelector('.subrequirement')) return true;
+  const normalized = normalizeTitle(title);
+  return (
+    (banners.exact || []).includes(normalized) ||
+    (banners.prefixes || []).some((prefix) => normalized.startsWith(prefix))
+  );
+};
 
 const SidebarAuditTracker = ({
   auditData,
@@ -9,6 +152,7 @@ const SidebarAuditTracker = ({
   onAuditDataUpdate,
   expandState,
   onToggleExpand,
+  onMinimize,
 }) => {
   const [auditSections, setAuditSections] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,23 +219,35 @@ const SidebarAuditTracker = ({
       const majorReqHeader = Array.from(doc.querySelectorAll('.reqHeader'))
         .find(header => header.textContent.includes('MAJOR REQUIREMENTS'));
       
-      if (!majorReqHeader) {
-        console.warn('MAJOR REQUIREMENTS section not found');
+      // A layout we can't read must SAY so. This used to console.warn and
+      // return from inside the try, leaving setError untouched: the panel
+      // showed nothing at all and any audit already on screen stayed there, so
+      // a non-DARS file, a truncated download or a DARS layout change looked
+      // exactly like a successful upload.
+      const startingReq = majorReqHeader?.closest('.requirement');
+      if (!majorReqHeader || !startingReq) {
+        setError(
+          `We couldn't read "${file.name}" as a UC San Diego degree audit — ` +
+            'the "MAJOR REQUIREMENTS" section is missing. Open your audit at ' +
+            'act.ucsd.edu, choose "Save as HTML" (not Print or PDF), and upload ' +
+            'that file. Your previously loaded audit is unchanged.'
+        );
+        setUploadProgress(null);
         return;
       }
-      
-      // Start from MAJOR REQUIREMENTS and get all requirement sections after it
-      const startingReq = majorReqHeader.closest('.requirement');
-      if (!startingReq) {
-        console.warn('Could not find requirement container for MAJOR REQUIREMENTS');
-        return;
-      }
-      
+
+      // The degree/major exactly as the audit's own header names it, used to
+      // recognise the degree banner block for ANY major (see isBannerBlock).
+      const degreeBanners = degreeBannerTitles(doc);
+
       // Get all requirement sections starting from MAJOR REQUIREMENTS
       let currentElement = startingReq.nextElementSibling;
       while (currentElement) {
         if (currentElement.classList.contains('requirement')) {
-          const requirementSection = parseRequirementSection(currentElement);
+          const requirementSection = parseRequirementSection(
+            currentElement,
+            degreeBanners
+          );
           if (requirementSection) {
             newAuditSections.push(requirementSection);
           }
@@ -99,6 +255,31 @@ const SidebarAuditTracker = ({
         currentElement = currentElement.nextElementSibling;
       }
       
+      // The audit's student-info header carries "Catalog Year" ("Fall 2024"),
+      // which is the student's matriculation catalog and therefore Year 1 of
+      // their planner grid. Labels and values alternate as sibling divs, so
+      // pair each label with the entry that follows it.
+      //
+      // Deliberately NOT inferred from the earliest completed term: transfer
+      // and AP credit post under the term they were earned (a Fall 2024
+      // student can carry an SP22 BILD 1 with grade TP), which would anchor
+      // the grid years too early and push their current quarter off the end.
+      function extractCatalogYear(doc) {
+        const header = doc.querySelector('.auditHeaderEntryLabel')?.parentElement;
+        if (!header) return null;
+        const nodes = Array.from(
+          header.querySelectorAll('.auditHeaderEntryLabel, .auditHeaderEntry')
+        );
+        for (let i = 0; i < nodes.length - 1; i++) {
+          if (!nodes[i].classList.contains('auditHeaderEntryLabel')) continue;
+          const label = (nodes[i].textContent || '').trim().toLowerCase();
+          if (label !== 'catalog year') continue;
+          const value = (nodes[i + 1].textContent || '').trim();
+          return value || null;
+        }
+        return null;
+      }
+
       // Function to find EARNED units from the 180-unit requirement section
       function calculateUnitsCompleted(doc) {
         // Find the main 180-unit requirement section
@@ -124,23 +305,34 @@ const SidebarAuditTracker = ({
             return earnedValue;
           }
         }
-        
+
         console.warn('Could not parse earned units value');
         return 0;
       }
+
+      // Units the whole degree requires, from the audit's own total-units
+      // requirement (rqdHours, e.g. "180.00"). Reading the audit rather than
+      // hardcoding 180 keeps this right for students whose total differs.
+      // The requirement carries no NEEDS row, so subtract EARNED ourselves.
+      function calculateUnitsRequired(doc) {
+        const totalHrx = doc.querySelector('[rname="TOTALHRX"]');
+        const value = parseFloat(totalHrx?.getAttribute('rqdHours') || '');
+        return isNaN(value) || value <= 0 ? null : value;
+      }
       
       // Enhanced parsing function for requirement sections
-      function parseRequirementSection(reqElement) {
+      function parseRequirementSection(reqElement, banners = {}) {
         // Get requirement title from reqTitle or reqHeader
         const titleElement = reqElement.querySelector('.reqTitle') || reqElement.querySelector('.reqHeader');
         if (!titleElement) return null;
-        
+
         let title = titleElement.textContent.trim();
-        
+
         // Clean up title (remove HTML artifacts)
-        title = title.replace(/^\s*\>\>\s*|\s*\<\<\s*$/g, '').trim();
-        if (!title || title.includes('DATA SCIENCE - BS')) return null; // Skip header sections
-        
+        title = title.replace(/^\s*>>\s*|\s*<<\s*$/g, '').trim();
+        if (!title) return null;
+        if (isBannerBlock(reqElement, title, banners)) return null;
+
         // Special handling for WORK IN PROGRESS section
         const isWorkInProgress = title.includes('WORK IN PROGRESS');
         
@@ -177,10 +369,22 @@ const SidebarAuditTracker = ({
               status = 'in_progress';
             }
           }
+
+          // Subcategory label from the audit (e.g. "Arts", "Formal Skills")
+          const subTitleElement = subreq.querySelector('.subreqTitle');
+          const subTitle = subTitleElement
+            ? subTitleElement.textContent
+                .replace(/^\s*>>\s*|\s*<<\s*$/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+            : null;
           
-          // Get completed courses from this subrequirement
+          // Get completed courses from this subrequirement. Keep them on the
+          // subrequirement itself so the UI can nest MUS 20R under Arts (etc.)
+          // instead of dumping every taken course into a flat section-level list.
           const courseRows = subreq.querySelectorAll('.completedCourses .takenCourse');
-          
+          const completedCourses = [];
+
           courseRows.forEach(row => {
             const courseElement = row.querySelector('.course');
             const descElement = row.querySelector('.descLine') || row.querySelector('.description .descLine');
@@ -192,21 +396,54 @@ const SidebarAuditTracker = ({
               const description = descElement.textContent.trim();
               const term = termElement ? termElement.textContent.trim() : '';
               const grade = gradeElement ? gradeElement.textContent.trim() : '';
-              
+              // The audit prints the units it applied for this course. That is
+              // the authoritative count — it is what the registrar credited —
+              // and the only one available while the grid is being built, since
+              // the catalog is behind an async endpoint. Courses whose row
+              // carries no hours stay null (honestly unknown) rather than being
+              // stamped with a fabricated 4.
+              // DARS exports are not consistent about which class carries the
+              // units on a taken-course row — requirement totals use `.hours`,
+              // but course rows have also been documented as `.credit`. Try
+              // every known spelling rather than betting on one: guessing wrong
+              // would silently mark EVERY audit course unknown.
+              const hoursElement = [
+                '.hours.number',
+                '.hours',
+                '.credit.number',
+                '.credit',
+                '.credits',
+                '.creditHours',
+              ].reduce((found, sel) => found || row.querySelector(sel), null);
+              const hours = hoursElement
+                ? parseFloat(hoursElement.textContent.trim())
+                : NaN;
+              const credits = Number.isFinite(hours) ? hours : null;
+
               // For WORK IN PROGRESS, mark courses with WIP/NR grades
               let displayGrade = grade;
               if (isWorkInProgress && (!grade || grade === '' || grade === 'NR')) {
                 displayGrade = 'WIP';
               }
-              
-              
-              items.push(`${courseCode} - ${description} (${term}, ${displayGrade})`);
+
+              const display = `${courseCode} - ${description} (${term}, ${displayGrade})`;
+              // Still push to section.items for older UI / restored-plan fallbacks.
+              items.push(display);
+              completedCourses.push({
+                course_id: courseCode,
+                description,
+                term,
+                grade: displayGrade,
+                credits,
+                display,
+              });
             }
           });
           
           let needType = null;
           let needAmount = null;
           let availableCodes = [];
+          let groups = [];
 
           // Enhanced NEEDS parsing - group NEEDS and Available courses together
           if (status === 'not_fulfilled') {
@@ -246,19 +483,18 @@ const SidebarAuditTracker = ({
               }
             }
             
-            // Get available courses to select from
-            const selectCourses = subreq.querySelectorAll('.selectcourses .course');
-            if (selectCourses.length > 0) {
-              availableCodes = Array.from(selectCourses).map(course => {
-                const subject = course.querySelector('.discipline, .subject')
-                  ?.textContent.trim();
-                const number = course.querySelector('.number')?.textContent.trim();
-                if (number && /^[A-Za-z]{2,6}\s*\d/.test(number)) return number;
-                if (subject && number) return `${subject} ${number}`;
-                return course.textContent.replace(/\s+/g, ' ').trim();
-              }).filter(Boolean);
-              const availableCourses = availableCodes.join(', ');
-              availableCoursesDisplay = `Available: ${availableCourses}`;
+            // Get available courses to select from.
+            //
+            // The audit abbreviates runs within a department — "DSC 152, 100,
+            // 102" renders the tail entries as bare numbers — but every option
+            // carries department/number as attributes, so read those instead of
+            // the visible text. Adjacent options joined by "OR" are alternatives
+            // for ONE slot; commas/whitespace separate slots.
+            const selectTable = subreq.querySelector('.selectcourses');
+            if (selectTable?.querySelector('.course')) {
+              groups = readCourseGroups(selectTable);
+              availableCodes = groups.flat();
+              availableCoursesDisplay = `Available: ${availableCodes.join(', ')}`;
             }
             
             // Group NEEDS and Available courses together as a single item
@@ -272,10 +508,17 @@ const SidebarAuditTracker = ({
           }
 
           structuredSubrequirements.push({
+            title: subTitle || null,
             status,
             needType,
             needAmount: Number.isFinite(needAmount) ? needAmount : null,
-            availableCodes
+            // OR-groups are the real structure; availableCodes is the flat
+            // projection kept so older saved audits and any consumer that
+            // hasn't migrated still work.
+            groups,
+            mode: requirementMode(groups, needType, needAmount),
+            availableCodes,
+            completedCourses,
           });
         });
         
@@ -292,9 +535,23 @@ const SidebarAuditTracker = ({
         return null;
       }
       
+      // Found the anchor but read nothing out of it — same class of failure,
+      // same rule: say so rather than silently keeping the old audit.
+      if (newAuditSections.length === 0) {
+        setError(
+          `We found the audit structure in "${file.name}" but couldn't read any ` +
+            'requirement sections from it. The file may be truncated, or saved ' +
+            'from a page that had not finished loading. Re-download it from ' +
+            'act.ucsd.edu and try again. Your previously loaded audit is unchanged.'
+        );
+        setUploadProgress(null);
+        return;
+      }
+
       // Calculate total units completed
       const unitsCompleted = calculateUnitsCompleted(doc);
-      
+      const unitsRequired = calculateUnitsRequired(doc);
+
       // Create audit result with same structure as demo
       const auditResult = {
         sections: newAuditSections,
@@ -304,6 +561,11 @@ const SidebarAuditTracker = ({
           inProgressSections: newAuditSections.filter(s => s.status === 'in_progress').length,
           notFulfilledSections: newAuditSections.filter(s => s.status === 'not_fulfilled').length,
           unitsCompleted: unitsCompleted,
+          // From the audit's own total-units requirement, so the headline can
+          // say "N units left" instead of only a category percentage.
+          unitsRequired: unitsRequired,
+          // "Fall 2024" — anchors year_index 0 of the planner grid.
+          catalogYear: extractCatalogYear(doc),
           parseTimestamp: new Date().toISOString(),
           parsedBy: 'client'
         }
@@ -363,34 +625,32 @@ const SidebarAuditTracker = ({
     auditData?.metadata
   );
 
+  const requirementsExpanded = expandState === "expanded";
+
   return (
     <div className="audit-tracker h-full flex flex-col bg-white">
-      {/* Panel header */}
-      <div className="h-11 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0">
-        <h2 className="panel-heading">Graduation Progress</h2>
-        {onToggleExpand && (
-          <button
-            type="button"
-            className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
-            onClick={onToggleExpand}
-            title={
-              expandState === "expanded"
-                ? "Restore side panel (Esc)"
-                : "Expand requirements"
-            }
-          >
-            {expandState === "expanded" ? (
-              <Minimize2 className="w-3.5 h-3.5" />
-            ) : (
-              <Maximize2 className="w-3.5 h-3.5" />
-            )}
-          </button>
-        )}
-      </div>
+      {/* Graduation Progress — collapses to its header when Requirements is maximized,
+          same pattern as Course Search when the assistant takes over */}
+      <div className="flex-shrink-0 border-b border-slate-200">
+        <div className="h-11 px-4 flex items-center justify-between">
+          <h2 className="panel-heading">Graduation Progress</h2>
+          {onMinimize && (
+            <button
+              type="button"
+              className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+              onClick={onMinimize}
+              title="Hide panel"
+              aria-label="Hide graduation progress panel"
+            >
+              <PanelLeftClose className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
-      {/* Upload + progress — progress details collapse so Requirements can grow */}
-      <div className="border-b border-slate-200 flex-shrink-0">
-        <div className="px-4 pt-3 pb-2">
+        {/* Upload + progress — hidden while Requirements owns the panel */}
+        {!requirementsExpanded && (
+          <div>
+            <div className="px-4 pt-3 pb-2">
           {/* Upload Section — big dropzone before an audit exists, a slim
               "Replace" row once one is loaded (both accept click or drag) */}
           <label className="block w-full">
@@ -451,32 +711,61 @@ const SidebarAuditTracker = ({
             </div>
           )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
-              <div className="text-sm text-red-700">{error}</div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Progress Summary — dark green is audit-completed; light green is
-            the additional estimated progress represented by the plan. */}
-        {auditSections.length > 0 && (
-          <div className="px-4 pb-3">
-            <button
-              type="button"
-              onClick={() => setProgressOpen((o) => !o)}
-              className="w-full flex items-center gap-2 text-left"
-              aria-expanded={progressOpen}
-            >
+            {/* Progress Summary — dark green is audit-completed; light green is
+                the additional estimated progress represented by the plan. */}
+            {auditSections.length > 0 && (
+              <div className="px-4 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setProgressOpen((o) => !o)}
+                  className="w-full flex items-center gap-2 text-left"
+                  aria-expanded={progressOpen}
+                >
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between mb-1.5">
                   <span className="text-xs font-medium text-slate-700 truncate">
-                    Overall progress
+                    {progress.unitsRemaining !== null
+                      ? 'Left to graduate'
+                      : 'Overall progress'}
                   </span>
                   <div className="flex items-baseline gap-1.5 ml-2 tabular-nums">
-                    <span className="text-sm font-semibold text-slate-800">
-                      {progress.verifiedPercent}%
-                    </span>
+                    {progress.unitsRemaining !== null ? (
+                      <span className="text-sm font-semibold text-slate-800">
+                        {/* "at most" because unverified courses carry no unit
+                            count, so the true remainder can only be lower. */}
+                        {progress.unknownUnitCourses > 0 ? '≤ ' : ''}
+                        {progress.unitsRemaining} units
+                        {progress.unitsRemaining > 0 ? (
+                          // ~15 units is a normal full-time quarter
+                          <span className="ml-1.5 text-xs font-normal text-slate-500">
+                            ≈ {Math.ceil(progress.unitsRemaining / 15)} quarter
+                            {Math.ceil(progress.unitsRemaining / 15) === 1 ? '' : 's'}
+                          </span>
+                        ) : (
+                          // Units and requirements clear independently. A plan
+                          // can cover 180 units and still leave Arts or the
+                          // elective units open, so never let a bare "0 units"
+                          // read as "done".
+                          progress.outstandingSections > 0 && (
+                            <span className="ml-1.5 text-xs font-normal text-amber-600">
+                              · {progress.outstandingSections} requirement
+                              {progress.outstandingSections === 1 ? '' : 's'} still open
+                            </span>
+                          )
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-sm font-semibold text-slate-800">
+                        {progress.verifiedPercent}%
+                      </span>
+                    )}
                     {progress.withPlanPercent > progress.verifiedPercent && (
                       <>
                         <span className="text-[10px] text-slate-400">→</span>
@@ -507,6 +796,12 @@ const SidebarAuditTracker = ({
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
                     Added by plan
+                  </span>
+                  <span className="ml-auto tabular-nums text-slate-400">
+                    {progress.verified}/{progress.total} categories
+                    {progress.newlyProjected > 0
+                      ? ` · +${progress.newlyProjected} via plan`
+                      : ''}
                   </span>
                 </div>
               </div>
@@ -547,13 +842,32 @@ const SidebarAuditTracker = ({
                       </span>
                     </div>
                   )}
+                  {/* Courses the audit vouches for that the catalog never
+                      published carry no unit count, so they add 0 to every
+                      row above. Saying so is the difference between a total
+                      that is incomplete and one that is quietly wrong. */}
+                  {progress.unknownUnitCourses > 0 && (
+                    <div className="flex items-center justify-between px-3 py-2">
+                      <span className="text-xs text-amber-700">
+                        Units not counted
+                      </span>
+                      <span className="text-xs font-medium tabular-nums text-amber-600">
+                        {progress.unknownUnitCourses} unverified course
+                        {progress.unknownUnitCourses === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  )}
                   {(progress.currentUnits > 0 || progress.plannedUnits > 0) && (
                     <div className="flex items-center justify-between px-3 py-2 bg-navy-50/60">
                       <span className="text-xs font-medium text-navy-700">
                         Projected total
                       </span>
                       <span className="text-sm font-semibold tabular-nums text-navy-800">
-                        {progress.projectedUnits} / 180
+                        {progress.unknownUnitCourses > 0 ? '≥ ' : ''}
+                        {progress.projectedUnits}
+                        {progress.unitsRequired !== null
+                          ? ` / ${progress.unitsRequired}`
+                          : ''}
                       </span>
                     </div>
                   )}
@@ -562,45 +876,74 @@ const SidebarAuditTracker = ({
             )}
           </div>
         )}
-      </div>
-
-      {/* Requirements — grows into whatever the progress block leaves */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        {auditSections.length > 0 && (
-          <div className={`p-4 ${expandState === "expanded" ? "max-w-4xl" : ""}`}>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h3 className="panel-heading truncate">Requirements</h3>
-              <button
-                onClick={toggleAllSections}
-                className="flex-shrink-0 whitespace-nowrap text-[11px] font-medium text-navy-500 hover:text-navy-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 rounded"
-              >
-                {allExpanded ? 'Collapse all' : 'Expand all'}
-              </button>
-            </div>
-            <div className="space-y-2">
-              {auditSections.map((section, index) => {
-                // Rename "The following courses" sections to "In Progress"
-                let displayTitle = section.title;
-                if (section.title && section.title.toLowerCase().startsWith('the following courses')) {
-                  displayTitle = 'In Progress';
-                }
-
-                return (
-                  <AuditAccordionSection
-                    key={`${section.title}-${index}`}
-                    title={displayTitle}
-                    status={section.status}
-                    items={section.items || []}
-                    projection={progress.sectionProgress[index]}
-                    isExpanded={expandedSections.has(index)}
-                    onToggle={() => toggleSection(index)}
-                  />
-                );
-              })}
-            </div>
-          </div>
+        </div>
         )}
       </div>
+
+      {/* Requirements — own header + expand control, matching Course Assistant */}
+      {auditSections.length > 0 && (
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="h-11 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0 gap-2">
+            <h3 className="panel-heading truncate">Requirements</h3>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                type="button"
+                onClick={toggleAllSections}
+                className="whitespace-nowrap px-1.5 py-1 text-[11px] font-medium text-navy-500 hover:text-navy-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 rounded"
+              >
+                {allExpanded ? "Collapse all" : "Expand all"}
+              </button>
+              {onToggleExpand && (
+                <button
+                  type="button"
+                  className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+                  onClick={onToggleExpand}
+                  title={
+                    requirementsExpanded
+                      ? "Restore side panel (Esc)"
+                      : "Expand requirements"
+                  }
+                >
+                  {requirementsExpanded ? (
+                    <Minimize2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <div className={`p-4 ${requirementsExpanded ? "max-w-4xl" : ""}`}>
+              <div className="space-y-2">
+                {auditSections.map((section, index) => {
+                  // Rename "The following courses" sections to "In Progress"
+                  let displayTitle = section.title;
+                  if (
+                    section.title &&
+                    section.title.toLowerCase().startsWith("the following courses")
+                  ) {
+                    displayTitle = "In Progress";
+                  }
+
+                  return (
+                    <AuditAccordionSection
+                      key={`${section.title}-${index}`}
+                      title={displayTitle}
+                      status={section.status}
+                      items={section.items || []}
+                      projection={progress.sectionProgress[index]}
+                      isExpanded={expandedSections.has(index)}
+                      onToggle={() => toggleSection(index)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

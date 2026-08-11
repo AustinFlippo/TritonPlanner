@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, ChevronRightIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from 'lucide-react';
 
 const AuditSectionBlock = ({ title, status, items = [] }) => {

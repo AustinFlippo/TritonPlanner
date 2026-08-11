@@ -12,8 +12,10 @@
 export function normalizeCourseId(raw) {
   if (!raw) return null;
   const cleaned = String(raw).toUpperCase().replace(/\s+/g, " ").trim();
-  // Split a leading alpha subject from the trailing course number.
-  const match = cleaned.match(/^([A-Z]{2,5})\s*[- ]?\s*(\d{1,3}[A-Z]{0,3})$/);
+  // Split a leading alpha subject from the trailing course number. The `0*`
+  // drops TSS's zero padding ("AAS-010R" -> "AAS 10R"); the catalog and the
+  // planner grid are unpadded, so without it nothing from OData ever matches.
+  const match = cleaned.match(/^([A-Z]{2,5})\s*[- ]?\s*0*(\d{1,3}[A-Z]{0,3})$/);
   if (!match) return cleaned || null;
   return `${match[1]} ${match[2]}`;
 }

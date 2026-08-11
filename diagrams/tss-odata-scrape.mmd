@@ -1,0 +1,44 @@
+flowchart LR
+  subgraph Auth["Student browser"]
+    SSO["SSO + Duo at sis.ucsd.edu"]
+    Cookie["Session cookie for tss.ucsd.edu"]
+  end
+
+  subgraph Ext["Chrome extension booking-bridge"]
+    Planner["TritonPlanner page<br/>CustomEvent relay"]
+    Bridge["planner-bridge.js"]
+    SW["background.js<br/>service worker"]
+    OData["odata.js<br/>fetchSections / fetchTerm*"]
+    Store[("chrome.storage.local<br/>scrapedSections · termCatalog")]
+  end
+
+  subgraph TSS["TSS OData service"]
+    Root["yucsd_con_module_servicedef"]
+    Module["YUCSD_CON_MODULE<br/>CourseAbbr → ModuleID"]
+    Events["YUCSD_CON_EVENTS<br/>LE/DI/LA · seats · package"]
+    Sched["YUCSD_CON_MODULE_SCHED<br/>DoW · Begin/EndTime"]
+  end
+
+  subgraph App["TritonPlanner app"]
+    QV["Quarter View / Search"]
+    Admin["Admin → Section data"]
+    SB[("Supabase term_sections<br/>shared publish")]
+  end
+
+  SSO --> Cookie
+  Cookie -.->|host_permissions<br/>credentials include| SW
+  Planner -->|tritonplanner:fetch-*| Bridge
+  Bridge -->|TPBB_FETCH_*| SW
+  SW --> OData
+  OData -->|1 filter CourseAbbr / year| Module
+  Module -->|2 ModuleID + period| Events
+  Module -->|2 ModuleID| Sched
+  Events -->|join on ModuleID<br/>+ EventObjid| OData
+  Sched --> OData
+  OData -->|merge / termCatalog| Store
+  Store -->|storage.onChanged push| Bridge
+  Bridge -->|sections reply| QV
+  Admin -->|fetch whole term| SW
+  Admin -->|page writes DB| SB
+  SB -->|published first| QV
+  Root --- Module

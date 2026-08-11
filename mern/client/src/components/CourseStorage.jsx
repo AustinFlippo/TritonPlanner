@@ -7,6 +7,7 @@ import {
   deleteSavedPlan,
   planStats,
 } from "../utils/savedPlans";
+import ConfirmDialog from "./ConfirmDialog";
 
 const formatDate = (iso) => {
   if (!iso) return "";
@@ -22,7 +23,14 @@ const formatDate = (iso) => {
 const iconButtonClass =
   "p-1.5 rounded-lg text-slate-400 hover:text-navy-600 hover:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:opacity-40 disabled:pointer-events-none";
 
-const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
+const CourseStorage = ({
+  schedule = [],
+  activeSavedPlan,
+  onLoadPlan,
+  onSavedPlanChange,
+  onSavedPlanDelete,
+  onNavigate,
+}) => {
   const { user } = useAuth();
 
   const [plans, setPlans] = useState([]);
@@ -35,6 +43,10 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
 
   // Id of the plan currently being written to / deleted
   const [busyId, setBusyId] = useState(null);
+
+  // Custom confirm dialog (replaces window.confirm)
+  // { type: "delete" | "overwrite", plan }
+  const [confirm, setConfirm] = useState(null);
 
   const current = planStats(schedule);
   const canSave = current.courses > 0;
@@ -61,6 +73,9 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
     try {
       const plan = await updateSavedPlan(user, id, { name: renameValue });
       setPlans((prev) => prev.map((p) => (p.id === id ? plan : p)));
+      if (activeSavedPlan?.id === id) {
+        onSavedPlanChange?.({ id: plan.id, name: plan.name });
+      }
       setRenamingId(null);
       setError(null);
     } catch (err) {
@@ -71,50 +86,55 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
     }
   };
 
-  const handleOverwrite = async (plan) => {
-    if (!canSave) return;
-    if (
-      !window.confirm(
-        `Replace "${plan.name}" with the schedule currently in the planner?`
-      )
-    ) {
-      return;
-    }
+  const runOverwrite = async (plan) => {
     setBusyId(plan.id);
     try {
       const updated = await updateSavedPlan(user, plan.id, { schedule });
       setPlans((prev) =>
         [updated, ...prev.filter((p) => p.id !== plan.id)]
       );
+      if (activeSavedPlan?.id === plan.id) {
+        onSavedPlanChange?.({ id: updated.id, name: updated.name });
+      }
       setError(null);
+      setConfirm(null);
     } catch (err) {
       console.error("Failed to update plan:", err);
       setError(err.message || "Couldn't update this plan.");
+      setConfirm(null);
     } finally {
       setBusyId(null);
     }
   };
 
-  const handleDelete = async (plan) => {
-    if (!window.confirm(`Delete "${plan.name}"? This can't be undone.`)) return;
+  const runDelete = async (plan) => {
     setBusyId(plan.id);
     try {
       await deleteSavedPlan(user, plan.id);
       setPlans((prev) => prev.filter((p) => p.id !== plan.id));
+      onSavedPlanDelete?.(plan.id);
       setError(null);
+      setConfirm(null);
     } catch (err) {
       console.error("Failed to delete plan:", err);
       setError(err.message || "Couldn't delete this plan.");
+      setConfirm(null);
     } finally {
       setBusyId(null);
     }
+  };
+
+  const handleConfirm = () => {
+    if (!confirm) return;
+    if (confirm.type === "overwrite") runOverwrite(confirm.plan);
+    else if (confirm.type === "delete") runDelete(confirm.plan);
   };
 
   return (
     <div className="max-w-5xl mx-auto">
       {/* Page heading */}
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-slate-800">Saved plans</h2>
+        <h2 className="text-base font-semibold text-slate-800">Saved Plans</h2>
         <p className="text-sm text-slate-500 mt-0.5">
           {user
             ? "Snapshots you've saved from the planner."
@@ -210,9 +230,22 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
                       <p className="text-sm font-medium text-slate-800 truncate">
                         {plan.name}
                       </p>
+                      {/* Courses whose units the catalog never published are
+                          named, not folded into the total as zero. */}
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {stats.courses} courses · {stats.units} units · saved{" "}
-                        {formatDate(plan.updatedAt)}
+                        {stats.courses} courses · {stats.units} units
+                        {stats.unknownUnits > 0 && (
+                          <span
+                            className="text-amber-600"
+                            title={`${stats.unknownUnits} course${
+                              stats.unknownUnits === 1 ? "" : "s"
+                            } in this plan have no published unit count, so they are not included in the total.`}
+                          >
+                            {" "}
+                            + {stats.unknownUnits} unknown
+                          </span>
+                        )}{" "}
+                        · saved {formatDate(plan.updatedAt)}
                       </p>
                     </>
                   )}
@@ -221,14 +254,16 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
                 {!isRenaming && (
                   <div className="flex-shrink-0 flex items-center gap-1">
                     <button
-                      onClick={() => onLoadPlan?.(plan.schedule)}
+                      onClick={() => onLoadPlan?.(plan)}
                       disabled={busy}
                       className="px-3 py-1.5 text-sm font-medium rounded-lg border border-navy-200 text-navy-700 hover:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:opacity-40 disabled:pointer-events-none"
                     >
                       Load
                     </button>
                     <button
-                      onClick={() => handleOverwrite(plan)}
+                      onClick={() =>
+                        canSave && setConfirm({ type: "overwrite", plan })
+                      }
                       disabled={busy || !canSave}
                       className={iconButtonClass}
                       title="Replace with the current planner schedule"
@@ -253,7 +288,7 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
                       <Pencil size={16} />
                     </button>
                     <button
-                      onClick={() => handleDelete(plan)}
+                      onClick={() => setConfirm({ type: "delete", plan })}
                       disabled={busy}
                       className={`${iconButtonClass} hover:text-red-600 hover:bg-red-50`}
                       title="Delete"
@@ -268,6 +303,30 @@ const CourseStorage = ({ schedule = [], onLoadPlan, onNavigate }) => {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={Boolean(confirm)}
+        variant={confirm?.type === "delete" ? "danger" : "default"}
+        title={
+          confirm?.type === "delete"
+            ? "Delete this plan?"
+            : "Replace this plan?"
+        }
+        message={
+          confirm?.type === "delete"
+            ? `“${confirm.plan.name}” will be permanently removed. This can’t be undone.`
+            : confirm
+              ? `Replace “${confirm.plan.name}” with the schedule currently in the planner? The previous snapshot will be lost.`
+              : ""
+        }
+        confirmLabel={confirm?.type === "delete" ? "Delete plan" : "Replace plan"}
+        cancelLabel="Cancel"
+        busy={Boolean(confirm && busyId === confirm.plan.id)}
+        onConfirm={handleConfirm}
+        onCancel={() => {
+          if (!(confirm && busyId === confirm.plan.id)) setConfirm(null);
+        }}
+      />
     </div>
   );
 };

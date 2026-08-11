@@ -5,7 +5,7 @@ The DegreeAuditParser is a comprehensive system for uploading and parsing HTML d
 
 ## Core Files
 - **Main Component**: `/mern/client/src/components/audit/SidebarAuditTracker.jsx`
-- **Utility Parser**: `/mern/client/src/utils/auditParser.js`
+- **Server-side parser**: none. The audit is parsed entirely in the browser; the unused `/mern/server/parseHtmlAuditSections.js` and its `POST /upload-degree-audit` route were deleted.
 - **Supporting Component**: `/mern/client/src/components/audit/AuditAccordionSection.jsx`
 
 ## Architecture Overview

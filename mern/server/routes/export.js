@@ -11,9 +11,12 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load the service account key using environment variable
+// Load the service account key using environment variable. Resolve rather than
+// join: hosted deployments mount the key as a secret file at an ABSOLUTE path
+// (Render uses /etc/secrets/...), which path.join would silently reinterpret as
+// relative to the repo root. A relative value still resolves from there.
 const GOOGLE_SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH || 'credentials/academic-planner-463804-202e89b2e5e4.json';
-const KEYFILE_PATH = path.join(__dirname, '../..', GOOGLE_SERVICE_ACCOUNT_PATH);
+const KEYFILE_PATH = path.resolve(__dirname, '../..', GOOGLE_SERVICE_ACCOUNT_PATH);
 
 // Configure Google Sheets API
 const auth = new google.auth.GoogleAuth({

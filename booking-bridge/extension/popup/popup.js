@@ -44,6 +44,16 @@ function renderPlan(plan) {
   }
 }
 
+const relativeTime = (timestamp) => {
+  if (!timestamp) return "never";
+  const minutes = Math.floor((Date.now() - timestamp) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  return `${Math.floor(hours / 24)} day(s) ago`;
+};
+
 async function refresh() {
   const [planResponse, sectionResponse] = await Promise.all([
     send("TPBB_GET_PLAN"),
@@ -62,17 +72,16 @@ async function refresh() {
     : "none yet";
   if (courses.length) $("section-status").classList.add("ok");
 
-  // Mirrors selectors.js `verified`. Until a capture confirms them, say so.
-  $("selector-status").classList.add("warn");
+  $("freshness").textContent = relativeTime(sectionResponse?.updatedAt);
+  if (sectionResponse?.updatedAt) $("freshness").classList.add("ok");
 }
+
+$("open-admin").addEventListener("click", () => {
+  chrome.runtime.openOptionsPage();
+});
 
 $("open-tss").addEventListener("click", () => {
   chrome.tabs.create({ url: "https://sis.ucsd.edu/" });
-});
-
-$("clear").addEventListener("click", async () => {
-  await send("TPBB_CLEAR");
-  location.reload();
 });
 
 refresh();

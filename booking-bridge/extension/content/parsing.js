@@ -41,25 +41,6 @@
     return { start: clean(match[1]), end: clean(match[2]) };
   }
 
-  /** "45 of 200" / "155/200" / "12 available" -> seat counts. */
-  function parseSeats(raw) {
-    const text = String(raw || "");
-    const pair = text.match(/(\d+)\s*(?:of|\/)\s*(\d+)/i);
-    if (pair) {
-      const first = Number(pair[1]);
-      const second = Number(pair[2]);
-      // Rendered as taken-of-total; guard against the inverse ordering.
-      const seatsTaken = Math.min(first, second);
-      const seatsTotal = Math.max(first, second);
-      return { seatsTaken, seatsTotal, seatsAvailable: seatsTotal - seatsTaken };
-    }
-    const available = text.match(/(\d+)\s*(?:available|open|left|remaining)/i);
-    if (available) {
-      return { seatsTaken: null, seatsTotal: null, seatsAvailable: Number(available[1]) };
-    }
-    return { seatsTaken: null, seatsTotal: null, seatsAvailable: null };
-  }
-
   /** Fold TSS status wording into our normalized vocabulary. */
   function normalizeStatus(raw, statusText) {
     const text = String(raw || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -81,11 +62,14 @@
   function normalizeCourseId(raw) {
     if (!raw) return null;
     const cleaned = String(raw).toUpperCase().replace(/\s+/g, " ").trim();
-    const match = cleaned.match(/^([A-Z]{2,5})\s*[- ]?\s*(\d{1,3}[A-Z]{0,3})$/);
+    const match = cleaned.match(/^([A-Z]{2,5})\s*[- ]?\s*0*(\d{1,3}[A-Z]{0,3})$/);
+    // TSS's OData writes course numbers zero-padded ("AAS-010R", "CSE-008A")
+    // while the catalog and the planner grid use "AAS 10R" / "CSE 8A". Strip
+    // the padding here or nothing from OData ever matches a planned course.
     return match ? `${match[1]} ${match[2]}` : cleaned || null;
   }
 
-  const api = { parseDays, parseTimeRange, parseSeats, normalizeStatus, normalizeCourseId };
+  const api = { parseDays, parseTimeRange, normalizeStatus, normalizeCourseId };
 
   if (typeof window !== "undefined") window.TPBB_parsing = api;
   if (typeof globalThis !== "undefined") globalThis.TPBB_parsing = api;

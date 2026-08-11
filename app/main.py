@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Query
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -8,6 +8,7 @@ from pathlib import Path
 # Import the new RAG system
 from rag_pipeline import create_rag_system
 from planner_agent import plan_chat
+from planner_metrics import summarize_metrics
 
 # Load environment variables from root .env file
 root_env_path = Path(__file__).parent.parent / '.env'
@@ -20,10 +21,13 @@ if not root_env_path.exists():
 
 app = FastAPI()
 
+# No cookie/session auth on this API (Supabase tokens ride in the body from
+# the Express proxy), so credentials stay off — browsers reject the
+# wildcard-plus-credentials combination anyway.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -46,6 +50,11 @@ def get_rag_system():
             return None
     return rag_system
 
+class ChatTurn(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
     message: str
     thread_id: str
@@ -54,6 +63,20 @@ class ChatRequest(BaseModel):
     # agent (local catalog, no Pinecone) handles the message instead of RAG.
     audit_sections: list | None = None
     schedule: list | None = None
+    # Live / published TSS seat snapshot for the enrollment quarter (compact).
+    seat_availability: dict | None = None
+    # Enrollable section packages for the enrollment quarter (from the browser).
+    section_options: dict | None = None
+    # Which app tab the student is on (planner / quarter / …) plus enrollment
+    # quarter coordinates, so the agent can interpret "my schedule" correctly.
+    ui_context: dict | None = None
+    # Two-digit fall year that year_index 0 of the grid means, from the audit's
+    # Catalog Year. Without it the agent falls back to the calendar anchor and
+    # would disagree with the client about which row is which year.
+    base_year: int | None = None
+    # Prior turns for this exact saved plan. The API stays stateless; the
+    # frontend owns one transcript per plan and sends it with each request.
+    history: list[ChatTurn] | None = None
 
 
 # Dummy schedule data
@@ -83,26 +106,64 @@ async def chat(request: ChatRequest):
     # Planner-aware path: uses the local-catalog planning agent (only needs
     # OPENAI_API_KEY). Used when the frontend sends audit/schedule context,
     # and as the fallback whenever the Pinecone RAG system isn't configured.
-    if request.audit_sections or request.schedule or get_rag_system() is None:
+    if (
+        request.audit_sections is not None
+        or request.schedule is not None
+        or get_rag_system() is None
+    ):
         try:
             result = await plan_chat(
                 request.message,
                 request.audit_sections or [],
                 request.schedule or [],
+                history=[
+                    turn.model_dump()
+                    for turn in (request.history or [])
+                ],
+                seat_availability=request.seat_availability,
+                section_options=request.section_options,
+                ui_context=request.ui_context,
+                base_year=request.base_year,
             )
+            # agent_loop is loop-cost telemetry (rounds / tools / exit). Kept
+            # top-level so it never lands in the chat bubble the student sees.
+            loop = result.get("agent_loop")
+            if result.get("seat_lookup") is not None:
+                payload = {"seat_lookup": result["seat_lookup"]}
+                if loop is not None:
+                    payload["agent_loop"] = loop
+                return payload
+            if result.get("section_options_request") is not None:
+                payload = {
+                    "section_options_request": result["section_options_request"]
+                }
+                if loop is not None:
+                    payload["agent_loop"] = loop
+                return payload
             message = {"type": "ai", "content": result["content"]}
-            for key in ("proposed_schedule", "placements", "warnings"):
+            for key in (
+                "proposed_schedule",
+                "placements",
+                "warnings",
+                "proposed_sections",
+            ):
                 if result.get(key) is not None:
                     message[key] = result[key]
-            return {"messages": [message]}
+            payload = {"messages": [message]}
+            if loop is not None:
+                payload["agent_loop"] = loop
+            return payload
         except Exception:
             import traceback
             traceback.print_exc()
+            hint = ("" if os.getenv("OPENAI_API_KEY")
+                    else " (OPENAI_API_KEY is not set for the FastAPI server.)")
             return {
                 "messages": [{
                     "type": "ai",
                     "content": "Sorry — the planning assistant hit an error. "
-                               "Make sure OPENAI_API_KEY is set for the FastAPI server."
+                               "Please try again; the server log has the "
+                               f"details.{hint}"
                 }]
             }
 
@@ -196,4 +257,16 @@ async def health_check():
         health_status["rag_system"] = f"error: {str(e)}"
     
     return health_status
+
+
+@app.get("/planner-metrics")
+async def planner_metrics(limit: int | None = Query(
+    default=None, ge=1, le=100000,
+    description="Only aggregate the most recent N turns",
+)):
+    """Average model rounds / tool calls for the planner agent loop.
+
+    Backed by app/data/planner_loop_metrics.jsonl (no student message text).
+    """
+    return summarize_metrics(limit=limit)
     

@@ -88,115 +88,8 @@
     };
   }
 
-  // --- schedule of classes scraping ---------------------------------------
-
-  /** Map discovered column headers onto our field names. */
-  function mapColumns(headerCells) {
-    const aliases = SELECTORS.targets.socRowCells.headerAliases;
-    const columns = {};
-
-    headerCells.forEach((cell, index) => {
-      const label = normalizeText(cell.textContent);
-      if (!label) return;
-      for (const [field, options] of Object.entries(aliases)) {
-        if (columns[field] !== undefined) continue;
-        if (options.some((option) => label === option || label.includes(option))) {
-          columns[field] = index;
-          return;
-        }
-      }
-    });
-
-    return columns;
-  }
-
   // Pure text parsers live in parsing.js so they can be unit tested directly.
-  const { parseDays, parseTimeRange, parseSeats, normalizeCourseId } = window.TPBB_parsing;
   const normalizeStatus = (raw) => window.TPBB_parsing.normalizeStatus(raw, SELECTORS.statusText);
-
-  /**
-   * Read the visible Schedule of Classes results into section objects.
-   *
-   * Only reads what is rendered. Fiori tables virtualize rows, so this returns
-   * what is on screen and reports the count — the caller is responsible for
-   * scrolling and merging if it needs the full result set.
-   */
-  function scrapeSchedule() {
-    const tableResult = resolve("socResultsTable");
-    if (!tableResult.ok) {
-      return { ok: false, reason: tableResult.reason, sections: [] };
-    }
-    const table = tableResult.elements[0];
-
-    const headerSpec = SELECTORS.targets.socRowCells;
-    let headerCells = [];
-    for (const candidate of headerSpec.headerCandidates) {
-      headerCells = tryCandidate(candidate, table);
-      if (headerCells.length) break;
-    }
-    if (!headerCells.length) {
-      return { ok: false, reason: "could not find column headers", sections: [] };
-    }
-
-    const columns = mapColumns(headerCells);
-    if (columns.courseId === undefined && columns.sectionId === undefined) {
-      return {
-        ok: false,
-        reason: `headers did not match known aliases: ${headerCells
-          .map((c) => normalizeText(c.textContent))
-          .filter(Boolean)
-          .join(" | ")}`,
-        sections: [],
-      };
-    }
-
-    const rowsResult = resolve("socResultRow", { root: table, all: true });
-    if (!rowsResult.ok) return { ok: false, reason: rowsResult.reason, sections: [] };
-
-    const sections = [];
-    for (const row of rowsResult.elements) {
-      let cells = [];
-      for (const candidate of headerSpec.cellCandidates) {
-        cells = tryCandidate(candidate, row);
-        if (cells.length) break;
-      }
-      if (!cells.length) continue;
-
-      const valueAt = (field) => {
-        const index = columns[field];
-        if (index === undefined || !cells[index]) return "";
-        return String(cells[index].textContent || "").replace(/\s+/g, " ").trim();
-      };
-
-      const courseId = valueAt("courseId");
-      const sectionId = valueAt("sectionId");
-      if (!courseId && !sectionId) continue;
-
-      const { start, end } = parseTimeRange(valueAt("time"));
-      sections.push({
-        courseId: normalizeCourseId(courseId),
-        sectionId: sectionId || null,
-        component: valueAt("component") || null,
-        days: parseDays(valueAt("days")),
-        start,
-        end,
-        instructor: valueAt("instructor") || null,
-        location: valueAt("location") || null,
-        units: valueAt("units") || null,
-        status: normalizeStatus(valueAt("status") || valueAt("seats")),
-        ...parseSeats(valueAt("seats")),
-        scrapedFrom: location.pathname + location.hash,
-      });
-    }
-
-    return {
-      ok: true,
-      sections,
-      columnsFound: Object.keys(columns),
-      rowsSeen: rowsResult.elements.length,
-      note: "Fiori virtualizes rows; scroll and re-scrape to capture long result sets.",
-    };
-  }
 
   // --- booking assistance --------------------------------------------------
 
@@ -260,12 +153,8 @@
 
   window.__TPBB_adapter = {
     resolve,
-    scrapeSchedule,
     prepareBooking,
     readResult,
-    parseDays,
-    parseTimeRange,
-    parseSeats,
     normalizeStatus,
     diagnostics: () => ({
       verified: SELECTORS.verified,

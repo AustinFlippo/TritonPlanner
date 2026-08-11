@@ -195,47 +195,6 @@
       Boolean(window.TPBB_SELECTORS.capturedAgainst),
       `capturedAgainst=${window.TPBB_SELECTORS.capturedAgainst}`);
 
-    // The trap: a filter value-help table renders first, as it does in TSS.
-    const table = adapter.resolve("socResultsTable");
-    check("resolves the RESULTS table, not a filter value-help popup",
-      table.ok && table.elements[0].id.includes("fe::table::"),
-      table.ok ? table.elements[0].id.slice(-60) : table.reason);
-
-    const scrape = adapter.scrapeSchedule();
-    check("scrapeSchedule() succeeds", scrape.ok, scrape.reason || "");
-    check("found 3 sections", scrape.sections.length === 3, `got ${scrape.sections.length}`);
-    check("ignores presentational spacer cells when aligning columns",
-      scrape.sections.every((s) => s.courseId && s.sectionId),
-      JSON.stringify(scrape.sections.map((s) => [s.courseId, s.sectionId])));
-
-    const [cse8a, cse11, math] = scrape.sections;
-
-    check("maps columns by header text, not position",
-      cse8a && cse8a.courseId === "CSE 8A", `courseId=${cse8a?.courseId}`);
-    check("normalizes CSE-8A -> 'CSE 8A'", cse8a?.courseId === "CSE 8A");
-    check("reads section id from 'Event ID'", cse8a?.sectionId === "A00");
-    check("parses MWF", JSON.stringify(cse8a?.days) === '["M","W","F"]',
-      JSON.stringify(cse8a?.days));
-    check("parses 10:00a-10:50a", cse8a?.start === "10:00a" && cse8a?.end === "10:50a",
-      `${cse8a?.start}-${cse8a?.end}`);
-    check("parses '245 of 300' seats",
-      cse8a?.seatsTaken === 245 && cse8a?.seatsTotal === 300);
-    check("status 'Available' -> open", cse8a?.status === "open", cse8a?.status);
-    check("reads component from 'Event Type'", cse8a?.component === "LE");
-
-    check("parses TuTh -> [T,R]", JSON.stringify(cse11?.days) === '["T","R"]',
-      JSON.stringify(cse11?.days));
-    check("'Waitlist Active' -> waitlist-active",
-      cse11?.status === "waitlist-active", cse11?.status);
-
-    check("'Waitlist Inactive' not swallowed by 'waitlist'",
-      math?.status === "waitlist-inactive", math?.status);
-    check("parses lone TH -> [R]", JSON.stringify(math?.days) === '["R"]',
-      JSON.stringify(math?.days));
-    check("parses '9:00 to 9:50'", math?.start === "9:00" && math?.end === "9:50",
-      `${math?.start}-${math?.end}`);
-    check("parses '12 available'", math?.seatsAvailable === 12);
-
     // Control resolution
     check("resolves Book/Save button", adapter.resolve("bookSaveButton").ok);
     check("resolves Go To Booking button", adapter.resolve("goToBookingButton").ok);

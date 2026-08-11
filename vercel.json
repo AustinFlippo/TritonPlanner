@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd mern/client && npm install && npm run build",
+  "outputDirectory": "mern/client/dist",
+  "installCommand": "echo 'install runs inside buildCommand'",
+  "framework": null
+}

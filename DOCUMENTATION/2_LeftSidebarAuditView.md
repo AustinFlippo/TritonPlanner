@@ -7,7 +7,7 @@ The LeftSidebarAuditView provides a visual representation of parsed degree audit
 - **Main Container**: `/mern/client/src/components/LeftSidebar.jsx`
 - **Audit Tracker**: `/mern/client/src/components/audit/SidebarAuditTracker.jsx`
 - **Accordion Sections**: `/mern/client/src/components/audit/AuditAccordionSection.jsx`
-- **Utility Functions**: `/mern/client/src/utils/auditParser.js`
+- **Utility Functions**: `/mern/client/src/utils/auditRequirements.js`, `/mern/client/src/utils/auditProgress.js`
 
 ## Component Architecture
 

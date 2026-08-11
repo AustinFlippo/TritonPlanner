@@ -4,24 +4,46 @@
 // Signed out -> localStorage, so the feature still works before sign-in
 //
 // This is separate from `planner_states`, which holds the single *live* plan
-// that auto-saves as the user edits.
+// that auto-saves as the user edits. Each named plan owns its full 4-year
+// grid, including the upcoming enrollment quarter — Quarter View is a lens
+// on that slot of the active plan, not a shared global quarter.
 
 import { supabase } from "./supabase";
+import {
+  gridBaseYear,
+  readStampedGrid,
+  stampGrid,
+} from "./auditCoursePlanner";
+import { hasUnknownCredits, parseCredits } from "./courseCredits";
+import { SAVED_PLANS_KEY } from "./plannerStateStore";
 
-const LOCAL_KEY = "tp_saved_plans";
+const LOCAL_KEY = SAVED_PLANS_KEY;
 const TERMS = ["fall", "winter", "spring"];
+
+// New rows wrap the grid as { baseYear, grid } inside the existing `schedule`
+// JSONB column, so recording the base year needs no schema change and rows
+// written before this still read back fine. See stampGrid.
+const packSchedule = stampGrid;
+const unpackSchedule = readStampedGrid;
 
 const newId = () =>
   globalThis.crypto?.randomUUID?.() ||
   `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const fromRow = (row) => ({
-  id: row.id,
-  name: row.name,
-  schedule: row.schedule,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-});
+const fromRow = (row) => {
+  const { grid, baseYear } = unpackSchedule(row.schedule);
+  return {
+    id: row.id,
+    name: row.name,
+    schedule: grid,
+    baseYear,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+// Local rows predate baseYear too; normalize so callers see one shape.
+const fromLocal = (plan) => ({ ...plan, baseYear: plan?.baseYear ?? null });
 
 const byNewest = (a, b) => (a.updatedAt < b.updatedAt ? 1 : -1);
 
@@ -48,19 +70,30 @@ const writeLocal = (plans) => {
 // Remote whenever there's a signed-in user and a configured client
 const isRemote = (user) => Boolean(user && supabase);
 
+/**
+ * Course / unit summary for a snapshot.
+ *
+ * `units` counts only courses whose unit value the catalog actually supplies.
+ * `unknownUnits` counts the rest separately instead of folding them in as 0 —
+ * "12 units" plus a visible "2 unknown" is honest, whereas `Number(x) || 0`
+ * turned an audit-vouched course's null (and a sequence's "4-4-4") into a
+ * confident zero and understated every total built on it.
+ */
 export const planStats = (schedule) => {
   let courses = 0;
   let units = 0;
+  let unknownUnits = 0;
   (schedule || []).forEach((year) => {
     TERMS.forEach((term) => {
       (year?.[term] || []).forEach((course) => {
         if (!course) return;
         courses += 1;
-        units += Number(course.credits) || 0;
+        if (hasUnknownCredits(course)) unknownUnits += 1;
+        else units += parseCredits(course.credits);
       });
     });
   });
-  return { courses, units };
+  return { courses, units, unknownUnits };
 };
 
 export const listSavedPlans = async (user) => {
@@ -72,7 +105,7 @@ export const listSavedPlans = async (user) => {
     if (error) throw new Error(error.message);
     return (data || []).map(fromRow);
   }
-  return readLocal().sort(byNewest);
+  return readLocal().map(fromLocal).sort(byNewest);
 };
 
 export const createSavedPlan = async (user, name, schedule) => {
@@ -80,7 +113,7 @@ export const createSavedPlan = async (user, name, schedule) => {
   if (isRemote(user)) {
     const { data, error } = await supabase
       .from("saved_plans")
-      .insert({ user_id: user.id, name: trimmed, schedule })
+      .insert({ user_id: user.id, name: trimmed, schedule: packSchedule(schedule) })
       .select("id, name, schedule, created_at, updated_at")
       .single();
     if (error) throw new Error(error.message);
@@ -92,6 +125,7 @@ export const createSavedPlan = async (user, name, schedule) => {
     id: newId(),
     name: trimmed,
     schedule,
+    baseYear: gridBaseYear(),
     createdAt: now,
     updatedAt: now,
   };
@@ -104,7 +138,8 @@ export const updateSavedPlan = async (user, id, patch) => {
   const now = new Date().toISOString();
   const changes = { updated_at: now };
   if (patch.name !== undefined) changes.name = patch.name.trim();
-  if (patch.schedule !== undefined) changes.schedule = patch.schedule;
+  // Re-stamp baseYear with the grid: an overwrite is a fresh snapshot.
+  if (patch.schedule !== undefined) changes.schedule = packSchedule(patch.schedule);
 
   if (isRemote(user)) {
     const { data, error } = await supabase
@@ -123,12 +158,14 @@ export const updateSavedPlan = async (user, id, patch) => {
   const updated = {
     ...plans[index],
     ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
-    ...(patch.schedule !== undefined ? { schedule: patch.schedule } : {}),
+    ...(patch.schedule !== undefined
+      ? { schedule: patch.schedule, baseYear: gridBaseYear() }
+      : {}),
     updatedAt: now,
   };
   plans[index] = updated;
   writeLocal(plans);
-  return updated;
+  return fromLocal(updated);
 };
 
 export const deleteSavedPlan = async (user, id) => {
