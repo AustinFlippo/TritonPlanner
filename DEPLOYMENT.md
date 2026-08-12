@@ -4,12 +4,12 @@ Three deployable pieces plus Supabase:
 
 | Piece | Where | Root directory |
 |---|---|---|
-| React client | Vercel | `mern/client` |
+| React client | Render (Static Site) | repo root, builds `mern/client` |
 | Express API | Render (Web Service, Node) | `mern/server` |
 | FastAPI planner/RAG | Render (Web Service, Docker) | `app` |
 | Auth + saved plans | Supabase | — |
 
-Deploy in this order: **Supabase → FastAPI → Express → Vercel**. Each step needs
+Deploy in this order: **Supabase → FastAPI → Express → client**. Each step needs
 the URL of the one before it.
 
 ---
@@ -22,8 +22,8 @@ the URL of the one before it.
    `app_admins`).
 2. Enable **Google** under Authentication → Providers.
 3. Authentication → URL Configuration:
-   - **Site URL** → your Vercel production URL
-   - **Redirect URLs** → add `https://<your-app>.vercel.app/**`
+   - **Site URL** → your static site's URL
+   - **Redirect URLs** → add `https://<your-site>.onrender.com/**`
 
    The repo's `supabase/config.toml` only lists `http://localhost:5173`. If you
    skip this, Google sign-in fails in production with a redirect error and
@@ -82,11 +82,11 @@ that. If you instead run `node mern/server/server.js` from the repo root,
 | `SUPABASE_URL` | for admin controls | same project URL as the client |
 | `SUPABASE_ANON_KEY` | for admin controls | same anon key as the client |
 | `OPENAI_API_KEY` | yes | used by the search/recommendation path |
-| `CORS_ORIGINS` | recommended | comma-separated browser origins, e.g. `https://your-app.vercel.app` |
+| `CORS_ORIGINS` | recommended | comma-separated browser origins, e.g. `https://your-site.onrender.com` |
 | `GOOGLE_SERVICE_ACCOUNT_PATH` | only for Sheets export | see below |
 
 Leave `CORS_ORIGINS` unset and any origin is allowed, which keeps local
-development and Vercel preview deployments working. Set it in production: the
+development and Render preview environments working. Set it in production: the
 catalog data is public, but `/chat` spends OpenAI credits. Requests with no
 `Origin` header (curl, health checks, server-to-server) are always allowed —
 CORS is a browser control, not an auth boundary.
@@ -116,33 +116,31 @@ Admins control cadence from **Admin → Section data**.
 
 ---
 
-## 4. React client (Vercel)
+## 4. React client (Render Static Site)
 
-New Project → **leave Root Directory at the repository root.** Do *not* set it
-to `mern/client`.
+New **Static Site** → same repo.
 
-The committed `vercel.json` drives the build:
+| Setting | Value |
+|---|---|
+| Root Directory | *(leave blank — repo root)* |
+| Build Command | `cd mern/client && npm install && npm run build` |
+| Publish Directory | `mern/client/dist` |
 
-```json
-"buildCommand": "cd mern/client && npm install && npm run build",
-"outputDirectory": "mern/client/dist"
-```
-
-This matters. Four client files import `../../../../booking-bridge/core/*.js`,
-which reaches outside `mern/client`:
+Build from the repo root rather than pointing Root Directory at `mern/client`.
+Four client files import `../../../../booking-bridge/core/*.js`, which reaches
+outside `mern/client`:
 
 - `context/NextQuarterOfferingsContext.jsx`
 - `components/QuarterlyView.jsx`
 - `components/AdminSectionData.jsx`
 - `utils/sectionPackages.js`
 
-Pointing the Root Directory at `mern/client` can exclude `booking-bridge/` from
-the build context, and the build then fails on unresolved imports. Building
-from the repo root keeps the sibling package available. A local
-`npm run build` inside `mern/client` succeeds either way — the sibling is on
-disk — so it does **not** prove the deploy will work.
+Render clones the whole repo, so the sibling package is on disk either way, but
+building from the root is the configuration that has actually been verified and
+it removes the question entirely.
 
-Only one route exists (`/`), so no SPA rewrite rule is needed.
+Only one route exists (`/`), so no SPA rewrite rule is needed. (If routes are
+added later, add a Render rewrite: source `/*` → destination `/index.html`.)
 
 | Variable | Required | Notes |
 |---|---|---|
@@ -150,15 +148,19 @@ Only one route exists (`/`), so no SPA rewrite rule is needed.
 | `VITE_SUPABASE_URL` | yes | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | yes | Supabase anon public key |
 
-**These are read at build time, not runtime.** Changing one in the Vercel
-dashboard does nothing until you redeploy. If the app loads but every course
-list is empty, `VITE_API_URL` was missing or wrong when the bundle was built —
-a production bundle built without it falls back to `http://localhost:5050`, so
-every request goes to the visitor's own machine. The bundle now logs an
-explicit console error in that case instead of failing silently.
+**These are read at build time, not runtime.** Changing one in the Render
+dashboard does nothing until you trigger a new build. If the app loads but
+every course list is empty, `VITE_API_URL` was missing or wrong when the bundle
+was built — a production bundle built without it falls back to
+`http://localhost:5050`, so every request goes to the visitor's own machine.
+The bundle logs an explicit console error in that case instead of failing
+silently.
 
 Without the two Supabase variables the app still runs — signed out, with
 localStorage persistence only.
+
+A `vercel.json` is committed at the repo root. It is unused by Render and can
+be ignored or deleted; it encodes the same build for Vercel if you ever move.
 
 ---
 
