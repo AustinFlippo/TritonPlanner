@@ -1,5 +1,6 @@
-import React from "react";
+import { Plus } from "lucide-react";
 import CourseCard from "./CourseCard";
+import { hasUnknownCredits } from "../../utils/courseCredits";
 
 const TermBlock = ({
   termName,
@@ -15,19 +16,41 @@ const TermBlock = ({
   getSlotClassName,
   previewState,
   dragTarget,
-  invalidDrop,
+  dropWarning,
+  getCourseWarning,
+  onOpenCourse,
 }) => {
+  const termUnits = calculateTermUnits(courses);
+  // Courses the catalog has no unit count for are excluded from the total on
+  // purpose — say so, rather than letting the total imply they're worth zero.
+  const unknownUnitCourses = (courses || []).filter(
+    (course) => course && hasUnknownCredits(course)
+  ).length;
+
   return (
-    <div className="flex-1 p-2">
-      {/* Term header with units */}
-      <div className="bg-stone-100 p-2 mb-2 flex justify-between items-center rounded">
-        <span className="font-semibold">{termName}</span>
-        <div className="flex items-center">
-          <span className="text-sm mr-2">term units</span>
-          <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-sm font-bold">
-            {calculateTermUnits(courses).toFixed(1)}
-          </span>
-        </div>
+    <div className="flex-1 px-3 py-3">
+      {/* Term header — single line, quiet units */}
+      <div className="flex justify-between items-baseline mb-2 px-1">
+        <span className="text-[13px] font-semibold text-slate-700">
+          {termName}
+        </span>
+        <span
+          className={`text-xs tabular-nums ${
+            termUnits > 0 ? "font-medium text-slate-600" : "text-slate-400"
+          }`}
+        >
+          {termUnits.toFixed(1)} units
+          {unknownUnitCourses > 0 && (
+            <span
+              className="ml-1 text-amber-600"
+              title={`${unknownUnitCourses} course${
+                unknownUnitCourses === 1 ? "" : "s"
+              } here have no published unit count, so they aren't in this total.`}
+            >
+              + {unknownUnitCourses} ?
+            </span>
+          )}
+        </span>
       </div>
 
       {/* Course slots */}
@@ -41,6 +64,7 @@ const TermBlock = ({
           {course ? (
             <CourseCard
               course={course}
+              warning={getCourseWarning ? getCourseWarning(course, termKey) : null}
               isPreviewing={
                 previewState &&
                 previewState.sourceYearIndex === yearIndex &&
@@ -52,25 +76,27 @@ const TermBlock = ({
               }
               onDragEnd={handleDragEnd}
               onRemove={() => handleRemoveCourse(yearIndex, termKey, courseIndex)}
+              onOpen={onOpenCourse}
             />
           ) : (
-            <div className="border border-gray-300 rounded p-4 text-gray-400 text-center bg-gray-50">
-              {invalidDrop &&
+            <div className="h-11 flex items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/60 text-slate-300">
+              {dropWarning &&
+              dragTarget &&
               dragTarget.yearIndex === yearIndex &&
               dragTarget.term === termKey &&
               dragTarget.courseIndex === courseIndex ? (
-                <div className="text-red-600">
-                  Course not offered in {termName}
-                </div>
+                <span className="text-xs text-amber-600 px-2 text-center">
+                  May not be offered in {termName}
+                </span>
               ) : previewState &&
                 previewState.targetYearIndex === yearIndex &&
                 previewState.targetTerm === termKey &&
                 previewState.targetCourseIndex === courseIndex ? (
-                <div className="text-yellow-600">
-                  {previewState.course.course_name} (Preview)
-                </div>
+                <span className="text-xs text-gold-600">
+                  {previewState.course.course_name} (preview)
+                </span>
               ) : (
-                "Drop course here"
+                <Plus className="w-4 h-4" aria-label="Empty course slot" />
               )}
             </div>
           )}

@@ -1,0 +1,885 @@
+{
+  "_comment": [
+    "Conformance cases for degree-audit requirement evaluation.",
+    "Loaded by BOTH mern/client/src/utils/auditRequirements.test.mjs (node --test)",
+    "and app/tests/test_audit_requirements.py (pytest). The JS and Python",
+    "evaluators are separate implementations of one spec; these cases are what",
+    "keeps them honest. If you change semantics on one side, the other side's",
+    "suite goes red.",
+    "",
+    "Shapes are taken from a real UC San Diego audit (Data Science BS, Eighth",
+    "College), so the tricky ones are not hypothetical.",
+    "",
+    "matches() in both runtimes is plain normalized equality for these cases;",
+    "cross-listing aliases are the caller's job and are tested separately."
+  ],
+  "cases": [
+    {
+      "name": "all-mode: every slot must be filled (real DS25 Core)",
+      "why": "7 slots and NEEDS 7 means complete each slot, not any 7 of the 11 codes",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 7,
+        "groups": [
+          [
+            "MATH 189",
+            "DSC 152"
+          ],
+          [
+            "DSC 100"
+          ],
+          [
+            "DSC 102"
+          ],
+          [
+            "DSC 106"
+          ],
+          [
+            "DSC 140A",
+            "CSE 150A"
+          ],
+          [
+            "DSC 140B",
+            "CSE 151A"
+          ],
+          [
+            "DSC 148",
+            "CSE 158"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 102",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 106",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 140A",
+          "credits": 4
+        },
+        {
+          "course_id": "CSE 150A",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 140B",
+          "credits": 4
+        },
+        {
+          "course_id": "CSE 151A",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "all",
+        "satisfied": false,
+        "progress": 5,
+        "needed": 7,
+        "openGroupCount": 2
+      },
+      "note": "Seven courses planned, but two are alternatives within slots already filled, so the MATH 189/DSC 152 and DSC 148/CSE 158 slots stay open. The old flat model called this complete."
+    },
+    {
+      "name": "all-mode: genuinely complete",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 3,
+        "groups": [
+          [
+            "MATH 189",
+            "DSC 152"
+          ],
+          [
+            "DSC 100"
+          ],
+          [
+            "DSC 140A",
+            "CSE 150A"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "DSC 152",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        },
+        {
+          "course_id": "CSE 150A",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "all",
+        "satisfied": true,
+        "progress": 3,
+        "needed": 3,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "all-mode: maximum matching beats greedy",
+      "why": "A course eligible for two slots must not block a course eligible for only one",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 2,
+        "groups": [
+          [
+            "DSC 100",
+            "DSC 102"
+          ],
+          [
+            "DSC 100"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 102",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "all",
+        "satisfied": true,
+        "progress": 2,
+        "needed": 2,
+        "openGroupCount": 0
+      },
+      "note": "Greedy binds DSC 100 to slot 1 and reports 1 of 2. Correct answer assigns DSC 102 to slot 1 and DSC 100 to slot 2."
+    },
+    {
+      "name": "any-mode: pick 1 from a long pool (real Arts breadth)",
+      "why": "81 slots and NEEDS 1 is a pool, not 81 required courses",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 1,
+        "groups": [
+          [
+            "FILM 71"
+          ],
+          [
+            "FILM 72"
+          ],
+          [
+            "MUS 11"
+          ],
+          [
+            "MUS 17"
+          ],
+          [
+            "VIS 1"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "MUS 17",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": true,
+        "progress": 1,
+        "needed": 1,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "any-mode: short of the count",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 2,
+        "groups": [
+          [
+            "FILM 71"
+          ],
+          [
+            "FILM 72"
+          ],
+          [
+            "MUS 11"
+          ],
+          [
+            "MUS 17"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "MUS 11",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": false,
+        "progress": 1,
+        "needed": 2,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "any-mode: one course cannot count twice",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 2,
+        "groups": [
+          [
+            "DSC 100"
+          ],
+          [
+            "DSC 100"
+          ],
+          [
+            "DSC 102"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": false,
+        "progress": 1,
+        "needed": 2,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "units: pool summed by credits (real Electives)",
+      "requirement": {
+        "needType": "units",
+        "needAmount": 16,
+        "groups": [
+          [
+            "BICD 100"
+          ],
+          [
+            "COGS 109"
+          ],
+          [
+            "COGS 118C"
+          ],
+          [
+            "CSE 170"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "COGS 109",
+          "credits": 4
+        },
+        {
+          "course_id": "CSE 170",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": false,
+        "progress": 8,
+        "needed": 16,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "units: satisfied exactly",
+      "requirement": {
+        "needType": "units",
+        "needAmount": 8,
+        "groups": [
+          [
+            "BICD 100"
+          ],
+          [
+            "COGS 109"
+          ],
+          [
+            "CSE 170"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "COGS 109",
+          "credits": 4
+        },
+        {
+          "course_id": "BICD 100",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": true,
+        "progress": 8,
+        "needed": 8,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "units: unlisted courses do not count",
+      "requirement": {
+        "needType": "units",
+        "needAmount": 8,
+        "groups": [
+          [
+            "BICD 100"
+          ],
+          [
+            "COGS 109"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "CSE 100",
+          "credits": 4
+        },
+        {
+          "course_id": "COGS 109",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": false,
+        "progress": 4,
+        "needed": 8,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "units: a dash-joined sequence counts its leading quarter",
+      "why": "Number(\"4-4-4\") is NaN, so this pool scored HILD 2A at 0 units while the list-less unit branch scored it 4 - one course, two answers. Both sides must read credits with parseCredits / parse_credits",
+      "requirement": {
+        "needType": "units",
+        "needAmount": 8,
+        "groups": [
+          [
+            "HILD 2A"
+          ],
+          [
+            "COGS 109"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "HILD 2A",
+          "credits": "4-4-4"
+        },
+        {
+          "course_id": "COGS 109",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": true,
+        "progress": 8,
+        "needed": 8,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "single-slot requirement (real CCE 3)",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 1,
+        "groups": [
+          [
+            "CCE 3"
+          ]
+        ]
+      },
+      "courses": [
+        {
+          "course_id": "CCE 3",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "all",
+        "satisfied": true,
+        "progress": 1,
+        "needed": 1,
+        "openGroupCount": 0
+      }
+    },
+    {
+      "name": "nothing planned",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 2,
+        "groups": [
+          [
+            "DSC 100"
+          ],
+          [
+            "DSC 102"
+          ]
+        ]
+      },
+      "courses": [],
+      "expect": {
+        "mode": "all",
+        "satisfied": false,
+        "progress": 0,
+        "needed": 2,
+        "openGroupCount": 2
+      }
+    },
+    {
+      "name": "no groups at all is never satisfiable",
+      "why": "List-less requirements must not silently count as done",
+      "requirement": {
+        "needType": "courses",
+        "needAmount": 1,
+        "groups": []
+      },
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "mode": "any",
+        "satisfied": false,
+        "progress": 0,
+        "needed": 1,
+        "openGroupCount": 0
+      }
+    }
+  ],
+  "_scope_comment": [
+    "Scope cases test a rule that lives ABOVE a single subrequirement: how far",
+    "does 'a course can only count once' reach?",
+    "",
+    "A real UC San Diego audit double-counts ACROSS categories but not within",
+    "one. In the reference audit, BILD 1 and BILD 3 each satisfy Breadth/Natural",
+    "Science AND Major/Subject Domain; PHIL 35 satisfies Breadth/Humanities AND",
+    "UC Writing/DEI. So exclusivity is per audit section, not global.",
+    "",
+    "This was a real drift: the sidebar scoped it per section while the agent",
+    "scoped it globally, so the agent told students to add a course they had",
+    "already planned. The per-subrequirement cases above cannot catch it,",
+    "because they only ever describe one subrequirement.",
+    "",
+    "Each side maps these onto its own entry point (evaluateRequirement per",
+    "section in JS, check_coverage over all sections in Python) and reports the",
+    "set of SATISFIED subrequirement titles.",
+    "",
+    "Rows that state no NEEDS at all are SKIPPED by both sides - they are not",
+    "reported satisfied and they do not block anything. A row with an options",
+    "list but no parsed NEEDS is such a row."
+  ],
+  "scope_cases": [
+    {
+      "name": "one course satisfies requirements in two different sections",
+      "why": "UCSD double-counts across categories - BILD 1 really does count twice",
+      "sections": [
+        {
+          "title": "Breadth Requirements",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Natural Science",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 1"
+                ],
+                [
+                  "CHEM 6A"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 1",
+                "CHEM 6A"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Major Lower Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Subject Domain",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 1"
+                ],
+                [
+                  "COGS 9"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 1",
+                "COGS 9"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "BILD 1",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Natural Science",
+          "Subject Domain"
+        ]
+      }
+    },
+    {
+      "name": "one course cannot fill two rows of the SAME section",
+      "why": "Within a category the audit requires distinct courses",
+      "sections": [
+        {
+          "title": "Major Upper Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Row A",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 1"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 1"
+              ]
+            },
+            {
+              "title": "Row B",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 1"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 1"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "BILD 1",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Row A"
+        ]
+      }
+    },
+    {
+      "name": "distinct courses fill distinct rows in one section",
+      "sections": [
+        {
+          "title": "Major Upper Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Row A",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 1"
+                ],
+                [
+                  "BILD 3"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 1",
+                "BILD 3"
+              ]
+            },
+            {
+              "title": "Row B",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "BILD 3"
+                ]
+              ],
+              "availableCodes": [
+                "BILD 3"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "BILD 1",
+          "credits": 4
+        },
+        {
+          "course_id": "BILD 3",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Row A",
+          "Row B"
+        ]
+      }
+    },
+    {
+      "name": "a satisfiable plan is not reported short because of row order",
+      "why": "Assignment must run across ALL rows of a section at once. Deciding row by row let the broad Electives row swallow DSC 100 - the only course the narrow Core row can ever accept - and the student was told to add a course already on their grid",
+      "sections": [
+        {
+          "title": "Data Science Upper Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Electives",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "DSC 100"
+                ],
+                [
+                  "DSC 102"
+                ],
+                [
+                  "DSC 106"
+                ]
+              ],
+              "availableCodes": [
+                "DSC 100",
+                "DSC 102",
+                "DSC 106"
+              ]
+            },
+            {
+              "title": "Core",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "DSC 100"
+                ]
+              ],
+              "availableCodes": [
+                "DSC 100"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        },
+        {
+          "course_id": "DSC 102",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Electives",
+          "Core"
+        ]
+      }
+    },
+    {
+      "name": "a row with options but no parsed NEEDS is skipped, not a blocker",
+      "why": "Such a row used to default to 'needs 1', fail, and pin its whole category at 0% forever with nothing on screen explaining why. Python skipped it; the two sides disagreed on every audit containing one",
+      "sections": [
+        {
+          "title": "Major Upper Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Row with a list but no NEEDS",
+              "status": "not_fulfilled",
+              "needType": null,
+              "needAmount": null,
+              "groups": [
+                [
+                  "DSC 106"
+                ]
+              ],
+              "availableCodes": [
+                "DSC 106"
+              ]
+            },
+            {
+              "title": "Row the plan covers",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "DSC 100"
+                ]
+              ],
+              "availableCodes": [
+                "DSC 100"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Row the plan covers"
+        ]
+      }
+    },
+    {
+      "name": "an in-progress row does not consume a sibling's planned course",
+      "why": "Eighth GE mid-quarter: CCE 3 in progress must not claim the planned CCE 120 and leave its own row reported short. The section title matches the attribute registry, so an unmet row here is handed the whole approved CCE list - which is exactly what an in-progress row must not receive",
+      "sections": [
+        {
+          "title": "Eighth College General Education Requirements",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Critical Community Engagement 3",
+              "status": "in_progress",
+              "needType": null,
+              "needAmount": null,
+              "groups": [],
+              "availableCodes": []
+            },
+            {
+              "title": "Critical Community Engagement 120",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "CCE 120"
+                ]
+              ],
+              "availableCodes": [
+                "CCE 120"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "CCE 120",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Critical Community Engagement 3",
+          "Critical Community Engagement 120"
+        ]
+      }
+    },
+    {
+      "name": "an in-progress row is on track, not a blocker",
+      "why": "The audit closes an in-progress row when grades post, so it needs no planned course. Treating it as unmet capped the sidebar's projection while the agent silently dropped it - the two sides disagreed on every mid-quarter audit",
+      "sections": [
+        {
+          "title": "Major Upper Division",
+          "status": "not_fulfilled",
+          "subrequirements": [
+            {
+              "title": "Row already under way",
+              "status": "in_progress",
+              "needType": null,
+              "needAmount": null,
+              "groups": [],
+              "availableCodes": []
+            },
+            {
+              "title": "Row the plan covers",
+              "status": "not_fulfilled",
+              "needType": "courses",
+              "needAmount": 1,
+              "groups": [
+                [
+                  "DSC 100"
+                ]
+              ],
+              "availableCodes": [
+                "DSC 100"
+              ]
+            }
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "course_id": "DSC 100",
+          "credits": 4
+        }
+      ],
+      "expect": {
+        "satisfied": [
+          "Row already under way",
+          "Row the plan covers"
+        ]
+      }
+    }
+  ]
+}

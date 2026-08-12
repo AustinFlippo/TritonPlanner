@@ -1,0 +1,37 @@
+flowchart LR
+  subgraph Planner["TritonPlanner left side"]
+    Grid["4-year grid<br/>one term cell"]
+    Catalog["v5.json catalog<br/>prereqs · offerings · units"]
+    Seats["scrapedSections<br/>from OData scrape"]
+    Build["buildBookingPlan()"]
+    Rank["Rank by unlocks<br/>+ scarcity + seats"]
+    Pack["Pack under unit cap<br/>11.5 / 19.5 / 22"]
+    Conflict["Drop / swap<br/>time conflicts"]
+  end
+
+  subgraph Bridge["Extension relay"]
+    Send["planAndSend()<br/>CustomEvent"]
+    PB["planner-bridge.js"]
+    SW["background.js<br/>TPBB_SET_PLAN"]
+    Store[("chrome.storage<br/>bookingPlan")]
+  end
+
+  subgraph TSSUI["TSS tab — assist only"]
+    Overlay["overlay.js panel"]
+    Adapter["adapter.prepareBooking"]
+    Prefill["Prefill grading<br/>+ credit hours"]
+    Highlight["Highlight Book/Save"]
+    Human["Student presses<br/>the button"]
+  end
+
+  Grid --> Build
+  Catalog --> Build
+  Seats --> Build
+  Build --> Rank --> Pack --> Conflict
+  Conflict -->|ordered steps + deferred| Send
+  Send --> PB --> SW --> Store
+  Store --> Overlay
+  Overlay --> Adapter
+  Adapter --> Prefill
+  Adapter --> Highlight
+  Highlight --> Human

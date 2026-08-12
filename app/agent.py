@@ -80,7 +80,9 @@ def generate(state: State):
             "context": docs_content
         })
         
-        llm = ChatOpenAI(temperature=0.1, model_name="gpt-4o-mini-2024-07-18")
+        llm = ChatOpenAI(
+            model_name=os.getenv("LLM_MODEL", "gpt-5.6-terra"),
+        )
         response = llm.invoke(messages)
         
         return {"answer": response.content}

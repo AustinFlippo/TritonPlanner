@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const ProfessorInfo = ({ professor }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -12,7 +12,14 @@ const ProfessorInfo = ({ professor }) => {
         <span className="text-sm font-semibold text-blue-600 hover:underline">
           {professor.name}
         </span>
-        <span className="text-sm text-gray-700">⭐ {professor.quality_rating}</span>
+        {/* An instructor teaching next quarter with no RateMyProfessors page
+            still belongs on the list, so the rating reads "Not rated" rather
+            than a bare "N/A" next to a star. */}
+        <span className="text-sm text-gray-700">
+          {professor.quality_rating && professor.quality_rating !== "N/A"
+            ? `⭐ ${professor.quality_rating}`
+            : "Not rated"}
+        </span>
       </div>
 
       {showDetails && (
@@ -21,16 +28,18 @@ const ProfessorInfo = ({ professor }) => {
           <div><strong>Difficulty:</strong> {professor.difficulty}</div>
           <div><strong>Ratings:</strong> {professor.num_ratings}</div>
           <div><strong>Department:</strong> {professor.department}</div>
-          <div>
-            <a
-              href={professor.profile_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              View on RateMyProfessors
-            </a>
-          </div>
+          {professor.profile_link && (
+            <div>
+              <a
+                href={professor.profile_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                View on RateMyProfessors
+              </a>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,0 +1,41 @@
+{
+  "_note": [
+    "Courses that UC San Diego actually teaches but that catalog.ucsd.edu has",
+    "not published yet. scrape-catalog.mjs can only see the General Catalog, so",
+    "these would otherwise be dropped by build-catalog.mjs even when the",
+    "Schedule of Classes proves they ran (see the 'SoC listings with no catalog",
+    "entry' count it prints).",
+    "",
+    "Entries are hand-written in the catalog-scrape.json shape. build-catalog.mjs",
+    "only uses an entry when the fresh catalog scrape has no course with the same",
+    "normalized id, so each one disappears on its own once UCSD publishes the",
+    "real listing. Recheck this file whenever the catalog is re-scraped.",
+    "",
+    "`offerings` here is a fallback used only when the Schedule of Classes",
+    "harvest has no evidence for the course; observed quarters always win."
+  ],
+  "courses": [
+    {
+      "normalized_course_id": "cce110",
+      "course_id": "CCE 110",
+      "course_name": "Foundations for Community Partnership",
+      "description": "This course is designed to prepare transfer students for critical community engagement by introducing both foundational concepts and community-facing writing skills. Students will integrate course material with their lived experience and collegiate academic history in preparation for community partnership and project design. Must be taken for a letter grade to count toward Eighth College general-education requirements. Prerequisites: Eighth College transfer students only.",
+      "credits": "4",
+      "prerequisites": "Eighth College transfer students only.",
+      "professors": [],
+      "offerings": ["FA", "WI", "SP"],
+      "_provenance": "https://eighth.ucsd.edu/engagement-program/cce-course-descriptions.html — launching Fall 2026 (four sections on Eighth's tentative FA26 schedule); not in catalog.ucsd.edu/courses/CCE.html or the legacy Schedule of Classes, which ends at SU26."
+    },
+    {
+      "normalized_course_id": "cce120",
+      "course_id": "CCE 120",
+      "course_name": "Community Partnership and Project Design",
+      "description": "This course focuses on putting the skills acquired in CCE 1-3 or CCE 110 (for transfers) into practice by acting. This project-based capstone course gives students the opportunity to design, develop, and deliver a project in collaboration with local community partners. Attendance is required for lecture and fieldwork sections (e.g., A00 + A01). Must be taken for a letter grade to count toward Eighth College general-education requirements. Prerequisites: Eighth College students only, junior or senior standing; CCE 1, CCE 2, and CCE 3, or CCE 110 for transfer students.",
+      "credits": "4",
+      "prerequisites": "Eighth College students only, junior or senior standing; CCE 1, CCE 2, and CCE 3, or CCE 110 for transfer students.",
+      "professors": [],
+      "offerings": ["FA", "WI", "SP"],
+      "_provenance": "https://eighth.ucsd.edu/engagement-program/cce-course-descriptions.html — capstone of the Eighth College CCE sequence, running since FA25. Confirmed in the Schedule of Classes for FA25/WI26/SP26 (4 units, JR/SR restricted) but absent from catalog.ucsd.edu/courses/CCE.html."
+    }
+  ]
+}

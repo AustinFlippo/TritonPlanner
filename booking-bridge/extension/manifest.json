@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "TritonPlanner Booking Bridge",
+  "version": "0.4.1",
+  "description": "Carries a TritonPlanner schedule into TSS: reads Schedule of Classes section data and walks you through booking, in your own signed-in session.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://tss.ucsd.edu/*",
+    "https://sis.ucsd.edu/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "TritonPlanner Booking Bridge",
+    "default_popup": "popup/popup.html"
+  },
+  "options_ui": {
+    "page": "admin/admin.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/ui5-probe.js"
+      ],
+      "matches": [
+        "https://tss.ucsd.edu/*",
+        "https://sis.ucsd.edu/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://tss.ucsd.edu/*",
+        "https://sis.ucsd.edu/*"
+      ],
+      "js": [
+        "content/runtime.js",
+        "content/selectors.js",
+        "content/parsing.js",
+        "content/capture.js",
+        "content/adapter.js",
+        "content/odata.js",
+        "content/overlay.js"
+      ],
+      "css": [
+        "content/overlay.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "content/runtime.js",
+        "content/planner-bridge.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

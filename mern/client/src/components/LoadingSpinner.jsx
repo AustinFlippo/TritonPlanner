@@ -1,8 +1,10 @@
-import React from "react";
+import { Loader2 } from "lucide-react";
 
-const LoadingSpinner = ({ size = "6", color = "blue-500", className = "" }) => {
+// Note: Tailwind can't see dynamically-built class names, so the spinner uses
+// a fixed style instead of interpolated size/color classes.
+const LoadingSpinner = ({ className = "" }) => {
   return (
-    <div className={`animate-spin rounded-full h-${size} w-${size} border-t-2 border-b-2 border-${color} ${className}`} />
+    <Loader2 className={`w-5 h-5 animate-spin text-navy-500 ${className}`} />
   );
 };
 

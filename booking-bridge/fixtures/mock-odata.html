@@ -1,0 +1,255 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OData client assertions</title>
+  <style>
+    body { font: 14px/1.5 ui-monospace, monospace; padding: 24px; max-width: 900px; }
+    .pass { color: #087443; } .fail { color: #b91c1c; font-weight: 600; }
+    h1 { font-size: 16px; } pre { background: #f5f5f5; padding: 12px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>TSS OData client — offline assertions</h1>
+  <p>
+    Exercises <code>odata.js</code> against stubbed responses copied from a real
+    entity-set dump of live TSS (2026-08-10): the three-table join across
+    <code>YUCSD_CON_MODULE</code>, <code>YUCSD_CON_EVENTS</code> and
+    <code>YUCSD_CON_MODULE_SCHED</code>. No signed-in session needed.
+  </p>
+  <div id="out"></div>
+
+  <script>
+  (async () => {
+    const out = document.getElementById("out");
+
+    // Load the real content scripts with cache busting, before fetch is stubbed
+    // below. Static <script src> tags let the browser serve a stale copy after
+    // an edit, which shows up as a phantom failure against correct code.
+    for (const file of ["selectors", "parsing", "odata"]) {
+      const source = await (
+        await fetch(`../extension/content/${file}.js?v=${Date.now()}`, { cache: "no-store" })
+      ).text();
+      new Function(source)();
+    }
+
+    let failures = 0;
+    const check = (label, actual, expected) => {
+      const ok = JSON.stringify(actual) === JSON.stringify(expected);
+      if (!ok) failures++;
+      const line = document.createElement("div");
+      line.className = ok ? "pass" : "fail";
+      line.textContent = `${ok ? "PASS" : "FAIL"}  ${label}` +
+        (ok ? "" : `\n      expected ${JSON.stringify(expected)}\n      got      ${JSON.stringify(actual)}`);
+      line.style.whiteSpace = "pre";
+      out.appendChild(line);
+    };
+
+    // --- stubbed service, verbatim shapes from the live dump ----------------
+
+    // One course: AAS-010R, Fall 2026 (AcademicPeriod "2"), ModuleID "4".
+    const MODULE_ROWS = [{
+      AcademicYear: "2026", AcademicYear_Text: "2026/2027",
+      AcademicPeriod: "2", AcademicPeriod_Text: "Fall Quarter",
+      ModuleID: "4", Persl: "26FA",
+      CourseAbbr: "AAS-010R", CourseTitle: "Introduction to African American Studies",
+      MinimumCredits: 4, MaximumCredits: 4, CreditsDisplay: "4.00",
+      seatsAvailable: "Y", DoW: "", EventID: "", Instructor: "", Building: "", Location: "",
+    }];
+
+    // A lecture and its discussion — same EventPkgOtjid, so one enrollable
+    // package, and the package's seat counts repeat on both rows.
+    const EVENT_ROWS = [
+      {
+        AcYear: "2026", AcPeriod: "2", ModuleID: "4",
+        EventPkgOtjid: "SE00150888", EventID: "E 00004309", EventObjid: "4309",
+        TeachingMethod: "LE", TeachingMethod_Text: "Lecture",
+        InstructorName: "Libby Butler", locationText: "MC Online",
+        EventAbbr: "001-000-LE", Sched: "Tu, Th 05:00 PM - 06:20 PM Live Online ",
+        EventPkgLimit: 38, EventPkgSeatsAvailable: 28, EventPkgNumOnWaitl: 0,
+      },
+      {
+        AcYear: "2026", AcPeriod: "2", ModuleID: "4",
+        EventPkgOtjid: "SE00150888", EventID: "E 00004310", EventObjid: "4310",
+        TeachingMethod: "DI", TeachingMethod_Text: "Discussion",
+        InstructorName: "Libby Butler", locationText: "MC Online",
+        EventAbbr: "001-001-DI", Sched: "W 02:00 PM - 02:50 PM Live Online ",
+        EventPkgLimit: 38, EventPkgSeatsAvailable: 28, EventPkgNumOnWaitl: 0,
+      },
+      // A full section with a waitlist, to exercise the status ladder.
+      {
+        AcYear: "2026", AcPeriod: "2", ModuleID: "4",
+        EventPkgOtjid: "SE00150999", EventID: "E 00004311", EventObjid: "4311",
+        TeachingMethod: "LE", TeachingMethod_Text: "Lecture",
+        InstructorName: "Ruiz, A", locationText: "CENTR 109",
+        EventAbbr: "002-000-LE", Sched: "MWF 09:00 AM - 09:50 AM ",
+        EventPkgLimit: 40, EventPkgSeatsAvailable: 0, EventPkgNumOnWaitl: 7,
+      },
+    ];
+
+    // Typed meeting pattern, one row per day. SectionId == EventObjid.
+    const SCHED_ROWS = [
+      { AcYear: "2026", Acsess: "2", ModuleID: "4", DoW: "2", BeginTime: "17:00:00", EndTime: "18:20:00", DurationMins: 80, SectionId: "4309", DoWText: "2 Tuesday" },
+      { AcYear: "2026", Acsess: "2", ModuleID: "4", DoW: "4", BeginTime: "17:00:00", EndTime: "18:20:00", DurationMins: 80, SectionId: "4309", DoWText: "4 Thursday" },
+      { AcYear: "2026", Acsess: "2", ModuleID: "4", DoW: "3", BeginTime: "14:00:00", EndTime: "14:50:00", DurationMins: 50, SectionId: "4310", DoWText: "3 Wednesday" },
+      // 4311 deliberately absent -> must fall back to parsing the Sched string.
+    ];
+
+    // The same course in a different term. It must be filtered out — and it is
+    // also the row that broke the old code: a stray period lookup made the
+    // server-side term filter reject every row, including the Fall ones.
+    const OTHER_TERM_ROW = {
+      ...MODULE_ROWS[0],
+      AcademicPeriod: "3", AcademicPeriod_Text: "Winter Quarter",
+      ModuleID: "99", Persl: "26WI",
+    };
+
+    const METADATA = `<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="com.sap.gateway.srvd.yucsd_con_module_servicedef.v0001">
+      <EntityType Name="YUCSD_CON_MODULEType">
+        <Key><PropertyRef Name="Tabnr"/></Key>
+        <Property Name="AcademicYear" Type="Edm.String"/>
+        <Property Name="AcademicPeriod" Type="Edm.String"/>
+        <Property Name="ModuleID" Type="Edm.String"/>
+        <Property Name="Persl" Type="Edm.String"/>
+        <Property Name="CourseAbbr" Type="Edm.String"/>
+        <Property Name="CourseTitle" Type="Edm.String"/>
+        <Property Name="MinimumCredits" Type="Edm.Decimal"/>
+        <Property Name="MaximumCredits" Type="Edm.Decimal"/>
+        <Property Name="CreditsDisplay" Type="Edm.String"/>
+        <Property Name="seatsAvailable" Type="Edm.String"/>
+        <Property Name="DoW" Type="Edm.String"/>
+        <Property Name="EventID" Type="Edm.String"/>
+        <Property Name="Instructor" Type="Edm.String"/>
+        <Property Name="Building" Type="Edm.String"/>
+        <Property Name="Location" Type="Edm.String"/>
+        <Property Name="DeliveryMode" Type="Edm.String"/>
+        <Property Name="DepartmentText" Type="Edm.String"/>
+        <Property Name="AcademicLevel" Type="Edm.String"/>
+      </EntityType>
+      <EntityContainer Name="Container">
+        <EntitySet Name="YUCSD_CON_MODULE" EntityType="com.sap.gateway.srvd.yucsd_con_module_servicedef.v0001.YUCSD_CON_MODULEType"/>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>`;
+
+    // SAP caps its own page size and returns @odata.nextLink for the remainder,
+    // regardless of the $top asked for. The events collection is served in two
+    // pages here so the continuation is actually exercised — reading only page
+    // one looks exactly like a complete result.
+    const requested = [];
+    window.fetch = async (target) => {
+      requested.push(target);
+      if (target.includes("$metadata")) {
+        return { ok: true, status: 200, text: async () => METADATA };
+      }
+      const page = (value, nextLink) => ({
+        ok: true, status: 200,
+        json: async () => (nextLink ? { value, "@odata.nextLink": nextLink } : { value }),
+      });
+      if (target.includes("YUCSD_CON_MODULE_SCHED")) return page(SCHED_ROWS);
+      if (target.includes("YUCSD_CON_EVENTS")) {
+        return target.includes("$skiptoken")
+          ? page(EVENT_ROWS.slice(2))
+          : page(EVENT_ROWS.slice(0, 2), "YUCSD_CON_EVENTS?$skiptoken=2");
+      }
+      // TSS returns every term for a course code; the client narrows it.
+      return page([...MODULE_ROWS, OTHER_TERM_ROW]);
+    };
+
+    const odata = window.__TPBB_odata;
+    const asked = (fragment) => requested.filter((r) => decodeURIComponent(r).includes(fragment));
+
+    // --- the join ----------------------------------------------------------
+
+    const result = await odata.fetchSections({
+      courseIds: ["AAS 10R"], year: "2026", term: "fall",
+    });
+
+    // Regression: the term filter used to run server-side on a period code
+    // looked up from another table. When that lookup was wrong, every query
+    // returned nothing while the courses plainly existed in the term.
+    check("takes the period code from the matched course rows", result.periodCode, "2");
+    check("does not send a term filter to the server",
+      asked("AcademicPeriod eq").length, 0);
+    check("drops rows from other terms client-side",
+      result.sections.every((s) => s.termText === "Fall Quarter"), true);
+    // 3 events split across 2 pages: only a client that follows @odata.nextLink
+    // sees all of them. Reading page one alone would report 2 and look fine.
+    check("follows @odata.nextLink instead of stopping at page one", result.count, 3);
+    check("re-attaches sap-client to the continuation URL",
+      asked("$skiptoken").every((r) => r.includes("sap-client=500")), true);
+    check("reports that nothing was truncated", result.truncated, false);
+
+    // Asked for "AAS 10R"; TSS stores "AAS-010R". Both spellings must go out.
+    check("queries both the padded and unpadded course code",
+      asked("CourseAbbr eq 'AAS-010R'").length > 0 && asked("CourseAbbr eq 'AAS-10R'").length > 0, true);
+    check("filters events by the resolved ModuleID",
+      asked("ModuleID eq '4'").length > 0, true);
+
+    const lecture = result.sections.find((s) => s.sectionId === "001-000-LE");
+    const discussion = result.sections.find((s) => s.sectionId === "001-001-DI");
+    const full = result.sections.find((s) => s.sectionId === "002-000-LE");
+
+    check("course code comes back unpadded", lecture.courseId, "AAS 10R");
+    check("course title comes from the course row", lecture.courseName,
+      "Introduction to African American Studies");
+    check("component from TeachingMethod", [lecture.component, discussion.component], ["LE", "DI"]);
+
+    // Typed schedule rows, not the display string.
+    check("lecture days from the numeric DoW", lecture.days, ["T", "R"]);
+    check("lecture times from typed BeginTime/EndTime",
+      [lecture.start, lecture.end], ["17:00", "18:20"]);
+    check("discussion is a different day and time",
+      [discussion.days, discussion.start, discussion.end], [["W"], "14:00", "14:50"]);
+
+    // 4311 has no schedule rows -> the Sched string is the fallback.
+    check("falls back to the Sched string when typed rows are missing",
+      [full.days, full.start, full.end], [["M", "W", "F"], "09:00am", "09:50am"]);
+
+    check("seats come from the package", [lecture.seatsAvailable, lecture.seatsTotal], [28, 38]);
+    check("derives seats taken", lecture.seatsTaken, 10);
+    check("lecture and discussion share a package id",
+      lecture.packageId === discussion.packageId, true);
+    check("open when seats remain", lecture.status, "open");
+    check("waitlist-active when full but people are queued", full.status, "waitlist-active");
+    check("carries the waitlist depth", full.waitlisted, 7);
+    check("carries term identity", [lecture.year, lecture.term, lecture.termKey],
+      ["2026", "2", "26FA"]);
+    check("units from the course row", lecture.units, "4.00");
+
+    // --- guards ------------------------------------------------------------
+
+    const empty = await odata.fetchSections({ courseIds: [] });
+    check("no courses requested means no query", empty.count, 0);
+
+    // Asking for a term the course genuinely does not run in must say so, and
+    // must not contradict itself by listing that same term as an alternative.
+    const wrongTerm = await odata.fetchSections({
+      courseIds: ["AAS 10R"], year: "2026", term: "spring",
+    });
+    check("reports a genuinely absent term as not offered", wrongTerm.count, 0);
+    check("does not list the requested term among the alternatives",
+      wrongTerm.offeringsFound.some((o) => /spring/i.test(o)), false);
+
+    requested.length = 0;
+    await odata.fetchSections({ courseIds: ["O'Brien-1"] });
+    check("doubles single quotes in filter literals",
+      asked("'O''BRIEN-1'").length > 0, true);
+
+    const wrongOrigin = await odata.selfTest();
+    check("refuses to run from a non-tss origin", wrongOrigin.ok, false);
+    check("names the origin problem rather than reporting a network failure",
+      /cross-origin/.test(wrongOrigin.error) && wrongOrigin.error.includes(location.origin), true);
+
+    const summary = document.createElement("h2");
+    summary.textContent = failures ? `${failures} assertion(s) failed` : "All assertions passed";
+    summary.className = failures ? "fail" : "pass";
+    out.appendChild(summary);
+  })();
+  </script>
+</body>
+</html>

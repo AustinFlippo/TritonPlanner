@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TritonPlanner — section data</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <header>
+    <h1>TritonPlanner section data</h1>
+    <span id="version" class="muted"></span>
+  </header>
+
+  <section class="panel">
+    <div class="row">
+      <div>
+        <p class="label">Last refreshed</p>
+        <p id="freshness" class="headline">checking…</p>
+        <p id="freshness-exact" class="muted"></p>
+      </div>
+      <button id="refresh" class="primary">Refresh seat counts</button>
+    </div>
+    <p id="result" class="result hidden"></p>
+    <p class="muted footnote">
+      Reads TSS with your existing sign-in — no TSS tab needs to be open.
+      Times and instructors rarely change once a schedule publishes; seat counts
+      move by the minute during enrollment.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="row">
+      <div>
+        <p class="label">Whole term schedule</p>
+        <p id="term-summary" class="headline">not fetched</p>
+        <p id="term-detail" class="muted"></p>
+      </div>
+      <div class="term-controls">
+        <label class="sr-only" for="term-year">Academic year</label>
+        <input id="term-year" type="text" inputmode="numeric" size="5" placeholder="2026" />
+        <label class="sr-only" for="term-term">Term</label>
+        <select id="term-term">
+          <option value="fall">Fall</option>
+          <option value="winter">Winter</option>
+          <option value="spring">Spring</option>
+          <option value="summer">Summer</option>
+        </select>
+        <button id="fetch-term">Fetch entire term</button>
+      </div>
+    </div>
+    <p id="term-result" class="result hidden"></p>
+    <p class="muted footnote">
+      Every course and every meeting for one term — the shared copy of times,
+      instructors and rooms, and the only thing here that covers courses outside your
+      own plan. Thousands of rows and a minute or two, so run it when a schedule
+      publishes rather than on a timer. Seat counts are deliberately excluded; those
+      stay per-student and live.
+      <strong>Year is the start of the academic year</strong> — Fall 2026, Winter 2027
+      and Spring 2027 are all 2026.
+    </p>
+  </section>
+
+  <section class="panel">
+    <p class="label">Courses tracked <span id="course-count" class="muted"></span></p>
+    <table id="courses">
+      <thead>
+        <tr>
+          <th>Course</th><th>Term</th><th>Sections</th><th>Seats open</th><th>Last read</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="empty" class="muted hidden">
+      Nothing stored yet. Open Quarter View in TritonPlanner on a quarter that has
+      courses — it fetches them automatically.
+    </p>
+  </section>
+
+  <section class="panel">
+    <p class="label">Recent activity</p>
+    <ul id="log"></ul>
+  </section>
+
+  <section class="panel danger">
+    <div class="row">
+      <div>
+        <p class="label">Stored data</p>
+        <p class="muted">
+          Everything here is re-fetchable from TSS. Clearing only removes the local copy.
+        </p>
+      </div>
+      <button id="clear" class="danger-btn">Clear all stored data</button>
+    </div>
+  </section>
+
+  <script src="admin.js"></script>
+</body>
+</html>

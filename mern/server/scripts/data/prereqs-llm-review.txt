@@ -1,0 +1,3689 @@
+ANAR 160
+  text:  upper-division standing and ANAR 153. Graduate students wishing to enroll should have already taken ANTH 202.
+  regex: [["ANAR 153","ANTH 202"]]
+  llm:   [["ANAR 153"]]
+
+ANTH 196C
+  text:  ANTH 196A-B.
+  regex: [["ANTH 196A"]]
+  llm:   [["ANTH 196A","ANTH 196B"]]
+
+ASTR 101
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E, and MATH 18 or 31AH and 20E. Recommended preparation: ASTR 18.
+  regex: [["PHYS 2A"],["MATH 18"],["ASTR 18"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["MATH 18","MATH 31AH"],["MATH 20E"]]
+
+ASTR 102
+  text:  ASTR 101, and PHYS 2A/2AR-B-C-D or 4A-B-C-D-E, and ASTR 18.
+  regex: [["ASTR 101"],["PHYS 2A"],["ASTR 18"]]
+  llm:   [["ASTR 101"],["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["ASTR 18"]]
+
+ASTR 105
+  text:  ASTR 101, and PHYS 2A/2AR-B-C-D or 4A-B-C-D-E, and ASTR 18.
+  regex: [["ASTR 101"],["PHYS 2A"],["ASTR 18"]]
+  llm:   [["ASTR 101"],["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["ASTR 18"]]
+
+ASTR 120
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 121
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 122
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 123
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 124
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 130
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 131
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 150
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E and BILD 62 or COGS 18 or CSE 11 or CSE 6R or CSE 8A or CSE 8B or DSC 10 or PHYS 41.
+  regex: [["PHYS 2A"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+
+ASTR 152
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"]]
+
+ASTR 154
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E and BILD 62 or COGS 18 or CSE 11 or CSE 6R or CSE 8A or CSE 8B or DSC 10 or PHYS 41.
+  regex: [["PHYS 2A"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+
+ASTR 155
+  text:  PHYS 2A/2AR-B-C-D or 4A-B-C-D-E and BILD 62 or COGS 18 or CSE 11 or CSE 6R or CSE 8A or CSE 8B or DSC 10 or PHYS 41.
+  regex: [["PHYS 2A"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["BILD 62","COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 10/10R","PHYS 41"]]
+
+ASTR 20A
+  text:  MATH 20A-B-C or 31BH and PHYS 2A/2AR-B or 4A and 4C.
+  regex: [["MATH 20A"],["PHYS 2A"]]
+  llm:   [["MATH 20A","MATH 31BH"],["MATH 20B","MATH 31BH"],["MATH 20C","MATH 31BH"],["PHYS 2A","PHYS 4A"],["PHYS 2B"],["PHYS 4C"]]
+
+AUD 284
+  text:  open to second- or third-year doctoral students or consent of instructor. One quarter unit represents three to four hours per week. Must also be concurrently enrolled in AUD 291.
+  regex: [["AUD 291"]]
+  llm:   []
+
+BENG 100
+  text:  MATH 18 or MATH 31AH , MATH 20C or MATH 31BH; bioengineering majors only or consent of department. (F,S,Su)
+  regex: [["MATH 18","MATH 20C","MATH 31AH","MATH 31BH"]]
+  llm:   [["MATH 18","MATH 31AH"],["MATH 20C","MATH 31BH"]]
+
+BENG 110
+  text:  MATH 20D, MATH 20E or MATH 31CH, MATH 18 or MATH 31AH; PHYS 2A or PHYS 2AR, PHYS 2BL, or consent of department. (F)
+  regex: [["MATH 18","MATH 20D","MATH 20E","MATH 31AH","MATH 31CH"]]
+  llm:   [["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"],["PHYS 2A"],["PHYS 2BL"]]
+
+BENG 120
+  text:  CHEM 6A and 6B; majors only or consent of department. (W)
+  regex: [["CHEM 6A"]]
+  llm:   [["CHEM 6A"],["CHEM 6B"]]
+
+BENG 123
+  text:  MATH 18 or MATH 31AH, MATH 20D, BENG 120, or CHEM 40B; majors only or consent of department. (W)
+  regex: [["BENG 120","CHEM 40B","MATH 18","MATH 20D","MATH 31AH"]]
+  llm:   [["MATH 18","MATH 31AH"],["MATH 20D"],["BENG 120","CHEM 40B"]]
+
+BENG 130
+  text:  CHEM 6B, MATH 20A, 20B, 20D, PHYS 2A, 2B, 2C; majors only or consent of department. (W)
+  regex: [["CHEM 6B","MATH 20A","PHYS 2A"]]
+  llm:   [["CHEM 6B"],["MATH 20A"],["MATH 20B"],["MATH 20D"],["PHYS 2A"],["PHYS 2B"],["PHYS 2C"]]
+
+BENG 134
+  text:  MATH 20D and MATH 18 or MATH 31AH; BENG 100 or consent of department. (S)
+  regex: [["MATH 20D"],["MATH 18","MATH 31AH"]]
+  llm:   [["MATH 20D"],["MATH 18","MATH 31AH"],["BENG 100"]]
+
+BENG 140A
+  text:  CHEM 6A-B, PHYS 2A-C, BILD 1, or BENG 102; majors only or consent of department. (W)
+  regex: [["BENG 102","BILD 1","CHEM 6A","PHYS 2A"]]
+  llm:   [["CHEM 6A"],["CHEM 6B"],["PHYS 2A"],["PHYS 2B"],["PHYS 2C"],["BILD 1","BENG 102"]]
+
+BENG 160
+  text:  BICD 100, BENG 100, CHEM 40B or CHEM 40BH or BENG 120, MAE 170; majors only or consent of department. (S)
+  regex: [["BENG 100","BENG 120","BICD 100","CHEM 40B","MAE 170"]]
+  llm:   [["BICD 100"],["BENG 100"],["CHEM 40B","BENG 120"],["MAE 170"]]
+
+BENG 166A
+  text:  BILD 1 and CHEM 6C or CHEM 6CH or CHEM 7L or CHEM 7LM and MATH 20D and PHYS 2A or PHYS 2AR, PHYS 2B-C; senior standing or consent of department. (F)
+  regex: [["BILD 1"],["CHEM 6C","CHEM 6CH","CHEM 7L","CHEM 7LM"],["MATH 20D"],["PHYS 2A","PHYS 2B"]]
+  llm:   [["BILD 1"],["CHEM 6C","CHEM 6CH","CHEM 7L","CHEM 7LM"],["MATH 20D"],["PHYS 2A"],["PHYS 2B"],["PHYS 2C"]]
+
+BENG 189
+  text:  BENG 133, 134, 135, 140A and 140B, or consent of department. (W)
+  regex: [["BENG 133"]]
+  llm:   [["BENG 133"],["BENG 134"],["BENG 135"],["BENG 140A"],["BENG 140B"]]
+
+BENG 193
+  text:  BENG 140A or BIPN 100; BENG 140B or BIPN 102; consent of instructor required. A GPA of 3.5 is requested as a requirement per the agreement with the School of Medicine to ensure that students who are p
+  regex: [["BENG 140A","BIPN 100"]]
+  llm:   [["BENG 140A","BIPN 100"],["BENG 140B","BIPN 102"]]
+
+BENG 230D
+  text:  BIPN 100, 102, and BENG 230C, or consent of instructor. (F,W,S)
+  regex: [["BIPN 100"],["BENG 230C"]]
+  llm:   [["BIPN 100"],["BIPN 102"],["BENG 230C"]]
+
+BENG/BIMM/CSE 181
+  text:  CSE 100; CSE 101; BIMM 100 or CHEM 114C; bioinformatics majors only. (W)
+  regex: [["CSE 100"]]
+  llm:   [["CSE 100"],["CSE 101"],["BIMM 100","CHEM 114C"]]
+
+BGJC 213
+  text:  none for graduate students. Undergraduates must be seniors or enrolled in BISP 199.
+  regex: [["BISP 199"]]
+  llm:   []
+
+BIBC 102
+  text:  BENG 120 or CHEM 140A or CHEM 40A or CHEM 41A and BENG 120 or CHEM 140B or CHEM 40B or CHEM 41B. Note: Students may not receive credit for both BIBC 102 and CHEM 114B.
+  regex: [["BENG 120","CHEM 40A","CHEM 41A"],["BENG 120","BIBC 102","CHEM 40B","CHEM 41B"],["CHEM 114B"]]
+  llm:   [["BENG 120","CHEM 40A","CHEM 41A"],["BENG 120","CHEM 40B","CHEM 41B"]]
+
+BIBC 103
+  text:  BILD 1. Note: Students may not receive credit for BIBC 103 after taking CHEM 108. Attendance at the first lecture/lab is required. Nonattendance may result in the student’s being dropped from the cour
+  regex: [["BIBC 103","BILD 1","CHEM 108"]]
+  llm:   [["BILD 1"]]
+
+BICD 136
+  text:  BILD 1, BILD 2 recommended.
+  regex: [["BILD 1","BILD 2"]]
+  llm:   []
+
+BICD 140
+  text:  BICD 100 or BICD 100R and BIMM 100. BIBC 100 recommended.
+  regex: [["BICD 100","BICD 100R"],["BIBC 100","BIMM 100"]]
+  llm:   [["BICD 100","BICD 100R"],["BIMM 100"]]
+
+BIEB 134
+  text:  BILD 3. Students will not receive credit for both BIEB 134 and SIO 134.
+  regex: [["BIEB 134","BILD 3"],["SIO 134"]]
+  llm:   [["BILD 3"]]
+
+BIEB 166
+  text:  BILD 3 and Physics 1A or 2A.
+  regex: [["BILD 3"]]
+  llm:   [["BILD 3"],["PHYS 1A","PHYS 2A"]]
+
+BIMM 116
+  text:  BILD 1 or COGS 107B or PSYC 106. Students may receive credit for one of the following: BIMM 116 or BIMM 116R.
+  regex: [["BILD 1","BIMM 116","BIMM 116R","COGS 107B","PSYC 106"]]
+  llm:   [["BILD 1","COGS 107B","PSYC 106"]]
+
+BIMM 116R
+  text:  BILD 1 or COGS 107B or PSYC 106. This course is a distance education course. Students may receive credit for one of the following: BIMM 116 or BIMM 116R.
+  regex: [["BILD 1","BIMM 116","BIMM 116R","COGS 107B","PSYC 106"]]
+  llm:   [["BILD 1","COGS 107B","PSYC 106"],["BIMM 116","BIMM 116R"]]
+
+BIMM 181
+  text:  CSE 100 or CSE 100R and CSE 101 and BIMM 100 or CHEM 114C. Students may receive credit for one of the following: CSE 181, BIMM 181, or BENG 181.
+  regex: [["CSE 100","CSE 100R"],["CSE 101"],["BENG/BIMM/CSE 181","BIMM 100","CHEM 114C"]]
+  llm:   [["CSE 100","CSE 100R"],["CSE 101"],["BIMM 100","CHEM 114C"]]
+
+BIMM 182
+  text:  CSE 100 or CSE 100R. Students may receive credit for one of the following: CSE 182, BENG 182, or BIMM 182.
+  regex: [["BENG/BIMM/CSE/CHEM 182","CSE 100","CSE 100R"]]
+  llm:   [["CSE 100","CSE 100R"]]
+
+BIOM 252
+  text:  BIOM 200A-B, 201. Limited to BMS graduate students except by consent of instructor.
+  regex: [["BIOM 200A"]]
+  llm:   [["BIOM 200A"],["BIOM 200B"],["BIOM 201"]]
+
+BIOM 253
+  text:  BIOM 200A-B, 201. Limited to BMS graduate students except by consent of instructor.
+  regex: [["BIOM 200A"]]
+  llm:   [["BIOM 200A"],["BIOM 200B"],["BIOM 201"]]
+
+BIOM 254
+  text:  BIOM 200A-B, 201. Limited to BMS graduate students except by consent of instructor.
+  regex: [["BIOM 200A"]]
+  llm:   [["BIOM 200A"],["BIOM 200B"],["BIOM 201"]]
+
+BIPN 106
+  text:  BILD 2, CHEM 6A-B-C. BILD 3 is recommended.
+  regex: [["BILD 2","BILD 3","CHEM 6A"]]
+  llm:   [["BILD 2"],["CHEM 6A"],["CHEM 6B"],["CHEM 6C"]]
+
+BISP 193
+  text:  department approval required. Enrollment is via department approval only. Students must complete a Special Studies form as well as a research plan. Paperwork for a BISP 193 must be submitted to SIS by
+  regex: [["BISP 193"]]
+  llm:   []
+
+BISP 198
+  text:  department approval required. Enrollment is via department approval only. Students must complete a Special Studies form. Paperwork for a BISP 198 must be submitted to SIS by Friday of the eighth week 
+  regex: [["BISP 198"]]
+  llm:   []
+
+CCS 197
+  text:  CCS 101, CCS 102, and department approval.
+  regex: [["CCS 101","CCS 102"]]
+  llm:   [["CCS 101"],["CCS 102"]]
+
+CCS 199
+  text:  CCS 101, CCS 102, and department approval.
+  regex: [["CCS 101","CCS 102"]]
+  llm:   [["CCS 101"],["CCS 102"]]
+
+CENG 100
+  text:  CENG 4 and CHEM 6B or CHEM 6BH. Students may not receive credit for both CENG 100 and CENG 110.
+  regex: [["CENG 4"],["CENG 100","CHEM 6B","CHEM 6BH"],["CENG 110"]]
+  llm:   [["CENG 4"],["CHEM 6B","CHEM 6BH"]]
+
+CENG 101A
+  text:  admission to the major and grades of C– or better in PHYS 2A, MATH 20D, and MATH 20E, or consent of instructor.
+  regex: [["MATH 20D","PHYS 2A"],["MATH 20E"]]
+  llm:   [["PHYS 2A"],["MATH 20D"],["MATH 20E"]]
+
+CENG 102
+  text:  CENG 100, CHEM 6C, and MATH 20C.
+  regex: [["CENG 100","CHEM 6C"],["MATH 20C"]]
+  llm:   [["CENG 100"],["CHEM 6C"],["MATH 20C"]]
+
+CENG 110
+  text:  CENG 4 and CHEM 6B or CHEM 6BH. Students may not receive credit for both CENG 100 and CENG 110.
+  regex: [["CENG 4"],["CENG 100","CHEM 6B","CHEM 6BH"],["CENG 110"]]
+  llm:   [["CENG 4"],["CHEM 6B","CHEM 6BH"]]
+
+CENG 113
+  text:  CENG 15, CENG 100 and MATH 20D.
+  regex: [["CENG 100","CENG 15"],["MATH 20D"]]
+  llm:   [["CENG 15"],["CENG 100"],["MATH 20D"]]
+
+CENG 122
+  text:  admission to the major and grades of C– or better in CENG 100, CENG 102, and CENG 101C.
+  regex: [["CENG 100","CENG 102"],["CENG 101C"]]
+  llm:   [["CENG 100"],["CENG 102"],["CENG 101C"]]
+
+CENG 157
+  text:  CENG 101A, CENG 101B, and CENG 101C.
+  regex: [["CENG 101A","CENG 101B"],["CENG 101C"]]
+  llm:   [["CENG 101A"],["CENG 101B"],["CENG 101C"]]
+
+CENG 160
+  text:  CENG 100. Students may not receive credit for both CENG 160 and CENG 260.
+  regex: [["CENG 100","CENG 160"],["CENG 260"]]
+  llm:   [["CENG 100"]]
+
+CENG 176A
+  text:  CENG 113, CENG 122, and CENG 170 or consent of instructor.
+  regex: [["CENG 113","CENG 122"],["CENG 170"]]
+  llm:   [["CENG 113"],["CENG 122"],["CENG 170"]]
+
+CENG 260
+  text:  department approval will ensure students have taken CENG 100 or an equivalent undergraduate-level material and energy balances course. Students may not receive credit for both CENG 160 and CENG 260.
+  regex: [["CENG 100"],["CENG 160"],["CENG 260"]]
+  llm:   [["CENG 100"]]
+
+CGS 100A
+  text:  CGS 2A-B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A"],["CGS 2B"]]
+
+CGS 121
+  text:  CGS 2A-B, at least one CGS upper-division course, or permission of the instructor.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A"],["CGS 2B"]]
+
+CGS 122
+  text:  CGS 2A-B, at least one CGS upper-division course, or permission of the instructor.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A"],["CGS 2B"]]
+
+CGS 123
+  text:  CGS 2A-B, at least one CGS upper-division course, or permission of the instructor.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A"],["CGS 2B"]]
+
+CGS 124
+  text:  CGS 2A-B, at least one CGS upper-division course, or permission of the instructor.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A"],["CGS 2B"]]
+
+CGS 126
+  text:  CGS 2A or 2B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A","CGS 2B"]]
+
+CGS 127
+  text:  CGS 2A or 2B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A","CGS 2B"]]
+
+CGS 128
+  text:  CGS 2A or 2B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A","CGS 2B"]]
+
+CGS 130
+  text:  CGS 2A or 2B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A","CGS 2B"]]
+
+CGS 135
+  text:  CGS 2A or 2B or at least one CGS upper-division course.
+  regex: [["CGS 2A"]]
+  llm:   [["CGS 2A","CGS 2B"]]
+
+CGS 137
+  text:  CGS 2A-B, ETHN 1, 2, or 3, at least one CGS or ETHN upper-division course, or permission of the instructor. Students may receive a combined total of twelve units for CGS 137 and ETHN 137.
+  regex: [["CGS 137","CGS 2A","ETHN 1"],["ETHN 137"]]
+  llm:   [["CGS 2A"],["CGS 2B"],["ETHN 1","ETHN 2","ETHN 3"]]
+
+CGS 147
+  text:  CGS 2A-B, ETHN 1, 2, 3, at least one CGS or ETHN upper-division course, or permission of the instructor.
+  regex: [["CGS 2A","ETHN 1"]]
+  llm:   [["CGS 2A"],["CGS 2B"],["ETHN 1"],["ETHN 2"],["ETHN 3"]]
+
+CGS 150
+  text:  CGS 2A-B, ETHN 1, 2, 3, at least one CGS or ETHN upper-division course, or permission of the instructor.
+  regex: [["CGS 2A","ETHN 1"]]
+  llm:   [["CGS 2A"],["CGS 2B"],["ETHN 1"],["ETHN 2"],["ETHN 3"]]
+
+CGS 165
+  text:  CGS 2A-B, ETHN 1, 2, 3, at least one CGS or ETHN upper-division course, or permission of the instructor.
+  regex: [["CGS 2A","ETHN 1"]]
+  llm:   [["CGS 2A"],["CGS 2B"],["ETHN 1"],["ETHN 2"],["ETHN 3"]]
+
+CGS 187
+  text:  CGS 2A-B, ETHN 1, 2, 3, at least one CGS or ETHN upper-division course, or permission of the instructor.
+  regex: [["CGS 2A","ETHN 1"]]
+  llm:   [["CGS 2A"],["CGS 2B"],["ETHN 1"],["ETHN 2"],["ETHN 3"]]
+
+CHEM 100A
+  text:  CHEM 6C or 6CH and CHEM 7L or 7LM. Recommended: PHYS 2CL or 2BL.
+  regex: [["CHEM 6C"],["CHEM 7L","PHYS 2CL"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["CHEM 7L","CHEM 7LM"]]
+
+CHEM 100B
+  text:  CHEM 100A and PHYS 2C or 2D and PHYS 2BL or 2CL or 2DL.
+  regex: [["CHEM 100A"],["PHYS 2C"],["PHYS 2BL"]]
+  llm:   [["CHEM 100A"],["PHYS 2C","PHYS 2D"],["PHYS 2BL","PHYS 2CL","PHYS 2DL"]]
+
+CHEM 104
+  text:  PHYS 2A and 2B.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A"],["PHYS 2B"]]
+
+CHEM 105A
+  text:  CHEM 6CL or 100A, PHYS 2BL or 2CL or 2DL, and CHEM 126 or 126A or 126B or 127 or 130 or 131 or 133.
+  regex: [["PHYS 2BL"]]
+  llm:   [["CHEM 100A"],["PHYS 2BL","PHYS 2CL","PHYS 2DL"],["CHEM 126A","CHEM 126B","CHEM 130","CHEM 131"]]
+
+CHEM 108
+  text:  CHEM 43A, 143A, 43AM or 143AM, and CHEM 114A.
+  regex: [["CHEM 43A"],["CHEM 114A"]]
+  llm:   [["CHEM 43A"],["CHEM 43AM"],["CHEM 114A"]]
+
+CHEM 109
+  text:  CHEM 43A, 143A, 43AM, or 143AM and CHEM 114A.
+  regex: [["CHEM 43A"],["CHEM 114A"]]
+  llm:   [["CHEM 43A","CHEM 43AM"],["CHEM 114A"]]
+
+CHEM 111
+  text:  CHEM 6C or 6CH.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+CHEM 114A
+  text:  CHEM 40A or 41A.
+  regex: [["CHEM 40A"]]
+  llm:   [["CHEM 40A","CHEM 41A"]]
+
+CHEM 114AR
+  text:  CHEM 40A or 41A.
+  regex: [["CHEM 40A"]]
+  llm:   [["CHEM 40A","CHEM 41A"]]
+
+CHEM 114B
+  text:  CHEM 40B, 40BH, or 41B and CHEM 114A.
+  regex: [["CHEM 40B"],["CHEM 114A"]]
+  llm:   [["CHEM 40B","CHEM 41B"],["CHEM 114A"]]
+
+CHEM 114D
+  text:  CHEM 114A, 114B, and 114C.
+  regex: [["CHEM 114A"]]
+  llm:   [["CHEM 114A"],["CHEM 114B"],["CHEM 114C"]]
+
+CHEM 115
+  text:  CHEM 114A and 114C. Corequisite: CHEM 109.
+  regex: [["CHEM 114A"],["CHEM 109"]]
+  llm:   [["CHEM 114A"],["CHEM 114C"]]
+
+CHEM 117
+  text:  CHEM 40B, 40CH, or 41C.
+  regex: [["CHEM 40B"]]
+  llm:   [["CHEM 40B","CHEM 41C"]]
+
+CHEM 119
+  text:  BIMM 100 or CHEM 114C and CHEM 40C, 40CH, or 41C.
+  regex: [["BIMM 100","CHEM 114C"],["CHEM 40C"]]
+  llm:   [["BIMM 100","CHEM 114C"],["CHEM 40C","CHEM 41C"]]
+
+CHEM 120A
+  text:  CHEM 6C or 6CH and CHEM 40A, 41A, or 140A.
+  regex: [["CHEM 6C"],["CHEM 40A"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["CHEM 40A","CHEM 41A"]]
+
+CHEM 125
+  text:  CHEM 114A and 120A.
+  regex: [["CHEM 114A"]]
+  llm:   [["CHEM 114A"],["CHEM 120A"]]
+
+CHEM 126A
+  text:  CHEM 6C or 6CH, PHYS 1C or 2C or 2D, and MATH 10C or 20C.
+  regex: [["CHEM 6C","PHYS 1C"],["MATH 10C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["PHYS 1C","PHYS 2C","PHYS 2D"],["MATH 10C","MATH 20C"]]
+
+CHEM 130
+  text:  CHEM 6C or 6CH, and PHYS 2C or 2D, and MATH 20D.
+  regex: [["CHEM 6C"],["PHYS 2C"],["MATH 20D"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["PHYS 2C","PHYS 2D"],["MATH 20D"]]
+
+CHEM 131
+  text:  CHEM 6C or 6CH, MATH 20C, and PHYS 2C or 2D.
+  regex: [["CHEM 6C","MATH 20C"],["PHYS 2C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["MATH 20C"],["PHYS 2C","PHYS 2D"]]
+
+CHEM 135
+  text:  CHEM 126 or 126B or 130 or 133 and MATH 20D.
+  regex: [["MATH 20D"]]
+  llm:   [["CHEM 126B","CHEM 130"],["MATH 20D"]]
+
+CHEM 141
+  text:  CHEM 40A, 40AH, 41A, 140A, or 140AH.
+  regex: [["CHEM 40A"]]
+  llm:   [["CHEM 40A","CHEM 41A"]]
+
+CHEM 142
+  text:  CHEM 40B, 40BH, 41B, 140B, or 140BH and BIBC 100 or BILD 1 or CHEM 114A.
+  regex: [["CHEM 40B"],["BIBC 100","BILD 1","CHEM 114A"]]
+  llm:   [["CHEM 40B","CHEM 41B"],["BIBC 100","BILD 1","CHEM 114A"]]
+
+CHEM 143B
+  text:  CHEM 43A or 43AM and CHEM 40B or 41B.
+  regex: [["CHEM 43A"],["CHEM 40B"]]
+  llm:   [["CHEM 43A","CHEM 43AM"],["CHEM 40B","CHEM 41B"]]
+
+CHEM 143C
+  text:  CHEM 43A, 43AM, 143A, 143AM, or 143AH and CHEM 40B, 40BH, 41B, 140B, or 140BH.
+  regex: [["CHEM 43A"],["CHEM 40B"]]
+  llm:   [["CHEM 43A","CHEM 43AM"],["CHEM 40B","CHEM 41B"]]
+
+CHEM 143D
+  text:  CHEM 40C, 40CH, 41C, 140C, or 140CH and CHEM 143B.
+  regex: [["CHEM 40C"],["CHEM 143B"]]
+  llm:   [["CHEM 40C","CHEM 41C"],["CHEM 143B"]]
+
+CHEM 145
+  text:  CHEM 40B, 40BH, 41B, 140B, or 140BH.
+  regex: [["CHEM 40B"]]
+  llm:   [["CHEM 40B","CHEM 41B"]]
+
+CHEM 146
+  text:  CHEM 40C, 40CH, or 41C.
+  regex: [["CHEM 40C"]]
+  llm:   [["CHEM 40C","CHEM 41C"]]
+
+CHEM 151
+  text:  CHEM 40A, 40AH, or 41A.
+  regex: [["CHEM 40A"]]
+  llm:   [["CHEM 40A","CHEM 41A"]]
+
+CHEM 152
+  text:  CHEM 40B or 41C.
+  regex: [["CHEM 40B"]]
+  llm:   [["CHEM 40B","CHEM 41C"]]
+
+CHEM 154
+  text:  CHEM 40B or 41C. Recommended: CHEM 152 is strongly recommended.
+  regex: [["CHEM 152","CHEM 40B"]]
+  llm:   [["CHEM 40B","CHEM 41C"]]
+
+CHEM 155
+  text:  CHEM 152 or 154.
+  regex: [["CHEM 152"]]
+  llm:   [["CHEM 152","CHEM 154"]]
+
+CHEM 156
+  text:  CHEM 40B or 41C and CHEM 120A. Recommended: CHEM 154 is strongly recommended.
+  regex: [["CHEM 40B"],["CHEM 120A","CHEM 154"]]
+  llm:   [["CHEM 40B","CHEM 41C"],["CHEM 120A"]]
+
+CHEM 157
+  text:  CHEM 40C, 40CH, or 41C.
+  regex: [["CHEM 40C"]]
+  llm:   [["CHEM 40C","CHEM 41C"]]
+
+CHEM 158
+  text:  CHEM 40C, 40CH, or 41C.
+  regex: [["CHEM 40C"]]
+  llm:   [["CHEM 40C","CHEM 41C"]]
+
+CHEM 167
+  text:  CHEM 40C, 40CH, or 41C and CHEM 114A.
+  regex: [["CHEM 40C"],["CHEM 114A"]]
+  llm:   [["CHEM 40C","CHEM 41C"],["CHEM 114A"]]
+
+CHEM 168
+  text:  CHEM 40C, 40CH, or 41C and CHEM 114A.
+  regex: [["CHEM 40C"],["CHEM 114A"]]
+  llm:   [["CHEM 40C","CHEM 41C"],["CHEM 114A"]]
+
+CHEM 171
+  text:  CHEM 6C or 6CH.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+CHEM 172
+  text:  CHEM 6C or 6CH.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+CHEM 173
+  text:  CHEM 6C or 6CH.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+CHEM 174
+  text:  CHEM 6C or 6CH.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+CHEM 185
+  text:  CHEM 126 or 126B or 130 or 133 and MATH 20C or 31BH. (May not be offered every year.)
+  regex: [["MATH 20C"]]
+  llm:   [["CHEM 126B","CHEM 130"],["MATH 20C","MATH 31BH"]]
+
+CHEM 187
+  text:  CHEM 6C or 6CH and CHEM 96 or EDS 31.
+  regex: [["CHEM 6C"],["CHEM 96","EDS 31/CHEM 96"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["CHEM 96","EDS 31/CHEM 96"]]
+
+CHEM 188
+  text:  CHEM 6C or 6CH and CHEM 187 or EDS 122.
+  regex: [["CHEM 6C"],["CHEM 187","EDS 122/CHEM 187"]]
+  llm:   [["CHEM 6C","CHEM 6CH"],["CHEM 187","EDS 122/CHEM 187"]]
+
+CHEM 255
+  text:  graduate standing. CHEM 252 or 254 is strongly recommended.
+  regex: [["CHEM 252"]]
+  llm:   [["CHEM 252","CHEM 254"]]
+
+CHEM 256
+  text:  graduate standing. CHEM 252 and CHEM 254 are strongly recommended.
+  regex: [["CHEM 252"],["CHEM 254"]]
+  llm:   []
+
+CHEM 40A
+  text:  CHEM 6B or 6BH.
+  regex: [["CHEM 6B"]]
+  llm:   [["CHEM 6B","CHEM 6BH"]]
+
+CHEM 41A
+  text:  CHEM 6B or 6BH.
+  regex: [["CHEM 6B"]]
+  llm:   [["CHEM 6B","CHEM 6BH"]]
+
+CHEM 43A
+  text:  CHEM 7L or 7LM and 40A, 40AH, or 41A.
+  regex: [["CHEM 7L"]]
+  llm:   [["CHEM 7L","CHEM 7LM"],["CHEM 40A","CHEM 41A"]]
+
+CHEM 43AM
+  text:  CHEM 7L or 7LM and CHEM 40A, 40AH, or 41A.
+  regex: [["CHEM 7L"],["CHEM 40A"]]
+  llm:   [["CHEM 7L","CHEM 7LM"],["CHEM 40A","CHEM 41A"]]
+
+CHEM 6AH
+  text:  AP Chemistry score of 4, or Math Placement Exam qualifying score, or AP Calculus AB score of 3, or MATH 4C or MATH 10A. Recommended: completion of a high school physics course strongly recommended. Co
+  regex: [["MATH 10A","MATH 20A","MATH 4C"]]
+  llm:   [["MATH 4C","MATH 10A"]]
+
+CHEM 6B
+  text:  CHEM 6A or 6AH.
+  regex: [["CHEM 6A"]]
+  llm:   [["CHEM 6A","CHEM 6AH"]]
+
+CHEM 6BH
+  text:  CHEM 6AH and MATH 20A. Recommended: concurrent or prior enrollment in MATH 20B.
+  regex: [["CHEM 6AH"],["MATH 20A","MATH 20B"]]
+  llm:   [["CHEM 6AH"],["MATH 20A"]]
+
+CHEM 6C
+  text:  CHEM 6B or 6BH.
+  regex: [["CHEM 6B"]]
+  llm:   [["CHEM 6B","CHEM 6BH"]]
+
+CHEM 7L
+  text:  CHEM 6B or 6BH.
+  regex: [["CHEM 6B"]]
+  llm:   [["CHEM 6B","CHEM 6BH"]]
+
+CHEM 7LM
+  text:  CHEM 6B or 6BH. Restricted to the following major codes: CH25, CH34, CH35, CH36, CH38.
+  regex: [["CHEM 6B"]]
+  llm:   [["CHEM 6B","CHEM 6BH"]]
+
+CHIN 165A
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165B-C, CHIN 185A-B-C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165B","CHIN 185A"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 165B","CHIN 185A"],["CHIN 165C","CHIN 185B"],["CHIN 185C"]]
+
+CHIN 165B
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165A, CHIN 165C, CHIN 185A-B-C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 165C","CHIN 185A"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 165C","CHIN 185A"],["CHIN 185B"],["CHIN 185C"]]
+
+CHIN 165C
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165A-B, CHIN 185A-B-C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185A"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185A"],["CHIN 165B","CHIN 185B"],["CHIN 185C"]]
+
+CHIN 169A
+  text:  any one of the following or department approval through placement interview: CHIN 165A-B-C, CHIN 169B, CHIN 182A-B-C.
+  regex: [["CHIN 165A","CHIN 169B","CHIN 182A"]]
+  llm:   [["CHIN 165A","CHIN 169B","CHIN 182A"],["CHIN 165B","CHIN 182B"],["CHIN 165C","CHIN 182C"]]
+
+CHIN 169B
+  text:  any one of the following or department approval through placement interview: CHIN 165A-B-C, CHIN 169A, CHIN 182A-B-C.
+  regex: [["CHIN 165A","CHIN 169A","CHIN 182A"]]
+  llm:   [["CHIN 165A","CHIN 169A","CHIN 182A"],["CHIN 165B","CHIN 182B"],["CHIN 165C","CHIN 182C"]]
+
+CHIN 182A
+  text:  any one of the following or department approval through placement interview: CHIN 165A-B-C, CHIN 169A-B, CHIN 182B-C, CHIN 185A-B-C.
+  regex: [["CHIN 165A","CHIN 169A","CHIN 182B","CHIN 185A"]]
+  llm:   [["CHIN 165A","CHIN 169A","CHIN 182B","CHIN 185A"],["CHIN 165B","CHIN 169B","CHIN 182C","CHIN 185B"],["CHIN 165C","CHIN 185C"]]
+
+CHIN 182B
+  text:  any one of the following or department approval through placement interview: CHIN 165A-B-C, CHIN 169A-B, CHIN 182A, CHIN 182C, CHIN 185A-B-C.
+  regex: [["CHIN 165A","CHIN 169A","CHIN 182A","CHIN 182C","CHIN 185A"]]
+  llm:   [["CHIN 165A","CHIN 165B","CHIN 165C","CHIN 169A","CHIN 169B","CHIN 182A","CHIN 182C","CHIN 185A","CHIN 185B","CHIN 185C"]]
+
+CHIN 182C
+  text:  any one of the following or department approval through placement interview: CHIN 165A-B-C, CHIN 169A-B, CHIN 182A-B, CHIN 185A-B-C.
+  regex: [["CHIN 165A","CHIN 169A","CHIN 182A","CHIN 185A"]]
+  llm:   [["CHIN 165A","CHIN 169A","CHIN 182A","CHIN 185A"],["CHIN 165B","CHIN 169B","CHIN 182B","CHIN 185B"],["CHIN 165C","CHIN 185C"]]
+
+CHIN 185A
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165A-B-C, CHIN 185B-C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185B"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185B"],["CHIN 100CM","CHIN 100CN","CHIN 165B","CHIN 185C"],["CHIN 100CM","CHIN 100CN","CHIN 165C"]]
+
+CHIN 185B
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165A-B-C, CHIN 185A, CHIN 185C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185A","CHIN 185C"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 185A","CHIN 185C"]]
+
+CHIN 185C
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 165A-B-C, CHIN 185A-B.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185A"]]
+  llm:   [["CHIN 100CM","CHIN 100CN","CHIN 165A","CHIN 185A"],["CHIN 165B","CHIN 185B"],["CHIN 165C"]]
+
+CHIN 186A
+  text:  any one of the following or department approval through placement interview: CHIN 100CM, CHIN 100CN, CHIN 186B-C.
+  regex: [["CHIN 100CM","CHIN 100CN","CHIN 186B"]]
+  llm:   [["CHIN 100CM","CHIN 100CN"]]
+
+CLAS 109
+  text:  LTGK 1, 2, 3, or equivalent.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1","LTGK 2","LTGK 3"]]
+
+CLAS 110
+  text:  LTLA 1, 2, 3, or equivalent.
+  regex: [["LTLA 1"]]
+  llm:   [["LTLA 1","LTLA 2","LTLA 3"]]
+
+COGS 101B
+  text:  COGS 1. Recommended: COGS 101A.
+  regex: [["COGS 1","COGS 101A"]]
+  llm:   [["COGS 1"]]
+
+COGS 101C
+  text:  COGS 1 and 14A.
+  regex: [["COGS 1"]]
+  llm:   [["COGS 1"],["COGS 14A"]]
+
+COGS 109
+  text:  COGS 14B, MATH 18 or MATH 31AH, and COGS 18 or CSE 7 or CSE 8A or CSE 11.
+  regex: [["COGS 14B","MATH 18","MATH 31AH"],["COGS 18","CSE 11","CSE 8A"]]
+  llm:   [["COGS 14B"],["MATH 18","MATH 31AH"],["COGS 18","CSE 8A","CSE 11"]]
+
+COGS 118C
+  text:  MATH 18 or MATH 31AH, COGS 14B or PSYC 60, and COGS 108 or COGS 109.
+  regex: [["COGS 14B","MATH 18","MATH 31AH","PSYC 60"],["COGS 108","COGS 109"]]
+  llm:   [["MATH 18","MATH 31AH"],["COGS 14B","PSYC 60"],["COGS 108","COGS 109"]]
+
+COGS 144
+  text:  COGS 14A-B.
+  regex: [["COGS 14A"]]
+  llm:   [["COGS 14A"],["COGS 14B"]]
+
+COGS 152
+  text:  CHEM 96 or COGS 1 or MATH 95 or PHIL 1 or PSYC 1 or EDS (20S or 30 or 31).
+  regex: [["CHEM 96","COGS 1","MATH 95","PHIL 1","PSYC 1"]]
+  llm:   [["CHEM 96","COGS 1","MATH 95","PHIL 1","PSYC 1","EDS 20S","EDS 31/CHEM 96"]]
+
+COGS 169
+  text:  COGS 1 and 107A or permission of instructor.
+  regex: [["COGS 1"]]
+  llm:   [["COGS 1"],["COGS 107A"]]
+
+COGS 178
+  text:  COGS 107A-B or consent of instructor.
+  regex: [["COGS 107A"]]
+  llm:   [["COGS 107A"],["COGS 107B"]]
+
+COGS 190D
+  text:  COGS 190A-B and COGS 198.
+  regex: [["COGS 190A"],["COGS 198"]]
+  llm:   [["COGS 190A"],["COGS 190B"],["COGS 198"]]
+
+COGS 279
+  text:  COGS 107A or PSYC 106; COGS 101A or PSYC 105.
+  regex: [["COGS 107A","PSYC 106"]]
+  llm:   [["COGS 107A","PSYC 106"],["COGS 101A","PSYC 105"]]
+
+COMM 120I
+  text:  COMM 10 and two of COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 120M
+  text:  COMM 10 and two of COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 120N
+  text:  COMM 10 and two from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 120P
+  text:  COMM 10 and two from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 120W
+  text:  COMM 10 and two from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 126
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 127
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 129
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 131
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 132
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 133
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 134
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 135
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 136
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 137
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 138
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 139
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 140
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 142
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 144
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 145
+  text:  COMM 10 and two from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 146
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 151
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 153
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 156
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 158
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 159
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 160
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 162
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 163
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 164
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 166
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 168
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 170
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 172
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 173
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 174
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 175
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 176
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 177
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 178
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 180
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 181
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 182
+  text:  COMM 10, COMM 100A, 100B, and 100C.
+  regex: [["COMM 10","COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A"],["COMM 100B"],["COMM 100C"]]
+
+COMM 183
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 184
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 185
+  text:  COMM 10 and one from COMM 100A, 100B, 100C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 190
+  text:  junior or senior standing and COMM 10 and at least one from COMM 100A-B-C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 190R
+  text:  junior or senior standing and COMM 10 and at least one from COMM 100A-B-C.
+  regex: [["COMM 10"],["COMM 100A"]]
+  llm:   [["COMM 10"],["COMM 100A","COMM 100B","COMM 100C"]]
+
+COMM 199H
+  text:  COMM 196A-B and consent of instructor. (P/NP grades only.)
+  regex: [["COMM 196A"]]
+  llm:   [["COMM 196A"],["COMM 196B"]]
+
+CSE 100R
+  text:  CSE 21 or MATH 154 or MATH 158 or MATH 184 or MATH 188 and CSE 12 and CSE 15L or CSE 29 or ECE 15. This course is a distance education course. Students may not receive credit for both CSE 100R and CSE
+  regex: [["CSE 21","MATH 154","MATH 158","MATH 184","MATH 188"],["CSE 12"],["CSE 100R","CSE 15L","CSE 29","ECE 15"],["CSE 100"]]
+  llm:   [["CSE 21","MATH 154","MATH 158","MATH 184","MATH 188"],["CSE 12"],["CSE 15L","CSE 29","ECE 15"]]
+
+CSE 175
+  text:  instructor approval required to ensure sufficient project experience to be successful in the course. No credit offered for CSE 175 if ECE 150 taken previously or concurrently.
+  regex: [["CSE 175","ECE 150"]]
+  llm:   []
+
+CSE 184
+  text:  BIMM 181 or BENG 181 or CSE 181, BENG 182 or BIMM 182 or CSE 182 or CHEM 182. Bioinformatics majors only.
+  regex: [["BENG/BIMM/CSE 181","BENG/BIMM/CSE/CHEM 182"]]
+  llm:   [["BENG/BIMM/CSE 181"],["BENG/BIMM/CSE/CHEM 182"]]
+
+CSE 197C
+  text:  department approval. Restricted to CS25, CS26, CS27, and CS29 majors only. Students may receive credit for one of the following: CSE 197C or CSE 197.
+  regex: [["CSE 197","CSE 197C"]]
+  llm:   []
+
+CSE 208
+  text:  CSE 202, CSE 200, and CSE 207 or consent of instructor.
+  regex: [["CSE 200","CSE 202"],["CSE 207"]]
+  llm:   [["CSE 202"],["CSE 200"],["CSE 207"]]
+
+CSE 221
+  text:  CSE 120 and 121, or consent of instructor. Restricted to students within the CS75, CS78, CS89, CS88, CS77, CS80, CS81, CS83, and CS76 majors. All other students will be allowed as space permits.
+  regex: [["CSE 120"]]
+  llm:   [["CSE 120"],["CSE 121"]]
+
+CSE 25
+  text:  COGS 18 or CSE 11 or CSE 6R or CSE 8A or CSE 8B or DSC 20. Restricted to students within the CS29 major. All other students will be allowed as space permits. This course is intended for students with 
+  regex: [["COGS 18","CSE 11","CSE 25","CSE 5","CSE 5R","CSE 6R","CSE 8A","DSC 20/20R"]]
+  llm:   [["COGS 18","CSE 11","CSE 6R","CSE 8A","DSC 20/20R"]]
+
+CSE 252B
+  text:  MATH 10D and MATH 20A–F or equivalent.
+  regex: [["MATH 20A"]]
+  llm:   [["MATH 20A"],["MATH 20B"],["MATH 20C"],["MATH 20D"],["MATH 20E"]]
+
+CSE 5
+  text:  none. For students to develop a high-level understanding of the AI field. Not for students who plan to study AI, computer science, or data science. Students may only receive credit for one of CSE 5, C
+  regex: [["CSE 25","CSE 5","CSE 5R"]]
+  llm:   []
+
+CSE 5R
+  text:  none. For students to develop a high-level understanding of the AI field. Not for students who plan to study AI, computer science, or data science. This is a distance education course. Students may on
+  regex: [["CSE 25","CSE 5","CSE 5R"]]
+  llm:   []
+
+DSC 123A
+  text:  (MATH 20C or MATH 31BH) and (MATH 18 or MATH 31 AH). Students may not receive credit for both DSC 123A and MATH 173A. Students who have not completed listed prerequisites may enroll with consent of in
+  regex: [["MATH 20C","MATH 31BH"],["DSC 123A","MATH 18"],["MATH 173A"]]
+  llm:   [["MATH 20C","MATH 31BH"],["MATH 18","MATH 31AH"]]
+
+DSC 123B
+  text:  DSC 123A or MATH 173A. Students may not receive credit for both DSC 123B and MATH 173B. Students who have not completed listed prerequisites may enroll with consent of instructor.
+  regex: [["DSC 123A","DSC 123B","MATH 173A"],["MATH 173B"]]
+  llm:   [["DSC 123A","MATH 173A"]]
+
+DSC 148
+  text:  (DSC 40B or CSE 12) and (DSC 80 or CSE 15L or CSE 29) and (MATH 180A or MATH 180B or MATH 181A or MATH 183 or MATH 186 or CSE 103 or ECE 109 or ECON 120A or MAE 108). Students may not receive credit f
+  regex: [["CSE 12","DSC 40B/40BR"],["CSE 15L","CSE 29","DSC 80/80R"],["CSE 103","DSC 148","ECE 109","ECON 120A","MAE 108","MATH 180A","MATH 180B","MATH 181A","MATH 183","MATH 186"],["CSE 158","CSE 158R"]]
+  llm:   [["DSC 40B/40BR","CSE 12"],["DSC 80/80R","CSE 15L","CSE 29"],["MATH 180A","MATH 180B","MATH 181A","MATH 183","MATH 186","CSE 103","ECE 109","ECON 120A","MAE 108"]]
+
+DSC 155
+  text:  MATH 180A and (MATH 18 or MATH 31AH). Students will not receive credit for both MATH 182 and DSC 155. Completion of MATH 102 is encouraged but not required.
+  regex: [["MATH 180A"],["MATH 18","MATH 182","MATH 31AH"],["DSC 155","MATH 102"]]
+  llm:   [["MATH 180A"],["MATH 18","MATH 31AH"]]
+
+DSC 161
+  text:  ECON 5 or POLI 170A or POLI 171 or POLI 30 or POLI 30D or POLI 5 or POLI 5D. Students will not receive credit for both POLI 176 and DSC 161. Restricted to junior and senior level students. Restricted 
+  regex: [["ECON 5","POLI 170A","POLI 171","POLI 176","POLI 30","POLI 5"],["DSC 161"]]
+  llm:   [["ECON 5","POLI 170A","POLI 171","POLI 30","POLI 5"]]
+
+DSC 288R
+  text:  DSC 208R, DSC 255R, and DSC 256R. Restricted to major codes DS78 and DS79.
+  regex: [["DSC 208R","DSC 255R"],["DSC 256R"]]
+  llm:   [["DSC 208R"],["DSC 255R"],["DSC 256R"]]
+
+DSC 40A/40AR
+  text:  DSC 10/R, (MATH 20C or MATH 31BH) and (MATH 18 or MATH 20F or MATH 31AH). Restricted to students within the DS25 major. All other students will be allowed as space permits.
+  regex: [["DSC 10/10R","MATH 20C","MATH 31BH"],["MATH 18","MATH 31AH"]]
+  llm:   [["DSC 10/10R"],["MATH 20C","MATH 31BH"],["MATH 18","MATH 31AH"]]
+
+DSC 95
+  text:  DSC 10. Students must have applied for and been accepted as a tutor for a DSC course for the first time; enrollment in DSC 95 is required for these students.
+  regex: [["DSC 10/10R"]]
+  llm:   [["DSC 10/10R"],["DSC 95"]]
+
+ECE 100
+  text:  MATH 20D, ECE 45, and ECE 65. ECE 65 may be taken concurrently. Open to EC26, EC27, EC28, EC37, and CS25 major codes only.
+  regex: [["ECE 45","MATH 20D"],["ECE 65"]]
+  llm:   [["MATH 20D"],["ECE 45"],["ECE 65"]]
+
+ECE 103
+  text:  ECE 65 and PHYS 2D or PHYS 4D and 4E.
+  regex: [["ECE 65"],["PHYS 2D","PHYS 4D"]]
+  llm:   [["ECE 65"],["PHYS 2D","PHYS 4D"],["PHYS 4E"]]
+
+ECE 107
+  text:  MATH 20D-E, PHYS 2A–C or 4A–C, and ECE 45. Open to EC26, EC27, EC28, and EC37 major codes only.
+  regex: [["MATH 20D","PHYS 2A"],["ECE 45"]]
+  llm:   [["MATH 20D"],["MATH 20E"],["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["ECE 45"]]
+
+ECE 108
+  text:  ECE 25 or CSE 140, 45, and ECE 30 or CSE 30. Open to EC26 and CS25 major codes only.
+  regex: [["CSE 140","ECE 25"],["CSE 30","ECE 30"]]
+  llm:   [["ECE 25","CSE 140"],["CSE 145"],["ECE 30","CSE 30"]]
+
+ECE 109
+  text:  MATH 20A-B, and MATH 20C or MATH 31BH.
+  regex: [["MATH 20A"],["MATH 20C","MATH 31BH"]]
+  llm:   [["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"]]
+
+ECE 116
+  text:  CSE 8B or CSE 11 or ECE 15 or MAE 8 and ECE 5, ECE 18.
+  regex: [["CSE 11","ECE 15"],["ECE 18","ECE 5"]]
+  llm:   [["CSE 11","ECE 15"],["ECE 5"],["ECE 18"]]
+
+ECE 118
+  text:  ECE 30 or CSE 30 and ECE 35, 45, 65.
+  regex: [["CSE 30","ECE 30"],["ECE 35"]]
+  llm:   [["ECE 30","CSE 30"],["ECE 35"],["ECE 45"],["ECE 65"]]
+
+ECE 134
+  text:  PHYS 2C–D with grades of C– or better.
+  regex: [["PHYS 2C"]]
+  llm:   [["PHYS 2C"],["PHYS 2D"]]
+
+ECE 155
+  text:  ECE 101 or BENG 122A, ECE 109 or ECON 120A or MAE 108 or MATH 180A or MATH 180B or MATH 183 or MATH 186, and ECE 153.
+  regex: [["BENG 122A","ECE 101","ECE 109","ECON 120A","MAE 108","MATH 180A","MATH 180B","MATH 183","MATH 186"],["ECE 153"]]
+  llm:   [["ECE 101","BENG 122A"],["ECE 109","ECON 120A","MAE 108","MATH 180A","MATH 180B","MATH 183","MATH 186"],["ECE 153"]]
+
+ECE 163
+  text:  ECE 101 and 102 with grades of C– or better.
+  regex: [["ECE 101"]]
+  llm:   [["ECE 101"],["ECE 102"]]
+
+ECE 164
+  text:  ECE 102 with a grade of C– or better. ECE 163 recommended.
+  regex: [["ECE 102","ECE 163"]]
+  llm:   [["ECE 102"]]
+
+ECE 166
+  text:  ECE 102 and 107 with grades of C– or better.
+  regex: [["ECE 102"]]
+  llm:   [["ECE 102"],["ECE 107"]]
+
+ECE 172A
+  text:  ECE 101 with a grade of C– or better. ECE 109 recommended.
+  regex: [["ECE 101","ECE 109"]]
+  llm:   [["ECE 101"]]
+
+ECE 181
+  text:  ECE 103 and 107 with grades of C– or better.
+  regex: [["ECE 103"]]
+  llm:   [["ECE 103"],["ECE 107"]]
+
+ECE 183
+  text:  ECE 103 and 107 with grades of C– or better.
+  regex: [["ECE 103"]]
+  llm:   [["ECE 103"],["ECE 107"]]
+
+ECE 187
+  text:  MATH 20A-B-F, 20C or 21C, 20D or 21D, PHYS 2A–D, ECE 101 (may be taken concurrently) with grades of C– or better.
+  regex: [["ECE 101","MATH 20A","PHYS 2A"]]
+  llm:   [["MATH 20A"],["MATH 20B"],["MATH 20C"],["MATH 20D"],["PHYS 2A"],["PHYS 2B"],["PHYS 2C"],["PHYS 2D"],["ECE 101"]]
+
+ECE 190
+  text:  students enrolling in this course must have completed all of the breadth courses and one depth course. The department stamp is required to enroll in ECE 190. (Specifications and enrollment forms are a
+  regex: [["ECE 190"]]
+  llm:   []
+
+ECE 209
+  text:  ECE 271A-B; graduate standing.
+  regex: [["ECE 271A"]]
+  llm:   [["ECE 271A","ECE 271B"]]
+
+ECE 213
+  text:  ECE 141A/B or equivalent; ECE 30 or equivalent; knowledge of C++ programming, basic computer architecture, and data structures and algorithms. Prerequisites: graduate standing.
+  regex: [["ECE 141A"]]
+  llm:   [["ECE 141A"],["ECE 141B"],["ECE 30"]]
+
+ECE 255C
+  text:  ECE 250; ECE 255B with a grade of B– or above; graduate standing.
+  regex: [["ECE 250"]]
+  llm:   [["ECE 250"],["ECE 255B"]]
+
+ECE 259C
+  text:  ECE 259A-B with a grade of B– or above; graduate standing.
+  regex: [["ECE 259A"]]
+  llm:   [["ECE 259A"],["ECE 259B"]]
+
+ECE 265C
+  text:  ECE 265A-B with a grade of B– or above; consent of instructor; graduate standing.
+  regex: [["ECE 265A"]]
+  llm:   [["ECE 265A"],["ECE 265B"]]
+
+ECE 265D
+  text:  ECE 265A-B with a grade of B– or above; graduate standing.
+  regex: [["ECE 265A"]]
+  llm:   [["ECE 265A"],["ECE 265B"]]
+
+ECE 271C
+  text:  ECE 271A-B with a grade of B– or above; graduate standing.
+  regex: [["ECE 271A"]]
+  llm:   [["ECE 271A"],["ECE 271B"]]
+
+ECE 30
+  text:  ECE 15 and 25 with grades of C– or better.
+  regex: [["ECE 15"]]
+  llm:   [["ECE 15"],["ECE 25"]]
+
+ECE 35
+  text:  MATH 18, 20A–B, and PHYS 2A.
+  regex: [["MATH 18"],["PHYS 2A"]]
+  llm:   [["MATH 18"],["MATH 20A"],["MATH 20B"],["PHYS 2A"]]
+
+ECON 100A
+  text:  ECON 1 and MATH 10C or 20C or 31BH.
+  regex: [["ECON 1"],["MATH 10C"]]
+  llm:   [["ECON 1"],["MATH 10C","MATH 20C","MATH 31BH"]]
+
+ECON 101
+  text:  ECON 100B or 102.
+  regex: [["ECON 100B"]]
+  llm:   [["ECON 100B","ECON 102"]]
+
+ECON 102
+  text:  ECON 1 or 100B and 2 or 3 or MATH 20C.
+  regex: [["ECON 1"],["MATH 20C"]]
+  llm:   [["ECON 1","ECON 100B"],["ECON 2","ECON 3","MATH 20C"]]
+
+ECON 103
+  text:  ECON 102 or 110B or 173A.
+  regex: [["ECON 102"]]
+  llm:   [["ECON 102","ECON 110B","ECON 173A"]]
+
+ECON 106
+  text:  ECON 100B and 102.
+  regex: [["ECON 100B"]]
+  llm:   [["ECON 100B"],["ECON 102"]]
+
+ECON 107
+  text:  ECON 2 or 100B; and MATH 10C or 20C or 31BH.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100B"],["MATH 10C","MATH 20C","MATH 31BH"]]
+
+ECON 109
+  text:  ECON 100C or MATH 31CH or MATH 109 or (CSE 20 and MATH 20 C).
+  regex: [["CSE 20","ECON 100C","MATH 109","MATH 31CH"]]
+  llm:   [["ECON 100C","MATH 31CH","MATH 109"]]
+
+ECON 116
+  text:  ECON 2 or 100B.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100B"]]
+
+ECON 118
+  text:  ECON 2 or 100A; and MATH 10A or 20A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"],["MATH 10A","MATH 20A"]]
+
+ECON 119
+  text:  ECON 2 or 100A and MATH 10A or 20A.
+  regex: [["ECON 2"],["MATH 10A"]]
+  llm:   [["ECON 2","ECON 100A"],["MATH 10A","MATH 20A"]]
+
+ECON 120A
+  text:  ECON 1; and MATH 10C or 20C or 31BH.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["MATH 10C","MATH 20C","MATH 31BH"]]
+
+ECON 130
+  text:  ECON 2 or 100A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"]]
+
+ECON 131
+  text:  ECON 2 or 100A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"]]
+
+ECON 132
+  text:  ECON 1 and (ECON 2 or 3 or 100A or 131 or ESYS 103 or MAE 124) and MATH 10C or 20C or 31BH.
+  regex: [["ECON 1"],["ECON 2","ESYS 103"],["MATH 10C"]]
+  llm:   [["ECON 1"],["ECON 2","ECON 3","ECON 100A","ECON 131","ESYS 103"],["MATH 10C","MATH 20C","MATH 31BH"]]
+
+ECON 135
+  text:  ECON 2 or 100A; and MATH 10A or 20A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"],["MATH 10A","MATH 20A"]]
+
+ECON 137
+  text:  ECON 100C and 120C. Enrollment limited to majors in the Department of Economics and MA33 only; department approval required.
+  regex: [["ECON 100C"]]
+  llm:   [["ECON 100C"],["ECON 120C"]]
+
+ECON 139
+  text:  ECON 2 or 100B.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100B"]]
+
+ECON 144
+  text:  ECON 2 or 100A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"]]
+
+ECON 145
+  text:  ECON 2 or 100A.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"]]
+
+ECON 147
+  text:  ECON 2 or 100A; and ECON 120B or MATH 181B.
+  regex: [["ECON 2"]]
+  llm:   [["ECON 2","ECON 100A"],["ECON 120B","MATH 181B"]]
+
+ECON 162
+  text:  ECON 1 and 3.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["ECON 3"]]
+
+ECON 164
+  text:  ECON 1 and 3.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["ECON 3"]]
+
+ECON 165
+  text:  ECON 1 and 3.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["ECON 3"]]
+
+ECON 167
+  text:  ECON 1 and 3.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["ECON 3"]]
+
+ECON 168
+  text:  ECON 1 and 3.
+  regex: [["ECON 1"]]
+  llm:   [["ECON 1"],["ECON 3"]]
+
+ECON 169
+  text:  ECON 3 and 100A.
+  regex: [["ECON 3"]]
+  llm:   [["ECON 3"],["ECON 100A"]]
+
+ECON 172A
+  text:  ECON 100A; and ECON 120A or ECE 109 or MATH 180A or MATH 183 or MATH 186; and MATH 18 or 31AH.
+  regex: [["ECON 100A"]]
+  llm:   [["ECON 100A"],["ECON 120A","ECE 109","MATH 180A","MATH 183","MATH 186"],["MATH 18","MATH 31AH"]]
+
+ECON 173A
+  text:  ECON 100A and ECON 120B or MATH 181B; and MATH 18 or 31AH.
+  regex: [["ECON 100A"],["ECON 120B","MATH 181B"]]
+  llm:   [["ECON 100A"],["ECON 120B","MATH 181B"],["MATH 18","MATH 31AH"]]
+
+ECON 173B
+  text:  ECON 4 or MGT 4; and ECON 173A.
+  regex: [["ECON 4"]]
+  llm:   [["ECON 4"],["ECON 173A"]]
+
+ECON 204
+  text:  ECON 200A-B-C.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+ECON 206
+  text:  ECON 200A-B-C or consent of instructor.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+ECON 208
+  text:  ECON 200A-B-C or consent of instructor.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+ECON 210D
+  text:  graduate standing and ECON 210A-B-C.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A","ECON 210B","ECON 210C"]]
+
+ECON 211
+  text:  graduate standing and ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 213
+  text:  ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 214
+  text:  graduate standing and ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 215
+  text:  ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 216
+  text:  ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 217
+  text:  ECON 210A-B-C or consent of instructor.
+  regex: [["ECON 210A"]]
+  llm:   [["ECON 210A"],["ECON 210B"],["ECON 210C"]]
+
+ECON 221
+  text:  graduate standing and ECON 220A, 220B, 220C, 220D, and 220E or consent of instructor.
+  regex: [["ECON 220A"]]
+  llm:   [["ECON 220A"],["ECON 220B"],["ECON 220C"],["ECON 220D"],["ECON 220E"]]
+
+ECON 225
+  text:  graduate standing and ECON 220A, 220B, 220C, 220D, and 220E or consent of instructor.
+  regex: [["ECON 220A"]]
+  llm:   [["ECON 220A"],["ECON 220B"],["ECON 220C"],["ECON 220D"],["ECON 220E"]]
+
+ECON 226
+  text:  graduate standing and ECON 220A, 220B, 220C, 220D, and 220E or consent of instructor.
+  regex: [["ECON 220A"]]
+  llm:   [["ECON 220A"],["ECON 220B"],["ECON 220C"],["ECON 220D"],["ECON 220E"]]
+
+ECON 227
+  text:  graduate standing and ECON 220A, 220B, 220C, 220D, and 220E or consent of instructor.
+  regex: [["ECON 220A"]]
+  llm:   [["ECON 220A"],["ECON 220B"],["ECON 220C"],["ECON 220D"],["ECON 220E"]]
+
+ECON 228
+  text:  graduate standing and ECON 220A, 220B, 220C, 220D, and 220E or consent of instructor.
+  regex: [["ECON 220A"]]
+  llm:   [["ECON 220A"],["ECON 220B"],["ECON 220C"],["ECON 220D"],["ECON 220E"]]
+
+ECON 230
+  text:  ECON 200A-B-C and ECON 220A-B-C.
+  regex: [["ECON 200A"],["ECON 220A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"],["ECON 220A"],["ECON 220B"],["ECON 220C"]]
+
+ECON 231
+  text:  graduate standing and ECON 200A-B-C and ECON 220A-B-C.
+  regex: [["ECON 200A"],["ECON 220A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"],["ECON 220A"],["ECON 220B"],["ECON 220C"]]
+
+ECON 232
+  text:  graduate standing and ECON 200A-B-C and ECON 220A-B-C.
+  regex: [["ECON 200A"],["ECON 220A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"],["ECON 220A"],["ECON 220B"],["ECON 220C"]]
+
+ECON 233
+  text:  graduate standing and ECON 200A-B-C and ECON 220A-B-C.
+  regex: [["ECON 200A"],["ECON 220A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"],["ECON 220A"],["ECON 220B"],["ECON 220C"]]
+
+ECON 261
+  text:  ECON 200C and 220C. Enrollment by completion of prerequisites or by consent of instructor.
+  regex: [["ECON 200C"]]
+  llm:   [["ECON 200C"],["ECON 220C"]]
+
+ECON 262
+  text:  graduate standing and ECON 200A-B-C.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+ECON 263
+  text:  graduate standing and ECON 200A-B-C.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+ECON 268
+  text:  graduate standing and ECON 200A-B-C or consent of instructor.
+  regex: [["ECON 200A"]]
+  llm:   [["ECON 200A"],["ECON 200B"],["ECON 200C"]]
+
+EDS 122/CHEM 187
+  text:  EDS 31/CHEM 87: Introduction to Teaching Science, Chemistry 6C.
+  regex: [["CHEM 87","EDS 31/CHEM 96"]]
+  llm:   [["EDS 31/CHEM 96","CHEM 87"],["CHEM 6C"]]
+
+EDS 131
+  text:  department approval. Students will need to fill out a placement form prior to getting approval to enroll in EDS 131. This form provides the course instructor with information to make the appropriate f
+  regex: [["EDS 131"]]
+  llm:   []
+
+EDS 140
+  text:  EDS 130 or EDS 131 or EDS 133 or EDS 135 or EDS 136 or EDS 137 or EDS 145 or EDS 146, department approval. Students will need to fill out a placement form prior to getting approval to enroll in EDS 14
+  regex: [["EDS 130","EDS 131","EDS 133","EDS 135","EDS 136","EDS 137","EDS 140","EDS 145","EDS 146"]]
+  llm:   [["EDS 130","EDS 131","EDS 133","EDS 135","EDS 136","EDS 137","EDS 145","EDS 146"]]
+
+EDS 146
+  text:  department approval required, EDS 139 must be taken as a corequisite.
+  regex: [["EDS 139"]]
+  llm:   []
+
+EDS 240C
+  text:  EDS 240A/EDS 240B, and ED76 major: Teaching and Learning Bilingual Education (ASL-English) or consent of instructor.
+  regex: [["EDS 240A","EDS 240B"]]
+  llm:   [["EDS 240A"],["EDS 240B"]]
+
+EDS 287C
+  text:  EDS 287A, EDS 287B, and EDS doctoral student (ED81 or ED82), or consent of instructor.
+  regex: [["EDS 287A","EDS 287B"]]
+  llm:   [["EDS 287A"],["EDS 287B"]]
+
+EDS 342B
+  text:  EDS 342A, EDS 361A. Must be an ED76 major. Concurrent enrollment in EDS 361B and 369A. (W)
+  regex: [["EDS 342A","EDS 361A","EDS 361B"]]
+  llm:   [["EDS 342A"],["EDS 361A"]]
+
+EDS 342C
+  text:  EDS 342A, EDS 342B, EDS 361A. Must be an ED76 major.
+  regex: [["EDS 342A","EDS 342B","EDS 361A"]]
+  llm:   [["EDS 342A"],["EDS 342B"],["EDS 361A"]]
+
+EDS 355A
+  text:  admission into the ED78: Multiple Subject (MS-2 program), and concurrent enrollment in EDS 361A or consent of instructor.
+  regex: [["EDS 361A"]]
+  llm:   []
+
+EDS 355C
+  text:  EDS 355B is required prior to EDS 355C. Students must have been admitted to ED85; Multiple Subject (MS-2 program), and concurrent enrollment in EDS 361C or consent of instructor.
+  regex: [["EDS 355B","EDS 355C"]]
+  llm:   [["EDS 355B"]]
+
+EDS 369A
+  text:  ED76 or ED78 majors for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 370A must be taken as a corequisite.
+  regex: [["EDS 370A"]]
+  llm:   []
+
+EDS 369B
+  text:  EDS 369A, ED78 major for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 370B must be taken as a corequisite
+  regex: [["EDS 369A","EDS 370B"]]
+  llm:   [["EDS 369A"]]
+
+EDS 369C
+  text:  EDS 369B, ED78 major for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 370C must be taken as a corequisite
+  regex: [["EDS 369B","EDS 370C"]]
+  llm:   [["EDS 369B"]]
+
+EDS 370A
+  text:  ED76 or ED78 majors for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 369A must be taken as a corequisite.
+  regex: [["EDS 369A"]]
+  llm:   []
+
+EDS 370B
+  text:  ED76 or ED78 majors for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 369B must be taken as a corequisite.
+  regex: [["EDS 369B"]]
+  llm:   []
+
+EDS 370C
+  text:  ED76 or ED78 majors for Elementary Multiple Subjects only. Affirmed Multiple Subject Credential candidate at UC San Diego who has advanced to student teaching. EDS 369C must be taken as a corequisite.
+  regex: [["EDS 369C"]]
+  llm:   []
+
+EDS 379A
+  text:  ED78 Single Subject major only. Affirmed Single Subject candidate at UC San Diego who has advanced to internship or consent of instructor. EDS 380A must be taken as a corequisite.
+  regex: [["EDS 380A"]]
+  llm:   []
+
+EDS 379B
+  text:  EDS 379A. ED78 Single Subject major only. Affirmed Single Subject candidate at UC San Diego who has advanced to internship. EDS 380B must be taken as a corequisite.
+  regex: [["EDS 379A","EDS 380B"]]
+  llm:   [["EDS 379A"]]
+
+EDS 379C
+  text:  EDS 379B. ED78 Single Subject major only. Affirmed Single Subject candidate at UC San Diego who has advanced to internship. EDS 380C must be taken as a corequisite.
+  regex: [["EDS 379B","EDS 380C"]]
+  llm:   [["EDS 379B"]]
+
+EDS 380A
+  text:  ED78 Single Subject major only. EDS 379A must be taken as a corequisite.
+  regex: [["EDS 379A"]]
+  llm:   []
+
+EDS 380B
+  text:  EDS 380A. ED78 Single Subject major only. EDS 379B must be taken as a corequisite.
+  regex: [["EDS 379B","EDS 380A"]]
+  llm:   [["EDS 380A"]]
+
+EDS 380C
+  text:  EDS 380A-B. ED78 Single Subject major only. EDS 379C must be taken as a corequisite.
+  regex: [["EDS 379C","EDS 380A"]]
+  llm:   [["EDS 380A"],["EDS 380B"]]
+
+ENVR 150
+  text:  upper-division standing or consent of instructor. Students will not receive credit for both ENVR 150 and ENVR 150GS.
+  regex: [["ENVR 150"],["ENVR 150GS"]]
+  llm:   []
+
+ERC 89
+  text:  Math 10A or 20A.
+  regex: [["MATH 10A"]]
+  llm:   [["MATH 10A","MATH 20A"]]
+
+ESYS 101
+  text:  BILD 1 or 2 or 3 or equivalent, or consent of instructor.
+  regex: [["BILD 1"]]
+  llm:   [["BILD 1","BILD 2","BILD 3"]]
+
+ESYS 102
+  text:  MATH 10A or MATH 20A, CHEM 6A, PHYS 1A or 2A, or consent of instructor.
+  regex: [["CHEM 6A","MATH 10A","MATH 20A","PHYS 1A"]]
+  llm:   [["MATH 10A","MATH 20A"],["CHEM 6A"],["PHYS 1A","PHYS 2A"]]
+
+GPEC 434
+  text:  GPCO 401, GPCO 406, and GPCO 453.
+  regex: [["GPCO 401","GPCO 406"],["GPCO 453"]]
+  llm:   [["GPCO 401"],["GPCO 406"],["GPCO 453"]]
+
+GPEC 464
+  text:  GPCO 453, 454, 468, and GPEC 446, or consent of instructor.
+  regex: [["GPCO 453"],["GPEC 446"]]
+  llm:   [["GPCO 453"],["GPCO 454"],["GPCO 468"],["GPEC 446"]]
+
+HIGR 274A
+  text:  department approval required. Courses in the HIGR 274A-B-C series may be taken out of sequence.
+  regex: [["HIGR 274A"]]
+  llm:   []
+
+HIGR 274B
+  text:  department approval required. Courses in the HIGR 274A-B-C series may be taken out of sequence.
+  regex: [["HIGR 274A"]]
+  llm:   []
+
+HIGR 274C
+  text:  department approval required. Courses in the HIGR 274A-B-C series may be taken out of sequence.
+  regex: [["HIGR 274A"]]
+  llm:   []
+
+HITO 106
+  text:  MMW 11, 12, 13, 14, 15, 21 or 22; or WCWP 10A or 10B; or CAT 1, 2, or 3; or DOC 1, 2 or 3; or HILD 2A, 2B, 2C, 7A, 7B, 7C, 10, 11, 12, or 14; or MCWP 40, 41, 50 or 125; or HUM 1, 2, 3, 4, or 5.
+  regex: [["MMW 11"]]
+  llm:   [["MMW 11","MMW 12","MMW 13","MMW 14","MMW 15","WCWP 10A","WCWP 10B","CAT 1","CAT 2","CAT 3","DOC 1","DOC 2","DOC 3","HILD 7A","HILD 7B","HILD 7C","HILD 10","HILD 11","HILD 12","HILD 14","MCWP 40","MCWP 50","MCWP 125","HUM 1","HUM 2","HUM 3","HUM 4","HUM 5"]]
+
+HIUS 185/285
+  text:  department stamp required for HIUS 185. Instructor approval required for HIUS 285.
+  regex: [["HIUS 185/285"]]
+  llm:   []
+
+LIGN 148
+  text:  LIGN 101 or LISL 1C/1CX.
+  regex: [["LIGN 101","LISL 1C"]]
+  llm:   [["LIGN 101","LISL 1C","LISL 1CX"]]
+
+LIIT 5BS
+  text:  LIIT 1A/1AX, 5AS or consent of instructor.
+  regex: [["LIIT 1A"]]
+  llm:   [["LIIT 1A","LIIT 1AX"],["LIIT 5AS"]]
+
+LIIT 5CS
+  text:  LIIT 1B/1BX, 5BS or consent of instructor.
+  regex: [["LIIT 1B"]]
+  llm:   [["LIIT 1B","LIIT 1BX"],["LIIT 5BS"]]
+
+LIIT 5DS
+  text:  LIIT 1C/1CX, 5CS or equivalent or consent of instructor.
+  regex: [["LIIT 1C"]]
+  llm:   [["LIIT 1C","LIIT 1CX"],["LIIT 5CS"]]
+
+LIPO 15
+  text:  LIPO 1D and 1DX or equivalent or by consent of the instructor.
+  regex: [["LIPO 1D"]]
+  llm:   [["LIPO 1D"],["LIPO 1DX"]]
+
+LIPO 16
+  text:  LIPO 1D and 1DX or equivalent or by consent of instructor.
+  regex: [["LIPO 1D"]]
+  llm:   [["LIPO 1D"],["LIPO 1DX"]]
+
+LIPO 17
+  text:  LIPO 1D and 1DX or equivalent or by consent of instructor.
+  regex: [["LIPO 1D"]]
+  llm:   [["LIPO 1D"],["LIPO 1DX"]]
+
+LISP 15/16/17
+  text:  LISP 1D/DX or at least three semesters/four quarters of college Spanish or by permission of the instructor.
+  regex: [["LISP 1D"]]
+  llm:   [["LISP 1D","LISP 1DX"]]
+
+LISP 18
+  text:  LISP 1D/DX.
+  regex: [["LISP 1D"]]
+  llm:   [["LISP 1D","LISP 1DX"]]
+
+LTEN 30
+  text:  CAT 2 and 3 or DOC 2 and 3 or HUM 1 and 2 or MCWP 40 and 50 or MMW 12 and 13 or WARR 11A-B or WCWP 10A-B. Completion of college writing requirement.
+  regex: [["CAT 2"],["DOC 2"],["HUM 1"],["MCWP 40"],["MMW 12"],["WCWP 10A"]]
+  llm:   [["CAT 2","DOC 2","HUM 1","MCWP 40","MMW 12","WCWP 10A"],["CAT 3","DOC 3","HUM 2","MCWP 50","MMW 13","WCWP 10B"]]
+
+LTFR 2A
+  text:  LIFR 1C/CX or its equivalent, score of 3 on French language AP exam or consent of instructor.
+  regex: [["LIFR 1C"]]
+  llm:   [["LIFR 1C","LIFR 1CX"]]
+
+LTGK 102
+  text:  LTGK 1, 2, and 3.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1"],["LTGK 2"],["LTGK 3"]]
+
+LTGK 103
+  text:  LTGK 1, 2, and 3.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1"],["LTGK 2"],["LTGK 3"]]
+
+LTGK 104
+  text:  LTGK 1, 2, and 3.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1"],["LTGK 2"],["LTGK 3"]]
+
+LTGK 105
+  text:  LTGK 1, 2, and 3.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1"],["LTGK 2"],["LTGK 3"]]
+
+LTGK 3
+  text:  LTGK 1 and 2 or equivalent.
+  regex: [["LTGK 1"]]
+  llm:   [["LTGK 1"],["LTGK 2"]]
+
+LTIT 2A
+  text:  LTIT 1C or LIIT 1C/1CX or its equivalent or a score of 3 on AP Italian Language and Culture Exam or placement result of 3 or 4 on the Language Placement Exam–Italian or consent of instructor.
+  regex: [["LIIT 1C"]]
+  llm:   [["LIIT 1C","LIIT 1CX"]]
+
+LTIT 50
+  text:  LTIT 2A and 2B, or consent of instructor.
+  regex: [["LTIT 2A"]]
+  llm:   [["LTIT 2A"],["LTIT 2B"]]
+
+LTLA 102
+  text:  LTLA 1, 2, and 3.
+  regex: [["LTLA 1"]]
+  llm:   [["LTLA 1"],["LTLA 2"],["LTLA 3"]]
+
+LTLA 103
+  text:  LTLA 1, 2, and 3.
+  regex: [["LTLA 1"]]
+  llm:   [["LTLA 1"],["LTLA 2"],["LTLA 3"]]
+
+LTLA 104
+  text:  LTLA 1, 2, and 3.
+  regex: [["LTLA 1"]]
+  llm:   [["LTLA 1"],["LTLA 2"],["LTLA 3"]]
+
+LTLA 105
+  text:  LTLA 1, 2, and 3.
+  regex: [["LTLA 1"]]
+  llm:   [["LTLA 1"],["LTLA 2"],["LTLA 3"]]
+
+LTSP 101
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 110
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 115
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 116
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 123
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 123GS
+  text:  LTSP 100A or LTSP 100B or 100F; department approval required. Students must apply and be accepted to the Global Seminars Program.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 124
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 126
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 128
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 134
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 135A
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 135B
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 136
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 137
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 138
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 145
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 150
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 150A
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 150B
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 151
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 155
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 166
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 169
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 170
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 172
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 174
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 175
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 176
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 177
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 180
+  text:  LTSP 100A or 100B or 100F, or consent of instructor.
+  regex: [["LTSP 100A"]]
+  llm:   [["LTSP 100A","LTSP 100F"]]
+
+LTSP 2A
+  text:  LISP 1C/1CX or LISP 1D/DX, or score of 3 on AP Spanish Language Exam, or placement result of 3 or 4 the Language Placement Exam—Spanish, or consent of instructor.
+  regex: [["LISP 1C","LISP 1D"]]
+  llm:   [["LISP 1C","LISP 1CX","LISP 1D","LISP 1DX"]]
+
+LTWR 113C
+  text:  LTWR 8A or 8B or 8C.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B","LTWR 8C"]]
+
+LTWR 114C
+  text:  LTWR 8A or 8B or 8C.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B","LTWR 8C"]]
+
+LTWR 115C
+  text:  LTWR 8A, 8B, or 8C.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B","LTWR 8C"]]
+
+LTWR 115W
+  text:  LTWR 8A, 8B, or 8C.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B","LTWR 8C"]]
+
+LTWR 119C
+  text:  LTWR 8A or 8B.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B"]]
+
+LTWR 119W
+  text:  LTWR 8A or 8B.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B"]]
+
+LTWR 120C
+  text:  LTWR 8A or 8B or 8C.
+  regex: [["LTWR 8A"]]
+  llm:   [["LTWR 8A","LTWR 8B","LTWR 8C"]]
+
+LTWR 129C
+  text:  LTWR 100C or 102C or 120C.
+  regex: [["LTWR 100C"]]
+  llm:   [["LTWR 100C","LTWR 102C","LTWR 120C"]]
+
+LTWR 8A
+  text:  CAT 2 and 3 or CCE 1 and 2 or DOC 2 and 3 or HUM 1 and 2 or MCWP 40 and 50 or MMW 12 and 13 or WARR 11A-B or WCWP 10A-B or SYN 1 and 2.
+  regex: [["CAT 2"],["CCE 1"],["DOC 2"],["HUM 1"],["MCWP 40"],["MMW 12"],["SYN 1","WCWP 10A"]]
+  llm:   [["CAT 2","CCE 1","DOC 2","HUM 1","MCWP 40","MMW 12","WCWP 10A","SYN 1"],["CAT 3","CCE 2","DOC 3","HUM 2","MCWP 50","MMW 13","WCWP 10B","SYN 2"]]
+
+LTWR 8B
+  text:  CAT 2 and 3 or CCE 1 and 2 or DOC 2 and 3 or HUM 1 and 2 or MCWP 40 and 50 or MMW 12 and 13 or WARR 11A-B or WCWP 10A-B or SYN 1 and 2.
+  regex: [["CAT 2"],["CCE 1"],["DOC 2"],["HUM 1"],["MCWP 40"],["MMW 12"],["SYN 1","WCWP 10A"]]
+  llm:   [["CAT 2","CCE 1","DOC 2","HUM 1","MCWP 40","MMW 12","WCWP 10A","SYN 1"],["CAT 3","CCE 2","DOC 3","HUM 2","MCWP 50","MMW 13","WCWP 10B","SYN 2"]]
+
+LTWR 8C
+  text:  CAT 2 and 3 or CCE 1 and 2 or DOC 2 and 3 or HUM 1 and 2 or MCWP 40 and 50 or MMW 12 and 13 or WARR 11A-B or WCWP 10A-B or SYN 1 and 2.
+  regex: [["CAT 2"],["CCE 1"],["DOC 2"],["HUM 1"],["MCWP 40"],["MMW 12"],["SYN 1","WCWP 10A"]]
+  llm:   [["CAT 2","CCE 1","DOC 2","HUM 1","MCWP 40","MMW 12","WCWP 10A","SYN 1"],["CAT 3","CCE 2","DOC 3","HUM 2","MCWP 50","MMW 13","WCWP 10B","SYN 2"]]
+
+MAE 03
+  text:  PHYS 2A or 4A. Enrollment restricted to BE 25, MC 25, MC 27, MC 29, and MC 30–37 majors only.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"]]
+
+MAE 08
+  text:  MATH 20A and 20B or consent of instructor.
+  regex: [["MATH 20A"]]
+  llm:   [["MATH 20A"],["MATH 20B"]]
+
+MAE 101A
+  text:  PHYS 2A or 4A and MATH 20D and MATH 20E or MATH 31CH, or consent of instructor. Enrollment restricted to MC 25, MC 27, MC 29, MC 30–34, and MC 35–37 majors only.
+  regex: [["PHYS 2A"],["MATH 20D"],["MATH 20E","MATH 31CH"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["MATH 20D"],["MATH 20E","MATH 31CH"]]
+
+MAE 101C
+  text:  MAE 101A or CENG 101A, MAE 101B, and MAE 105.
+  regex: [["CENG 101A","MAE 101A","MAE 101B"],["MAE 105"]]
+  llm:   [["MAE 101A","CENG 101A"],["MAE 101B"],["MAE 105"]]
+
+MAE 104
+  text:  MAE 101A and 101B, or consent of instructor. Enrollment restricted to MC 25, MC 27, MC 29, MC 30–34, MC 35–37, and SE 27 majors only.
+  regex: [["MAE 101A"]]
+  llm:   [["MAE 101A"],["MAE 101B"]]
+
+MAE 105
+  text:  PHYS 2A and B, and MATH 20D or 21D. Enrollment restricted to engineering majors only.
+  regex: [["PHYS 2A"],["MATH 20D"]]
+  llm:   [["PHYS 2A"],["PHYS 2B"],["MATH 20D"]]
+
+MAE 107
+  text:  MAE 8 or 9, and MATH 18 or 20F or 31AH.
+  regex: [["MATH 18"]]
+  llm:   [["MATH 18","MATH 31AH"]]
+
+MAE 126A
+  text:  MAE 101A or CENG 101A; MAE 170.
+  regex: [["CENG 101A","MAE 101A"]]
+  llm:   [["MAE 101A","CENG 101A"],["MAE 170"]]
+
+MAE 143A
+  text:  MATH 20D or 21D, MATH 20E, MATH 18 or 20F or 31AH, or consent of instructor.
+  regex: [["MATH 18","MATH 20D","MATH 20E"]]
+  llm:   [["MATH 20D"],["MATH 20E"],["MATH 18","MATH 31AH"]]
+
+MAE 150
+  text:  MAE 30A or MAE 130A or SE 101A or BENG 110, MAE 107 or SE 121, MAE 3 or MAE 2, and senior standing in engineering major, or consent of instructor.
+  regex: [["BENG 110","MAE 107","MAE 30A","SE 101A"]]
+  llm:   [["MAE 30A","SE 101A","BENG 110"],["MAE 107"]]
+
+MAE 155A
+  text:  MAE 2, MAE 21, or SE 2 or SE 104, MAE 104, MAE 30B or MAE 130C, and SE 160A, or consent of instructor.
+  regex: [["MAE 104","MAE 21","MAE 30B"],["SE 160A"]]
+  llm:   [["MAE 21"],["MAE 104"],["MAE 30B"],["SE 160A"]]
+
+MAE 155B
+  text:  MAE 113, MAE 142, MAE 155A, and MAE 170, or consent of instructor.
+  regex: [["MAE 113","MAE 142","MAE 155A"],["MAE 170"]]
+  llm:   [["MAE 113"],["MAE 142"],["MAE 155A"],["MAE 170"]]
+
+MAE 156A
+  text:  MAE 3, MAE 30B, MAE 131A, MAE 150, and MAE 170, or consent of instructor. Open to major codes MC 27 and MC 30–34 only.
+  regex: [["MAE 131A","MAE 150","MAE 30B"],["MAE 170"]]
+  llm:   [["MAE 30B"],["MAE 131A"],["MAE 150"],["MAE 170"]]
+
+MAE 156B
+  text:  MAE 156A in the immediately preceding quarter, MAE 101C, MAE 143B, and MAE 160 or MAE 131B. Open to major codes MC 27 and MC 30–34 only.
+  regex: [["MAE 101C","MAE 143B","MAE 156A"],["MAE 131B","MAE 160"]]
+  llm:   [["MAE 156A"],["MAE 101C"],["MAE 143B"],["MAE 160","MAE 131B"]]
+
+MAE 160
+  text:  MAE 20, MAE 30A or MAE 130A or SE 101A, and MAE 131A, or consent of instructor.
+  regex: [["MAE 20","MAE 30A","SE 101A"],["MAE 131A"]]
+  llm:   [["MAE 20"],["MAE 30A","SE 101A"],["MAE 131A"]]
+
+MAE 171A
+  text:  MAE 101A, MAE 143B, and MAE 170. Enrollment restricted to MC 27 and MC 30–34 majors only.
+  regex: [["MAE 101A","MAE 143B"],["MAE 170"]]
+  llm:   [["MAE 101A"],["MAE 143B"],["MAE 170"]]
+
+MAE 182
+  text:  MAE 108 and MAE 180. Recommended enrollment in MAE 143B before or concurrently.
+  regex: [["MAE 108"],["MAE 143B","MAE 180"]]
+  llm:   [["MAE 108"],["MAE 180"]]
+
+MAE 20
+  text:  PHYS 2A or 4A, CHEM 6A or CHEM 6AH, and MATH 20C.
+  regex: [["CHEM 6A","CHEM 6AH","PHYS 2A"],["MATH 20C"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["CHEM 6A","CHEM 6AH"],["MATH 20C"]]
+
+MAE 21
+  text:  PHYS 2A or 4A, CHEM 6A or CHEM 6AH, and MATH 20B. Enrollment restricted to MC 25 and MC 35–37 majors only.
+  regex: [["CHEM 6A","CHEM 6AH","PHYS 2A"],["MATH 20B"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["CHEM 6A","CHEM 6AH"],["MATH 20B"]]
+
+MAE 210C
+  text:  MAE 210A–B or consent of instructor.
+  regex: [["MAE 210A"]]
+  llm:   [["MAE 210A"],["MAE 210B"]]
+
+MAE 217C
+  text:  MAE 217A and B, or consent of instructor.
+  regex: [["MAE 217A"]]
+  llm:   [["MAE 217A"],["MAE 217B"]]
+
+MAE 218A
+  text:  MAE 217A, B, and C, or consent of instructor.
+  regex: [["MAE 217A"]]
+  llm:   [["MAE 217A"],["MAE 217B"],["MAE 217C"]]
+
+MAE 218B
+  text:  MAE 217A, B, and C, or consent of instructor.
+  regex: [["MAE 217A"]]
+  llm:   [["MAE 217A"],["MAE 217B"],["MAE 217C"]]
+
+MAE 225B
+  text:  MAE 221A, MAE 225A, and graduate standing.
+  regex: [["MAE 221A","MAE 225A"]]
+  llm:   [["MAE 221A"],["MAE 225A"]]
+
+MAE 228
+  text:  MAE 217A-B-C or consent of instructor.
+  regex: [["MAE 217A"]]
+  llm:   [["MAE 217A"],["MAE 217B"],["MAE 217C"]]
+
+MAE 233B
+  text:  MAE 231A-B-C or consent of instructor.
+  regex: [["MAE 231A"]]
+  llm:   [["MAE 231A"],["MAE 231B"],["MAE 231C"]]
+
+MAE 261
+  text:  MAE 210A and 290A, or consent of instructor.
+  regex: [["MAE 210A"]]
+  llm:   [["MAE 210A"],["MAE 290A"]]
+
+MAE 262
+  text:  MAE 209 or 210A and graduate standing, or consent of instructor.
+  regex: [["BENG/MAE 209"]]
+  llm:   [["BENG/MAE 209","MAE 210A"]]
+
+MAE 290C
+  text:  MAE 210A-B, 290A-B, and consent of instructor.
+  regex: [["MAE 210A"]]
+  llm:   [["MAE 210A"],["MAE 210B"],["MAE 290A"],["MAE 290B"]]
+
+MATH 111A
+  text:  MATH 20D, MATH 18 or MATH 20F or MATH 31AH, and MATH 109 or MATH 31CH. Students who have not completed listed prerequisites may enroll with consent of instructor.
+  regex: [["MATH 18","MATH 20D","MATH 31AH"],["MATH 109","MATH 31CH"]]
+  llm:   [["MATH 20D"],["MATH 18","MATH 31AH"],["MATH 109","MATH 31CH"]]
+
+MATH 173A
+  text:  MATH 20C or MATH 31BH and MATH 18 or 31AH. Students who have not completed listed prerequisites may enroll with consent of instructor.
+  regex: [["MATH 20C","MATH 31BH"],["MATH 18"]]
+  llm:   [["MATH 20C","MATH 31BH"],["MATH 18","MATH 31AH"]]
+
+MATH 188
+  text:  MATH 31CH or MATH 109 and MATH 18 or MATH 31AH and MATH 100A or 103A. Students who have not completed listed prerequisites may enroll with consent of instructor.
+  regex: [["MATH 109","MATH 31CH"],["MATH 18","MATH 31AH"],["MATH 100A"]]
+  llm:   [["MATH 31CH","MATH 109"],["MATH 18","MATH 31AH"],["MATH 100A","MATH 103A"]]
+
+MATH 210A
+  text:  MATH 20D-E-F, 140A/142A, or consent of instructor.
+  regex: [["MATH 20D"]]
+  llm:   [["MATH 20D"],["MATH 20E"],["MATH 140A","MATH 142A"]]
+
+MATH 220A-B-C
+  text:  MATH 140A-B or consent of instructor.
+  regex: [["MATH 140A"]]
+  llm:   [["MATH 140A"],["MATH 140B"]]
+
+MATH 221A
+  text:  MATH 200A and 220C. Students who have not completed MATH 200A and 220C may enroll with consent of instructor.
+  regex: [["MATH 200A"],["MATH 200A"]]
+  llm:   [["MATH 200A"]]
+
+MATH 231A
+  text:  MATH 210B or 240C. Students who have not completed MATH 210B or 240C may enroll with consent of instructor.
+  regex: [["MATH 210B"]]
+  llm:   [["MATH 210B","MATH 240C"]]
+
+MATH 286
+  text:  MATH 280A-B or consent of instructor.
+  regex: [["MATH 280A"]]
+  llm:   [["MATH 280A"],["MATH 280B"]]
+
+MATH 290A-B-C
+  text:  MATH 100A-B-C and MATH 140A-B-C.
+  regex: [["MATH 100A"],["MATH 140A"]]
+  llm:   [["MATH 100A"],["MATH 100B"],["MATH 100C"],["MATH 140A"],["MATH 140B"],["MATH 140C"]]
+
+MATH 31AH
+  text:  AP Calculus BC score of 5. Students without an AP Math BC score of 5 may enroll with a prerequisite of MATH 20A-B with a grade of A or better in each. Students who have not completed listed prerequisi
+  regex: [["MATH 20A"]]
+  llm:   [["MATH 20A"],["MATH 20B"]]
+
+MATS 201A
+  text:  consent of instructor. (Cross-listed with ECE 238A, MAE 271A, NANO 265.)
+  regex: [["ECE 238A","MAE 271A","NANO 265"]]
+  llm:   []
+
+MATS 201B
+  text:  consent of instructor. (Cross-listed with ECE 238B, MAE 271B.)
+  regex: [["ECE 238B","MAE 271B"]]
+  llm:   []
+
+MATS 201C
+  text:  consent of instructor. (Cross-listed with MAE 271C.)
+  regex: [["MAE 271C"]]
+  llm:   []
+
+MATS 205A
+  text:  consent of instructor. (Cross-listed with MAE 272.)
+  regex: [["MAE 272"]]
+  llm:   []
+
+MATS 213A
+  text:  consent of instructor. (Cross-listed with MAE 273A.)
+  regex: [["MAE 273A"]]
+  llm:   []
+
+MATS 227
+  text:  graduate student or consent of instructor. (Cross-listed with CHEM 222, MAE 251, NANO 227.)
+  regex: [["CHEM 222","MAE 251","NANO 227"]]
+  llm:   []
+
+MATS 231
+  text:  graduate standing. (Cross-listed with MAE 276.)
+  regex: [["MAE 276"]]
+  llm:   []
+
+MATS 236
+  text:  graduate standing or consent of instructor. (Cross-listed with MAE 253.)
+  regex: [["MAE 253"]]
+  llm:   []
+
+MATS 251A
+  text:  consent of the instructor. (Cross-listed with MAE 265A.)
+  regex: [["MAE 265A"]]
+  llm:   []
+
+MATS 251B
+  text:  consent of instructor. (Cross-listed with ECE 221, MAE 265B, NANO 251A.)
+  regex: [["ECE 221","MAE 265B","NANO 251A"]]
+  llm:   []
+
+MATS 252
+  text:  consent of instructor. (Cross-listed with MAE 266.)
+  regex: [["MAE 266"]]
+  llm:   []
+
+MATS 253
+  text:  consent of instructor. (Cross-listed with MAE 267.)
+  regex: [["MAE 267"]]
+  llm:   []
+
+MATS 256
+  text:  graduate standing or consent of instructor. (Cross-listed with MAE 254.)
+  regex: [["MAE 254"]]
+  llm:   []
+
+MATS 257
+  text:  graduate standing. (Cross-listed with BENG 242, NANO 257, MAE 257.)
+  regex: [["BENG 242/MATS 257/NANO 257","MAE 257"]]
+  llm:   []
+
+MATS 261A
+  text:  graduate standing. (Cross-listed with SE 251A.)
+  regex: [["SE 251A"]]
+  llm:   []
+
+MATS 261B
+  text:  graduate standing. (Cross-listed with SE 251B.)
+  regex: [["SE 251B"]]
+  llm:   []
+
+MBC 296
+  text:  SIOB 258. MBC 296 is restricted to students in the Master of Advanced Studies—Marine Biodiversity and Conservation Program (SI83).
+  regex: [["MBC 296"]]
+  llm:   []
+
+MGT 171
+  text:  upper-division standing. Students will not receive credit for both MGT 171 and MGT 171R.
+  regex: [["MGT 171"],["MGT 171R"]]
+  llm:   []
+
+MGTA 444
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 454
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 454A
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 455
+  text:  MGTA 451, MGTA 452, MGTA 453, restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 455R
+  text:  MGTA 451, MGTA 452, MGTA 453, restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 456
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 457
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 458
+  text:  MGTA 451, MGTA 452, and MGTA 453. Restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452"],["MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 459
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 460
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTA 466
+  text:  MGTA 451, MGTA 452, MGTA 453, and restricted to MS in business analytics program or with department and instructor approval.
+  regex: [["MGTA 451","MGTA 452","MGTA 453"]]
+  llm:   [["MGTA 451"],["MGTA 452"],["MGTA 453"]]
+
+MGTP 444
+  text:  MGTP 434, MGTP 424, restricted to MPAc students (major code RS91) or by department approval.
+  regex: [["MGTP 424","MGTP 434"]]
+  llm:   [["MGTP 434"],["MGTP 424"]]
+
+MSED 296B
+  text:  admission to the Joint Doctoral Program in Mathematics and Science Education or a master’s degree in biology, chemistry/biochemistry, mathematics, or physics with consent of instructor. MSED 296A must
+  regex: [["MSED 296A","MSED 296B"]]
+  llm:   [["MSED 296A"]]
+
+MSED 296C
+  text:  admission to the Joint Doctoral Program in Mathematics and Science Education or a master’s degree in biology, chemistry/biochemistry, mathematics, or physics with consent of instructor. MSED 296B must
+  regex: [["MSED 296B","MSED 296C"]]
+  llm:   [["MSED 296B"]]
+
+MUS 103D-E-F
+  text:  MUS 103A-B-C and admission into the Department of Music Honors Program in composition. Department approval required.
+  regex: [["MUS 103A"]]
+  llm:   [["MUS 103A"],["MUS 103B"],["MUS 103C"]]
+
+MUS 105
+  text:  MUS 101A and 101B or consent of instructor.
+  regex: [["MUS 101A"]]
+  llm:   [["MUS 101A"],["MUS 101B"]]
+
+MUS 113
+  text:  upper-division standing or consent of instructor. Department approval required. MUS 4, 8–10, or 120 recommended.
+  regex: [["MUS 4"]]
+  llm:   []
+
+MUS 120A
+  text:  MUS 1C or 2C or passing grade on proficiency exam. Music majors are recommended to take MUS 101A concurrently. Department approval required for nonmajors.
+  regex: [["MUS 101A","MUS 1C"]]
+  llm:   [["MUS 1C"]]
+
+MUS 120B
+  text:  MUS 120A. Music majors are recommended to take MUS 101B concurrently. Department approval required for nonmajors.
+  regex: [["MUS 101B","MUS 120A"]]
+  llm:   [["MUS 120A"]]
+
+MUS 120C
+  text:  MUS 120B. Music majors are recommended to take MUS 101C concurrently. Department approval required for nonmajors.
+  regex: [["MUS 101C","MUS 120B"]]
+  llm:   [["MUS 120B"]]
+
+MUS 137D
+  text:  MUS 137A-B-C and admission into the Music Department Honors Program in jazz. Department approval required.
+  regex: [["MUS 137A"]]
+  llm:   [["MUS 137A"],["MUS 137B"],["MUS 137C"]]
+
+MUS 170
+  text:  MUS 1A, 2A, 5, 6, or 7, or consent of instructor.
+  regex: [["MUS 1A"]]
+  llm:   [["MUS 1A","MUS 5","MUS 6","MUS 7"]]
+
+MUS 174B
+  text:  MUS 170, MUS 174A; restricted to music, ICAM-music, and ICAM-visual arts majors and minors, or consent of instructor.
+  regex: [["MUS 170","MUS 174A"]]
+  llm:   [["MUS 170"],["MUS 174A"]]
+
+MUS 174C
+  text:  MUS 170, MUS 174B; restricted to music, ICAM-music, and ICAM-visual arts majors and minors, or consent of instructor.
+  regex: [["MUS 170","MUS 174B"]]
+  llm:   [["MUS 170"],["MUS 174B"]]
+
+MUS 176
+  text:  consent of instructor, MUS 171 recommended.
+  regex: [["MUS 171"]]
+  llm:   []
+
+MUS 215C
+  text:  MUS 215A-B; graduate standing.
+  regex: [["MUS 215A"]]
+  llm:   [["MUS 215A"],["MUS 215B"]]
+
+MUS 215D
+  text:  MUS 215A-B-C; graduate standing.
+  regex: [["MUS 215A"]]
+  llm:   [["MUS 215A"],["MUS 215B"],["MUS 215C"]]
+
+MUS 270D
+  text:  consent of instructor and completion of MUS 270A-B-C.
+  regex: [["MUS 270A"]]
+  llm:   [["MUS 270A"],["MUS 270B"],["MUS 270C"]]
+
+MUS 32VM
+  text:  concurrent enrollment in MUS 32V, 132V, or 132C.
+  regex: [["MUS 32V"]]
+  llm:   []
+
+NANO 103
+  text:  BILD 1, CHEM 6C or CHEM 6CH, NANO 11 and NANO 102. Priority given to NA25 majors.
+  regex: [["BILD 1","CHEM 6C","CHEM 6CH","NANO 11"],["NANO 102"]]
+  llm:   [["BILD 1"],["CHEM 6C","CHEM 6CH"],["NANO 11"],["NANO 102"]]
+
+NANO 107
+  text:  NANO 15, NANO 11, MATH 20B or MATH 20D, and PHYS 2B.
+  regex: [["MATH 20B","MATH 20D","NANO 11","NANO 15"],["PHYS 2B"]]
+  llm:   [["NANO 15"],["NANO 11"],["MATH 20B","MATH 20D"],["PHYS 2B"]]
+
+NANO 110
+  text:  MATH 20F or MATH 18, NANO 102, NANO 104, and NANO 15 or CENG 15 or MAE 8. Restricted to NanoEngineering majors or by department approval.
+  regex: [["MATH 18","NANO 102","NANO 104"],["CENG 15","NANO 15"]]
+  llm:   [["MATH 18"],["NANO 102"],["NANO 104"],["NANO 15","CENG 15"]]
+
+NANO 159
+  text:  CHEM 6A or 6AH, CHEM 6B or 6BH, CHEM 6C or 6CH, CHEM 7L or 7LM.
+  regex: [["CHEM 6A","CHEM 6B","CHEM 6C","CHEM 7L"]]
+  llm:   [["CHEM 6A","CHEM 6AH"],["CHEM 6B","CHEM 6BH"],["CHEM 6C","CHEM 6CH"],["CHEM 7L","CHEM 7LM"]]
+
+NANO 164
+  text:  NANO 11, NANO 102, and upper-division standing.
+  regex: [["NANO 102","NANO 11"]]
+  llm:   [["NANO 11"],["NANO 102"]]
+
+NANO 181
+  text:  NANO 114 or CENG 114. Students may not receive credit for both NANO 181 and NANO 181R.
+  regex: [["CENG 114","NANO 114","NANO 181"],["NANO 181R"]]
+  llm:   [["NANO 114","CENG 114"]]
+
+NANO 281
+  text:  graduate standing. Students may not receive credit for both NANO 281 and NANO 281R.
+  regex: [["NANO 281"],["NANO 281R"]]
+  llm:   []
+
+PAE 225
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 212, PAE 215, and PAE 216.
+  regex: [["PAE 212","PAE 215"],["PAE 216"]]
+  llm:   [["PAE 212"],["PAE 215"],["PAE 216"]]
+
+PAE 234
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 212, PAE 215, and PAE 216.
+  regex: [["PAE 212","PAE 215"],["PAE 216"]]
+  llm:   [["PAE 212"],["PAE 215"],["PAE 216"]]
+
+PAE 242
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 214 and PAE 223.
+  regex: [["PAE 214"],["PAE 223"]]
+  llm:   [["PAE 214","PAE 223"]]
+
+PAE 245
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 212, PAE 215, and PAE 216.
+  regex: [["PAE 212","PAE 215"],["PAE 216"]]
+  llm:   [["PAE 212"],["PAE 215"],["PAE 216"]]
+
+PAE 255
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 212, PAE 215, and PAE 216.
+  regex: [["PAE 212","PAE 215"],["PAE 216"]]
+  llm:   [["PAE 212"],["PAE 215"],["PAE 216"]]
+
+PAE 290
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 210, PAE 211, PAE 212, PAE 213, PAE 214, PAE 215, PAE 216, PAE 220, PAE 221, PAE 222, PAE 223, PAE 224, P
+  regex: [["PAE 210","PAE 211","PAE 212","PAE 213","PAE 214","PAE 215","PAE 216","PAE 220","PAE 221","PAE 222","PAE 223","PAE 224","PAE 225","PAE 226","PAE 230","PAE 231","PAE 232","PAE 233","PAE 234","PAE 235","PAE 240","PAE 241","PAE 242","PAE 243","PAE 244","PAE 245","PAE 246","PAE 250","PAE 251","PAE 252","PAE 253","PAE 254","PAE 255","PAE 256"]]
+  llm:   [["PAE 210"],["PAE 211"],["PAE 212"],["PAE 213"],["PAE 214"],["PAE 215"],["PAE 216"],["PAE 220"],["PAE 221"],["PAE 222"],["PAE 223"],["PAE 224"],["PAE 225"],["PAE 226"],["PAE 230"],["PAE 231"],["PAE 232"],["PAE 233"],["PAE 234"],["PAE 235"],["PAE 240"],["PAE 241"],["PAE 242"],["PAE 243"],["PAE 244"],["PAE 245"],["PAE 246"],["PAE 250"],["PAE 251"],["PAE 252"],["PAE 253"],["PAE 254"],["PAE 255"],["PAE 256"]]
+
+PAE 454
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 410, PAE 411, PAE 412, PAE 420, PAE 430, PAE 440, and PAE 450.
+  regex: [["PAE 410","PAE 411","PAE 412","PAE 420","PAE 430","PAE 440"],["PAE 450"]]
+  llm:   [["PAE 410"],["PAE 411"],["PAE 412"],["PAE 420"],["PAE 430"],["PAE 440"],["PAE 450"]]
+
+PAE 489
+  text:  admission to the Physician Assistant Education Program (PE75) and successful completion of PAE 410, PAE 411, PAE 412, PAE 420, PAE 430, PAE 440, and PAE 450.
+  regex: [["PAE 410","PAE 411","PAE 412","PAE 420","PAE 430","PAE 440"],["PAE 450"]]
+  llm:   [["PAE 410"],["PAE 411"],["PAE 412"],["PAE 420"],["PAE 430"],["PAE 440"],["PAE 450"]]
+
+PH 130
+  text:  PH 40 or FMPH 40, PH 101 or FMPH 101, and upper-division standing.
+  regex: [["PH 101","PH 40"]]
+  llm:   [["PH 40"],["PH 101"]]
+
+PH 151
+  text:  PH 40 or FMPH 40 and sophomore standing. Renumbered from FMPH 151. Students may only receive credit for one of these courses: PH 151, PH 151R, or FMPH 151.
+  regex: [["PH 40"],["PH 151","PH 151R"]]
+  llm:   [["PH 40"]]
+
+PH 151R
+  text:  PH 40 or FMPH 40 and sophomore standing. This is a distance education course. Students may only receive credit for one of these courses: PH 151, PH 151R, or FMPH 151.
+  regex: [["PH 40"],["PH 151","PH 151R"]]
+  llm:   [["PH 40"]]
+
+PH 155
+  text:  PH 40 or FMPH 40. Restricted enrollment to sophomore, junior, and senior standing. Renumbered from FMPH 155. Students may not receive credit for both FMPH 155 and PH 155.
+  regex: [["PH 40"],["PH 155"]]
+  llm:   [["PH 40"]]
+
+PH 157
+  text:  PH 40 or FMPH 40 and sophomore standing. Renumbered from FMPH 191. Students can’t receive credit for PH 157 if they have already completed FMPH 191 subtitled “Race, Intersectionality, and Public Healt
+  regex: [["PH 40"],["PH 157"]]
+  llm:   [["PH 40"]]
+
+PH 161
+  text:  PH 40 or FMPH 40. Restricted enrollment to sophomore, junior, and senior standing. Renumbered from FMPH 161. Students may not receive credit for both FMPH 161 and PH 161.
+  regex: [["PH 40"],["PH 161"]]
+  llm:   [["PH 40"]]
+
+PH 171
+  text:  PH 40 or FMPH 40 and PH 101 or FMPH 101. Restricted enrollment to sophomore, junior, and senior standing. Renumbered from FMPH 171. Students may not receive credit for both FMPH 171 and PH 171.
+  regex: [["PH 40"],["PH 101"],["PH 171"]]
+  llm:   [["PH 40"],["PH 101"]]
+
+PH 193
+  text:  PH 40 or FMPH 40, PH 45, PH 101 or FMPH 101, PH 102 or FMPH 102, PH 110 or FMPH 110, and PH 120 or FMPH 120. Department approval required. Restricted to senior public health majors only. Renumbered fr
+  regex: [["PH 101","PH 102","PH 110","PH 40","PH 45"],["PH 120","PH 193","PH 193R"]]
+  llm:   [["PH 40"],["PH 45"],["PH 101"],["PH 102"],["PH 110"],["PH 120"]]
+
+PH 193R
+  text:  PH 40 or FMPH 40, PH 45, PH 101 or FMPH 101, PH 102 or FMPH 102, PH 110 or FMPH 110, and PH 120 or FMPH 120. Department approval required. Restricted to senior public health majors only. This is a dis
+  regex: [["PH 101","PH 102","PH 110","PH 40","PH 45"],["PH 120","PH 193","PH 193R"]]
+  llm:   [["PH 40"],["PH 45"],["PH 101"],["PH 102"],["PH 110"],["PH 120"]]
+
+PH 194
+  text:  PH 40 or FMPH 40, PH 45, PH 101 or FMPH 101, PH 102 or FMPH 102, PH 110 or FMPH 110, PH 120 or FMPH 120, and PH 193 or FMPH 193. Department approval required. Restricted to senior public health majors
+  regex: [["PH 101","PH 102","PH 110","PH 120","PH 40","PH 45"],["PH 193","PH 194","PH 194R"]]
+  llm:   [["PH 40"],["PH 45"],["PH 101"],["PH 102"],["PH 110"],["PH 120"],["PH 193"]]
+
+PH 194R
+  text:  PH 40 or FMPH 40, PH 45, PH 101 or FMPH 101, PH 102 or FMPH 102, PH 110 or FMPH 110, PH 120 or FMPH 120, and PH 193 or FMPH 193. Department approval required. Restricted to senior public health majors
+  regex: [["PH 101","PH 102","PH 110","PH 120","PH 40","PH 45"],["PH 193","PH 194","PH 194R"]]
+  llm:   [["PH 40"],["PH 45"],["PH 101"],["PH 102"],["PH 110"],["PH 120"],["PH 193"]]
+
+PH 196AH
+  text:  PH 40 or FMPH 40, PH 45, PH 101 or FMPH 101, PH 102 or FMPH 102, PH 110 or FMPH 110, PH 120 or FMPH 120. Department approval required. Restricted to upper-division public health majors only.
+  regex: [["PH 101","PH 102","PH 110","PH 120","PH 40","PH 45"]]
+  llm:   [["PH 40"],["PH 45"],["PH 101"],["PH 102"],["PH 110"],["PH 120"]]
+
+PH 400
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 400. Students may not receive credit for both FMPH 400 and PH 400.
+  regex: [["PH 400"]]
+  llm:   []
+
+PH 401
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 401. Students may not receive credit for both FMPH 401 and PH 401.
+  regex: [["PH 401"]]
+  llm:   []
+
+PH 402
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 402. Students may not receive credit for both FMPH 402 and PH 402.
+  regex: [["PH 402"]]
+  llm:   []
+
+PH 403
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 403. Students may not receive credit for both FMPH 403 and PH 403.
+  regex: [["PH 403"]]
+  llm:   []
+
+PH 404
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 404. Students may not receive credit for both FMPH 404 and PH 404.
+  regex: [["PH 404"]]
+  llm:   []
+
+PH 405
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 405. Students may not receive credit for both FMPH 405 and PH 405.
+  regex: [["PH 405"]]
+  llm:   []
+
+PH 406
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 406. Students may not receive credit for both FMPH 406 and PH 406.
+  regex: [["PH 406"]]
+  llm:   []
+
+PH 410
+  text:  must be enrolled in MPH program (PB75 and PB87) or program approval and successfully completed PH 402. Renumbered from FMPH 410. Students may not receive credit for both FMPH 410 and PH 410.
+  regex: [["PH 402"],["PH 410"]]
+  llm:   [["PH 402"]]
+
+PH 411
+  text:  must be enrolled in MPH program (PB87, PB90, and PB75) or program approval and successfully completed FMPH 402 or PH 402, and FMPH 403 or PH 403. Renumbered from FMPH 411. Students may not receive cre
+  regex: [["PH 402"],["PH 403"],["PH 411"]]
+  llm:   [["PH 402"],["PH 403"]]
+
+PH 412
+  text:  must be enrolled in MPH program (PB75, PB87, and PB90) or program approval and successfully completed FMPH 402 or PH 402. Renumbered from FMPH 412. Students may not receive credit for both FMPH 412 an
+  regex: [["PH 402"],["PH 412"]]
+  llm:   [["PH 402"]]
+
+PH 413
+  text:  must be enrolled in the MPH program (PB91, PB87, PB88, PB90, and PB75) or program approval. Renumbered from FMPH 413. Students may not receive credit for both FMPH 413 and PH 413.
+  regex: [["PH 413"]]
+  llm:   []
+
+PH 415
+  text:  must be enrolled in MPH program (PB75 and PB91) or program approval and successfully completed FMPH 401 or PH 401. Renumbered from FMPH 415. Students may not receive credit for both FMPH 415 and PH 41
+  regex: [["PH 401"],["PH 415"]]
+  llm:   [["PH 401"]]
+
+PH 417
+  text:  must be enrolled in MPH program (PB75 and PB91) or program approval and successfully completed FMPH 401 or PH 401. Renumbered from FMPH 417. Students may only receive credit for one of these courses: 
+  regex: [["PH 401","PH 417","PH 417R"]]
+  llm:   [["PH 401"]]
+
+PH 417R
+  text:  must be enrolled in MPH program (PB75 and PB91) or program approval and successfully completed FMPH 401 or PH 401. Students may only receive credit for one of these courses: PH 417, PH 417R, or FMPH 4
+  regex: [["PH 401","PH 417","PH 417R"]]
+  llm:   [["PH 401"]]
+
+PH 418
+  text:  must be enrolled in MPH program (PB75 and PB91) or program approval and successfully completed FMPH 401 or PH 401. Renumbered from FMPH 418. Students may not receive credit for both FMPH 418 and PH 41
+  regex: [["PH 401"],["PH 418"]]
+  llm:   [["PH 401"]]
+
+PH 419
+  text:  must be enrolled in MPH program (PB75, PB87, and PB91) or program approval and successfully completed FMPH 400 or PH 400. Renumbered from FMPH 419. Students may not receive credit for both FMPH 419 an
+  regex: [["PH 400"],["PH 419"]]
+  llm:   [["PH 400"]]
+
+PH 420
+  text:  must be enrolled in MPH program (PB75, PB90, and PB91) or program approval and successfully completed FMPH 401 or PH 401. Students can’t receive credit for PH 420 if they have already completed FMPH 4
+  regex: [["PH 401","PH 420"]]
+  llm:   [["PH 401"]]
+
+PH 425
+  text:  must be enrolled in MPH program (PB75, PB89, and PB91) or program approval and successfully completed FMPH 401 or PH 401. Renumbered from FMPH 425. Students may not receive credit for both FMPH 425 an
+  regex: [["PH 401"],["PH 425"]]
+  llm:   [["PH 401"]]
+
+PH 426
+  text:  must be enrolled in MPH program (PB75, PB87, and PB89) or program approval and successfully completed FMPH 402 or PH 402. Renumbered from FMPH 402. Students may not receive credit for both FMPH 402 an
+  regex: [["PH 402"],["PH 402"]]
+  llm:   [["PH 402"]]
+
+PH 427
+  text:  must be enrolled in MPH program (PB75 and PB89) or program approval. Renumbered from FMPH 427. Students may not receive credit for both FMPH 427 and PH 427.
+  regex: [["PH 427"]]
+  llm:   []
+
+PH 428
+  text:  must be enrolled in MPH program (PB75, PB88, and PB89) or program approval. Renumbered from FMPH 428. Students may not receive credit for both FMPH 428 and PH 428.
+  regex: [["PH 428"]]
+  llm:   []
+
+PH 429
+  text:  must be enrolled in MPH program (PB75, PB87, and PB89). Students cannot receive credit for PH 429 if they have already completed FMPH 491 subtitled “Substance Use and Population Health.”
+  regex: [["PH 429"]]
+  llm:   []
+
+PH 430
+  text:  must be enrolled in MPH program (PB75 and PB90) or program approval. Renumbered from FMPH 430. Students may not receive credit for both FMPH 430 and PH 430.
+  regex: [["PH 430"]]
+  llm:   []
+
+PH 431
+  text:  must be enrolled in MPH program (PB75 and PB90) or program approval. Renumbered from FMPH 431. Students may not receive credit for both FMPH 431 and PH 431.
+  regex: [["PH 431"]]
+  llm:   []
+
+PH 440
+  text:  must be enrolled in MPH program (PB75 and PB88) and successfully completed FMPH 405 or PH 405. Renumbered from FMPH 440. Students may not receive credit for both FMPH 440 and PH 440.
+  regex: [["PH 405"],["PH 440"]]
+  llm:   [["PH 405"]]
+
+PH 441
+  text:  must be enrolled in MPH program (PB75 and PB88) and successfully completed FMPH 405 or PH 405. Renumbered from FMPH 441. Students may not receive credit for both FMPH 441 and PH 441.
+  regex: [["PH 405"],["PH 441"]]
+  llm:   [["PH 405"]]
+
+PH 442
+  text:  must be enrolled in MPH program (PB75 and PB88). Students cannot receive credit for PH 442 if they have already completed FMPH 491 subtitled “Qualitative Research Methods.”
+  regex: [["PH 442"]]
+  llm:   []
+
+PH 460
+  text:  must be enrolled in MPH program (PB75 and PB90) or program approval. Renumbered from FMPH 460. Students may not receive credit for both FMPH 460 and PH 460.
+  regex: [["PH 460"]]
+  llm:   []
+
+PH 461
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 461. Students may not receive credit for both FMPH 461 and PH 461.
+  regex: [["PH 461"]]
+  llm:   []
+
+PH 462
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91) or program approval. Renumbered from FMPH 462. Students may not receive credit for both FMPH 462 and PH 462.
+  regex: [["PH 462"]]
+  llm:   []
+
+PH 463
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91). Students cannot receive credit for PH 463 if they have already completed FMPH 491 subtitled “VIIDAI: Public Health Field Pract
+  regex: [["PH 463"]]
+  llm:   []
+
+PH 496A
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91). Renumbered from FMPH 496A. Students may not receive credit for both FMPH 496A and PH 496A.
+  regex: [["PH 496A"]]
+  llm:   []
+
+PH 496B
+  text:  must be enrolled in MPH program (PB75, PB87, PB88, PB89, PB90, and PB91). Renumbered from FMPH 496B. Students may not receive credit for both FMPH 496B and PH 496B.
+  regex: [["PH 496B"]]
+  llm:   []
+
+PHB 226
+  text:  successful completion of FMPH 221 or PHB 221, FMPH 222 or PHB 222, and FMPH 223 or PHB 223 or program approval.
+  regex: [["PHB 221","PHB 222"],["PHB 223"]]
+  llm:   [["PHB 221"],["PHB 222"],["PHB 223"]]
+
+PHIL 106
+  text:  PHIL 32 or 33 or 104 or 105 or 111 or 112 or consent of instructor.
+  regex: [["PHIL 32"]]
+  llm:   [["PHIL 32","PHIL 33","PHIL 104","PHIL 105","PHIL 111","PHIL 112"]]
+
+PHIL 27
+  text:  CAT 2 and 3 or CAT 2CE and 3CE or CCE 1 and 2 or DOC 2 and 3 or HUM 1 and 2 or MCWP 40 and 50 or MCWP 40R and 50R or MMW 12 and 13 or WCWP 10A and B or SYN 1 and 2 or WARR 11A and 11B or SYN 1R and 2R
+  regex: [["CAT 2"],["CAT 2CE"],["CCE 1"],["DOC 2"],["HUM 1"],["MCWP 40"],["MCWP 40R"],["MMW 12"],["WCWP 10A"],["SYN 1"],["SYN 1R"]]
+  llm:   [["CAT 2","CAT 2CE","CCE 1","DOC 2","HUM 1","MCWP 40","MCWP 40R","MMW 12","WCWP 10A","SYN 1","SYN 1R"],["CAT 3","CAT 3CE","CCE 2","DOC 3","HUM 2","MCWP 50","MCWP 50R","MMW 13","WCWP 10B","SYN 2","SYN 2R"]]
+
+PHYS 100A
+  text:  PHYS 4A-B-C-D; MATH 20A, 20B, 20C or 31BH, 20D, 20E or 31CH, and 18 or 20F or 31AH. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["PHYS 4A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+PHYS 100B
+  text:  PHYS 100A, MATH 20A, 20B, 20C or 31BH, 20D, 20E or 31CH, and 18 or 20F or 31AH. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["MATH 20A","PHYS 100A"]]
+  llm:   [["PHYS 100A"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+PHYS 105A
+  text:  PHYS 4B-C-D-E, MATH 20A-B-C or 31BH, 20D, 20E or 31CH, and 18 or 20F or 31AH. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["MATH 20A","PHYS 4B"]]
+  llm:   [["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["PHYS 4E"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+PHYS 11
+  text:  MATH 10A or 20A. Corequisites: MATH 10B or 20B.
+  regex: [["MATH 10A","MATH 10B"]]
+  llm:   [["MATH 10A","MATH 20A"]]
+
+PHYS 110A
+  text:  PHYS 4A-B-C-D, MATH 20A-B-C or 31BH, 20D, 20E or 31CH, and 18 or 20F or 31AH. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["MATH 20A","PHYS 4A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+PHYS 110B
+  text:  PHYS 110A, MATH 20A-B-C or 31BH, 20D, 20E or 31CH, and 18 or 20F or 31AH. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["MATH 20A","PHYS 110A"]]
+  llm:   [["PHYS 110A"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20D"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+PHYS 113
+  text:  PHYS 130A-B.
+  regex: [["PHYS 130A"]]
+  llm:   [["PHYS 130A"],["PHYS 130B"]]
+
+PHYS 116
+  text:  PHYS 100B and 110B.
+  regex: [["PHYS 100B"]]
+  llm:   [["PHYS 100B"],["PHYS 110B"]]
+
+PHYS 120
+  text:  PHYS 4A-B-C, and 2CL. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only. Recommended preparation: PHYS 100A.
+  regex: [["PHYS 4A"],["PHYS 100A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 2CL"]]
+
+PHYS 130A
+  text:  PHYS 4A-B-C-D-E, 100A, 110A. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["PHYS 4A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["PHYS 4E"],["PHYS 100A"],["PHYS 110A"]]
+
+PHYS 130B
+  text:  PHYS 100B and 130A. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["PHYS 100B"]]
+  llm:   [["PHYS 100B"],["PHYS 130A"]]
+
+PHYS 133
+  text:  PHYS 2CL and 2DL. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["PHYS 2CL"]]
+  llm:   [["PHYS 2CL"],["PHYS 2DL"]]
+
+PHYS 136
+  text:  PHYS 4D, 100A, 130A.
+  regex: [["PHYS 4D"]]
+  llm:   [["PHYS 4D"],["PHYS 100A"],["PHYS 130A"]]
+
+PHYS 137
+  text:  PHYS 100A, 110A, and 130A.
+  regex: [["PHYS 100A"]]
+  llm:   [["PHYS 100A"],["PHYS 110A"],["PHYS 130A"]]
+
+PHYS 139
+  text:  PHYS 2A-B-C-D or 4A-B-C-D-E, MATH 20A-B-C or 31BH, and 18 or 20F or 31AH.
+  regex: [["MATH 20A","PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["PHYS 2D","PHYS 4D","PHYS 4E"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 18","MATH 31AH"]]
+
+PHYS 140B
+  text:  PHYS 130B and 140A. Open to major codes PY26, PY28, PY29, PY32, PY33, PY34, and PY35 only.
+  regex: [["PHYS 130B"]]
+  llm:   [["PHYS 130B"],["PHYS 140A"]]
+
+PHYS 152A
+  text:  PHYS 130A or CHEM 130. Corequisites: PHYS 140A.
+  regex: [["CHEM 130","PHYS 130A","PHYS 140A"]]
+  llm:   [["PHYS 130A","CHEM 130"]]
+
+PHYS 161
+  text:  PHYS 4A-B-C-D-E.
+  regex: [["PHYS 4A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["PHYS 4E"]]
+
+PHYS 162
+  text:  PHYS 4A-B-C-D-E.
+  regex: [["PHYS 4A"]]
+  llm:   [["PHYS 4A"],["PHYS 4B"],["PHYS 4C"],["PHYS 4D"],["PHYS 4E"]]
+
+PHYS 170
+  text:  PHYS 1B or 2B or 4C, and 1C or 2C or 4B.
+  regex: [["PHYS 1B"]]
+  llm:   [["PHYS 1B","PHYS 2B","PHYS 4C"],["PHYS 1C","PHYS 2C","PHYS 4B"]]
+
+PHYS 175
+  text:  CHEM 126 or 131 or 132 or the combination of PHYS 100A and 110A. Recommended preparation: prior or concurrent enrollment in PHYS 140A.
+  regex: [["PHYS 100A"],["PHYS 140A"]]
+  llm:   [["CHEM 131","CHEM 132"]]
+
+PHYS 191
+  text:  PHYS 2A or 4A.
+  regex: [["PHYS 2A"]]
+  llm:   [["PHYS 2A","PHYS 4A"]]
+
+PHYS 1B
+  text:  PHYS 1A or 2A, and MATH 10B or 20B.
+  regex: [["PHYS 1A"],["MATH 10B"]]
+  llm:   [["PHYS 1A","PHYS 2A"],["MATH 10B","MATH 20B"]]
+
+PHYS 210A
+  text:  PHYS 200A, 212A-B.
+  regex: [["PHYS 200A"]]
+  llm:   [["PHYS 200A"],["PHYS 212A"],["PHYS 212B"]]
+
+PHYS 212C
+  text:  PHYS 212A-B.
+  regex: [["PHYS 212A"]]
+  llm:   [["PHYS 212A"],["PHYS 212B"]]
+
+PHYS 215C
+  text:  PHYS 215A-B.
+  regex: [["PHYS 215A"]]
+  llm:   [["PHYS 215A"],["PHYS 215B"]]
+
+PHYS 225C
+  text:  PHYS 225A-B. Recommended preparation: PHYS 212A-B-C.
+  regex: [["PHYS 212A"]]
+  llm:   []
+
+PHYS 2A
+  text:  MATH 10A-B or 20A or 20B or 20C or 31BH. Recommended preparation: prior or concurrent enrollment in MATH 20B.
+  regex: [["MATH 10A","MATH 20B"]]
+  llm:   [["MATH 10A"],["MATH 10B","MATH 20A","MATH 20B","MATH 20C","MATH 31BH"]]
+
+PHYS 2BL
+  text:  PHYS 2A or 4A. Recommended preparation: prior or concurrent enrollment in PHYS 2B or 4C.
+  regex: [["PHYS 2A","PHYS 2B"]]
+  llm:   [["PHYS 2A","PHYS 4A"]]
+
+PHYS 2CL
+  text:  PHYS 2A or 4A, and 2B or 4C. Recommended preparation: prior or concurrent enrollment in PHYS 2C or 4D.
+  regex: [["PHYS 2A"],["PHYS 2C"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4C"]]
+
+PHYS 2D
+  text:  PHYS 2A or 4A, 2B, and MATH 20D. Recommended preparation: prior or concurrent enrollment in MATH 20E.
+  regex: [["PHYS 2A"],["MATH 20D","MATH 20E"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B"],["MATH 20D"]]
+
+PHYS 2DL
+  text:  PHYS 2BL or 2CL. Recommended preparation: prior or concurrent enrollment in PHYS 2D or 4E.
+  regex: [["PHYS 2BL","PHYS 2D"]]
+  llm:   [["PHYS 2BL","PHYS 2CL"]]
+
+PHYS 4A
+  text:  MATH 20A. Recommended preparation: prior or concurrent enrollment in MATH 20B and a knowledge of vectors.
+  regex: [["MATH 20A","MATH 20B"]]
+  llm:   [["MATH 20A"]]
+
+PHYS 4B
+  text:  PHYS 4A and MATH 20A-B. Recommended preparation: prior or concurrent enrollment in MATH 20C or 31BH.
+  regex: [["PHYS 4A"],["MATH 20A","MATH 20C"]]
+  llm:   [["PHYS 4A"],["MATH 20A"],["MATH 20B"]]
+
+PHYS 4C
+  text:  PHYS 4A-B or PHYS 2A-B-C, MATH 20A-B-C or 31BH, and 18 or 20F or 31AH. Recommended preparation: prior or concurrent enrollment in MATH 20E or 31CH.
+  regex: [["MATH 20A","PHYS 2A","PHYS 4A"],["MATH 20E"]]
+  llm:   [["PHYS 4A","PHYS 2A"],["PHYS 4B","PHYS 2B","PHYS 2C"],["MATH 20A","MATH 31BH"],["MATH 20B"],["MATH 20C"],["MATH 18","MATH 31AH"]]
+
+PHYS 4D
+  text:  PHYS 4A-B-C or the combination of PHYS 4C and PHYS 2A-B-C, MATH 20A-B-C or 31BH, 20E or 31CH, and 18 or 20F or 31AH. Recommended preparation: prior or concurrent enrollment in MATH 20D.
+  regex: [["PHYS 4A","PHYS 4C"],["MATH 20A","PHYS 2A"],["MATH 20D"]]
+  llm:   [["PHYS 4A","PHYS 2A"],["PHYS 4B","PHYS 2B"],["PHYS 4C","PHYS 2C"],["MATH 20A"],["MATH 20B"],["MATH 20C","MATH 31BH"],["MATH 20E","MATH 31CH"],["MATH 18","MATH 31AH"]]
+
+POLI 104F
+  text:  POLI 104A-B.
+  regex: [["POLI 104A"]]
+  llm:   [["POLI 104A"],["POLI 104B"]]
+
+POLI 104J
+  text:  POLI 104A or 104B, upper-division standing.
+  regex: [["POLI 104A"]]
+  llm:   [["POLI 104A","POLI 104B"]]
+
+POLI 120J
+  text:  for POLI 120J, one lower-division political science course; for POLI 220J, graduate standing.
+  regex: [["POLI 120J"]]
+  llm:   []
+
+POLI 160AA
+  text:  POLI 10 or 11.
+  regex: [["POLI 10"]]
+  llm:   [["POLI 10","POLI 11"]]
+
+POLI 161
+  text:  POLI/ECON 5(D) and POLI 30(D).
+  regex: [["ECON 5"],["POLI 30"]]
+  llm:   []
+
+POLI 175
+  text:  CCS 1 or ECON 5/5R or POLI 5/5D/5R/5DR or POLI 30/30D.
+  regex: [["ECON 5","POLI 30","POLI 5"]]
+  llm:   [["ECON 5","POLI 5R/POLI 5DR/ECON 5R","POLI 5","POLI 30"]]
+
+POLI 194RA
+  text:  department approval. Students must apply for the Research Apprenticeship program and be approved to enroll. Participants must be majors in political science with junior or senior standing and a GPA of
+  regex: [["POLI 30"]]
+  llm:   []
+
+POLI 194SD
+  text:  department approval and consent of instructor. Corequisites: POLI 197SD.
+  regex: [["POLI 197SD"]]
+  llm:   []
+
+POLI 198RA
+  text:  department approval. Students must apply for the Research Apprenticeship program and be approved to enroll. Participants must be majors in political science with junior or senior standing and a GPA of
+  regex: [["POLI 30"]]
+  llm:   []
+
+POLI 27
+  text:  CAT 2 and 3, DOC 2 and 3, MCWP 40 and 50, HUM 1 and 2, WCWP 10A–B, or WARR 11A–B, SYN 1 and SYN 2, CCE 1 and CCE 2.
+  regex: [["CAT 2"],["DOC 2"],["MCWP 40"],["HUM 1"],["SYN 1","WCWP 10A"],["CCE 1","SYN 2"],["CCE 2"]]
+  llm:   [["CAT 2"],["CAT 3"],["DOC 2"],["DOC 3"],["MCWP 40"],["MCWP 50"],["HUM 1"],["HUM 2"],["WCWP 10A"],["WCWP 10B"],["SYN 1"],["SYN 2"],["CCE 1"],["CCE 2"]]
+
+POLI 28
+  text:  PHIL/POLI 27.
+  regex: [["POLI 27"]]
+  llm:   [["PHIL 27","POLI 27"]]
+
+PSYC 116A
+  text:  upper-division standing, PSYC 70, PSYC 100, and instructor and department approval.
+  regex: [["PSYC 100","PSYC 70"]]
+  llm:   [["PSYC 70"],["PSYC 100"]]
+
+PSYC 127
+  text:  upper-division standing, PSYC 60, PSYC 70, PSYC 172.
+  regex: [["PSYC 172","PSYC 60","PSYC 70"]]
+  llm:   [["PSYC 60"],["PSYC 70"],["PSYC 172"]]
+
+PSYC 194A
+  text:  PSYC 110, PSYC 111A-B, department approval, psychology majors only, acceptance to the Honors Program.
+  regex: [["PSYC 110","PSYC 111A"]]
+  llm:   [["PSYC 110"],["PSYC 111A"],["PSYC 111B"]]
+
+PSYC 194B
+  text:  PSYC 110, PSYC 111A-B, PSYC 194A, department approval, psychology majors only, acceptance to the Honors program.
+  regex: [["PSYC 110","PSYC 111A","PSYC 194A"]]
+  llm:   [["PSYC 110"],["PSYC 111A"],["PSYC 111B"],["PSYC 194A"]]
+
+PSYC 194C
+  text:  PSYC 194A-B, department approval, psychology majors only, acceptance to the Honors program.
+  regex: [["PSYC 194A"]]
+  llm:   [["PSYC 194A"],["PSYC 194B"]]
+
+SE 103
+  text:  SE 3, SE 9, SE 101A, and SE 105.
+  regex: [["SE 101A","SE 3","SE 9"],["SE 105"]]
+  llm:   [["SE 3"],["SE 9"],["SE 101A"],["SE 105"]]
+
+SE 131A
+  text:  MATH 20E, SE 3, and SE 110B.
+  regex: [["MATH 20E","SE 3"],["SE 110B"]]
+  llm:   [["MATH 20E"],["SE 3"],["SE 110B"]]
+
+SE 131B
+  text:  SE 131A, SE 101C, and SE 130B.
+  regex: [["SE 101C","SE 131A"],["SE 130B"]]
+  llm:   [["SE 131A"],["SE 101C"],["SE 130B"]]
+
+SE 132
+  text:  SE 9, SE 110A, and SE 125.
+  regex: [["SE 110A","SE 9"],["SE 125"]]
+  llm:   [["SE 9"],["SE 110A"],["SE 125"]]
+
+SE 140B
+  text:  SE 140A, SE 151A, and SE 181.
+  regex: [["SE 140A","SE 151A"],["SE 181"]]
+  llm:   [["SE 140A"],["SE 151A"],["SE 181"]]
+
+SE 143A
+  text:  SE 3, SE 142, and SE 160B.
+  regex: [["SE 142","SE 3"],["SE 160B"]]
+  llm:   [["SE 3"],["SE 142"],["SE 160B"]]
+
+SE 150A
+  text:  SE 130A, SE 110B, and SE 103.
+  regex: [["SE 110B","SE 130A"],["SE 103"]]
+  llm:   [["SE 130A"],["SE 110B"],["SE 103"]]
+
+SE 152
+  text:  SE 130B, SE 150A, and SE 151A.
+  regex: [["SE 130B","SE 150A"],["SE 151A"]]
+  llm:   [["SE 130B"],["SE 150A"],["SE 151A"]]
+
+SE 168
+  text:  SE 101C, SE 131A, and SE 167 or SE 167GS.
+  regex: [["SE 101C","SE 131A"],["SE 167"]]
+  llm:   [["SE 101C"],["SE 131A"],["SE 167"]]
+
+SE 180
+  text:  grade of C– or better in all SE 9, SE 101C, and SE 110A. Enrollment restricted to SE27, SE28, SE29, SE30, SE31 majors only.
+  regex: [["SE 101C","SE 9"],["SE 110A"]]
+  llm:   [["SE 9"],["SE 101C"],["SE 110A"]]
+
+SE 214
+  text:  SE 151A, B, or equivalent basic reinforced concrete course, or consent of instructor, graduate standing.
+  regex: [["SE 151A"]]
+  llm:   [["SE 151A"],["SE 151B"]]
+
+SIO 102
+  text:  SIO 50 and CHEM 6A-B-C or CHEM 6AH-6BH-6CH, or consent of instructor.
+  regex: [["SIO 50"],["CHEM 6A","CHEM 6AH"]]
+  llm:   [["SIO 50"],["CHEM 6A","CHEM 6AH"],["CHEM 6B","CHEM 6BH"],["CHEM 6C","CHEM 6CH"]]
+
+SIO 103
+  text:  MATH 20C or MATH 31BH, and PHYS 2C, and SIO 50, or consent of instructor. SIO 160 recommended.
+  regex: [["MATH 20C","MATH 31BH"],["PHYS 2C"],["SIO 160","SIO 50"]]
+  llm:   [["MATH 20C","MATH 31BH"],["PHYS 2C"],["SIO 50"]]
+
+SIO 106
+  text:  SIO 50, MATH 20C, PHYS 2C, and CHEM 6C; upper-division standing or consent of instructor.
+  regex: [["MATH 20C","PHYS 2C","SIO 50"],["CHEM 6C"]]
+  llm:   [["SIO 50"],["MATH 20C"],["PHYS 2C"],["CHEM 6C"]]
+
+SIO 107
+  text:  (CHEM 6B or 6BH) and (BILD 3 or SIO 50 or SIO 60)
+  regex: [["CHEM 6B"],["BILD 3","SIO 50","SIO 60"]]
+  llm:   [["CHEM 6B","CHEM 6BH"],["BILD 3","SIO 50","SIO 60"]]
+
+SIO 111
+  text:  PHYS 2A–C or PHYS 4A–C and MATH 20A–E, or consent of instructor.
+  regex: [["PHYS 2A","PHYS 4A"],["MATH 20A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B"],["PHYS 2C","PHYS 4C"],["MATH 20A"],["MATH 20B"],["MATH 20C"],["MATH 20D"],["MATH 20E"]]
+
+SIO 119
+  text:  PHYS 1C or 2C, CHEM 6C, or consent of instructor.
+  regex: [["CHEM 6C","PHYS 1C"]]
+  llm:   [["PHYS 1C","PHYS 2C"],["CHEM 6C"]]
+
+SIO 135/SIOG 236
+  text:  undergraduate: PHYS 2A-B or PHYS 4A-B-C, or consent of instructor. Graduate: graduate-level standing or consent of instructor.
+  regex: [["PHYS 2A","PHYS 4A"]]
+  llm:   [["PHYS 2A","PHYS 4A"],["PHYS 2B","PHYS 4B","PHYS 4C"]]
+
+SIO 136
+  text:  BILD 3, SIO 132, and SIO 134, or consent of instructor.
+  regex: [["BILD 3","SIO 132"],["SIO 134"]]
+  llm:   [["BILD 3"],["SIO 132"],["SIO 134"]]
+
+SIO 138
+  text:  BILD 3, MATH 10A or MATH 20A, CHEM 6B, or consent of instructor.
+  regex: [["BILD 3","CHEM 6B","MATH 10A","MATH 20A"]]
+  llm:   [["BILD 3"],["MATH 10A","MATH 20A"],["CHEM 6B"]]
+
+SIO 141/CHEM 174
+  text:  CHEM 6C or 6CH, or consent of instructor.
+  regex: [["CHEM 6C"]]
+  llm:   [["CHEM 6C","CHEM 6CH"]]
+
+SIO 144/SIOG 252A
+  text:  undergraduate: SIO 50, 102, and 120 or consent of instructor. Graduate: graduate-level standing or consent of instructor. Graduate level requires student presentation.
+  regex: [["SIO 50"]]
+  llm:   [["SIO 50"],["SIO 102"],["SIO 120"]]
+
+SIO 156
+  text:  BILD 1, BILD 2, BILD 3, and CHEM 6C or CHEM 6CH.
+  regex: [["BILD 1","BILD 2","BILD 3"],["CHEM 6C","CHEM 6CH"]]
+  llm:   [["BILD 1"],["BILD 2"],["BILD 3"],["CHEM 6C","CHEM 6CH"]]
+
+SIO 189
+  text:  CHEM 6C and BILD 1 or 3 or consent of instructor.
+  regex: [["CHEM 6C"],["BILD 1"]]
+  llm:   [["CHEM 6C"],["BILD 1","BILD 3"]]
+
+SIOC 207C
+  text:  ECE 251A or ECE 251AN.) Prerequisites: graduate standing ECE 251A (for ECE 251B); SIOC 207B or SIO 207B (for SIOC 207C).
+  regex: [["ECE 251A","ECE 251B"]]
+  llm:   [["ECE 251A"],["ECE 251A"],["SIOC 207B"]]
+
+SOCG 255D
+  text:  SOCG 255A is a prerequisite for SOCG 255D; enrollment in Science Studies Program or instructor’s permission.
+  regex: [["ANTH 268/COGR 225A/HIGR 238/PHIL 209A/SOCG 255A","ANTH 269/COGR 225D/HIGR 241/PHIL 209D/SOCG 255D"]]
+  llm:   [["ANTH 268/COGR 225A/HIGR 238/PHIL 209A/SOCG 255A"]]
+
+SOCI 100
+  text:  upper-division standing. Will not receive credit for SOCI 100 and SOCA 100.
+  regex: [["SOCI 100"]]
+  llm:   []
+
+SOCI 103M
+  text:  SOCI 60 or CSS 2, and upper-division standing. Will not receive credit for SOCI 103M and SOCA 103M.
+  regex: [["SOCI 60"],["SOCI 103M"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 104
+  text:  SOCI 60 and upper-division standing. Will not receive credit for SOCI 104 and SOCA 104.
+  regex: [["SOCI 60"],["SOCI 104"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 104Q
+  text:  upper-division standing. Will not receive credit for SOCI 104Q and SOCA 104Q.
+  regex: [["SOCI 104Q"]]
+  llm:   []
+
+SOCI 105
+  text:  graduate standing or consent of instructor for SOCG 227 and SOCI for SOCI 105. Will not receive credit for SOCI 105 and SOCA 105.
+  regex: [["SOCG 227"],["SOCI 105"]]
+  llm:   [["SOCG 227"]]
+
+SOCI 106
+  text:  SOCI 60 and upper-division standing. Will not receive credit for SOCI 106 and SOCA 106.
+  regex: [["SOCI 60"],["SOCI 106"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 106M
+  text:  SOCI 60 and SOCI 178 or the consent of instructor. Will not receive credit for SOCI 106M and SOCA 106M.
+  regex: [["SOCI 60"],["SOCI 106M","SOCI 178"]]
+  llm:   [["SOCI 60"],["SOCI 178"]]
+
+SOCI 107
+  text:  SOCI 60 and upper-division standing. Will not receive credit for SOCI 107 and SOCA 107.
+  regex: [["SOCI 60"],["SOCI 107"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 108
+  text:  SOCI 60 and upper-division standing. Will not receive credit for SOCI 108 and SOCA 108.
+  regex: [["SOCI 60"],["SOCI 108"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 109
+  text:  CSS 2 or SOCI 60 or SOCL 60 and upper-division standing. Will not receive credit for SOCI 109 and SOCA 109.
+  regex: [["SOCI 60"],["SOCI 109"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 110
+  text:  SOCI 60 and upper-division standing. Will not receive credit for SOCI 110 and SOCA 110A.
+  regex: [["SOCI 60"],["SOCI 110"]]
+  llm:   [["SOCI 60"]]
+
+SOCI 112
+  text:  upper-division standing. Will not receive credit for SOCI 112 and SOCB 112.
+  regex: [["SOCI 112"]]
+  llm:   []
+
+SOCI 113
+  text:  upper-division standing. Will not receive credit for SOCI 113 and SOCB 113.
+  regex: [["SOCI 113"]]
+  llm:   []
+
+SOCI 115
+  text:  upper-division standing. Will not receive credit for SOCI 115 and SOCB 115.
+  regex: [["SOCI 115"]]
+  llm:   []
+
+SOCI 116
+  text:  upper-division standing. Will not receive credit for SOCI 116 and SOCB 118A.
+  regex: [["SOCI 116"]]
+  llm:   []
+
+SOCI 117
+  text:  upper-division standing. Will not receive credit for SOCI 117 and SOCB 117.
+  regex: [["SOCI 117"]]
+  llm:   []
+
+SOCI 118
+  text:  upper-division standing. Will not receive credit for SOCI 118 and SOCB 118.
+  regex: [["SOCI 118"]]
+  llm:   []
+
+SOCI 118E
+  text:  upper-division standing. Will not receive credit for SOCI 118E and SOCB 118L.
+  regex: [["SOCI 118E"]]
+  llm:   []
+
+SOCI 119
+  text:  upper-division standing. Will not receive credit for SOCI 119 and SOCB 119.
+  regex: [["SOCI 119"]]
+  llm:   []
+
+SOCI 121
+  text:  upper-division standing. Will not receive credit for SOCI 121 and SOCI 121R or SOCI 121 and SOCC 121.
+  regex: [["SOCI 121"],["SOCI 121","SOCI 121R"]]
+  llm:   []
+
+SOCI 121R
+  text:  upper-division standing. Will not receive credit for SOCI 121R and SOCI 121 or SOCI 121R and SOCC 121.
+  regex: [["SOCI 121R"],["SOCI 121","SOCI 121R"]]
+  llm:   []
+
+SOCI 125
+  text:  upper-division standing. Will not receive credit for SOCI 125 and SOCB 125.
+  regex: [["SOCI 125"]]
+  llm:   []
+
+SOCI 126
+  text:  upper-division standing. Will not receive credit for SOCI 126 and SOCC 126.
+  regex: [["SOCI 126"]]
+  llm:   []
+
+SOCI 127
+  text:  upper-division standing. Will not receive credit for SOCI 127 and SOCB 127.
+  regex: [["SOCI 127"]]
+  llm:   []
+
+SOCI 129
+  text:  upper-division standing. Will not receive credit for SOCI 129 and SOCC 129.
+  regex: [["SOCI 129"]]
+  llm:   []
+
+SOCI 130
+  text:  upper-division standing. Will not receive credit for SOCI 130 and SOCD 130.
+  regex: [["SOCI 130"]]
+  llm:   []
+
+SOCI 131
+  text:  upper-division standing. Will not receive credit for SOCI 131 and SOCB 131.
+  regex: [["SOCI 131"]]
+  llm:   []
+
+SOCI 132
+  text:  upper-division standing. Will not receive credit for SOCI 132 and SOCC 132.
+  regex: [["SOCI 132"]]
+  llm:   []
+
+SOCI 133
+  text:  upper-division standing. Will not receive credit for SOCI 133 and SOCB 133.
+  regex: [["SOCI 133"]]
+  llm:   []
+
+SOCI 134
+  text:  upper-division standing. Will not receive credit for SOCI 134 and SOCC 134A.
+  regex: [["SOCI 134"]]
+  llm:   []
+
+SOCI 135
+  text:  upper-division standing. Will not receive credit for SOCI 135 and SOCC 135.
+  regex: [["SOCI 135"]]
+  llm:   []
+
+SOCI 136E
+  text:  upper-division standing. Will not receive credit for SOCI 136E and SOCC 136A.
+  regex: [["SOCI 136E"]]
+  llm:   []
+
+SOCI 136F
+  text:  upper-division standing. Will not receive credit for SOCI 136F and SOCC 136B.
+  regex: [["SOCI 136F"]]
+  llm:   []
+
+SOCI 137
+  text:  upper-division standing. Will not receive credit for SOCI 137 and SOCB 137.
+  regex: [["SOCI 137"]]
+  llm:   []
+
+SOCI 138
+  text:  upper-division standing. Will not receive credit for SOCI 138 and SOCC 138 or SOCI 138 and SOCI 138GS.
+  regex: [["SOCI 138"],["SOCI 138"],["SOCI 138GS"]]
+  llm:   []
+
+SOCI 139
+  text:  upper-division standing. Will not receive credit for SOCI 139 and SOCC 139.
+  regex: [["SOCI 139"]]
+  llm:   []
+
+SOCI 140
+  text:  upper-division standing. Will not receive credit for SOCI 140 and SOCC 140.
+  regex: [["SOCI 140"]]
+  llm:   []
+
+SOCI 140F
+  text:  upper-division standing. Will not receive credit for SOCI 140F and SOCC 140F.
+  regex: [["SOCI 140F"]]
+  llm:   []
+
+SOCI 141
+  text:  upper-division standing. Will not receive credit for SOCI 141 and SOCC 141.
+  regex: [["SOCI 141"]]
+  llm:   []
+
+SOCI 142
+  text:  upper-division standing. Will not receive credit for SOCI 142 and SOCB 142.
+  regex: [["SOCI 142"]]
+  llm:   []
+
+SOCI 143
+  text:  upper-division standing. Will not receive credit for SOCI 143 and SOCB 143.
+  regex: [["SOCI 143"]]
+  llm:   []
+
+SOCI 144
+  text:  upper-division standing. Will not receive credit for SOCI 144 and SOCC 144.
+  regex: [["SOCI 144"]]
+  llm:   []
+
+SOCI 145
+  text:  upper-division standing. Will not receive credit for SOCI 145 and SOCB 145.
+  regex: [["SOCI 145"]]
+  llm:   []
+
+SOCI 147
+  text:  upper-division standing. Will not receive credit for SOCI 147 and SOCC 147.
+  regex: [["SOCI 147"]]
+  llm:   []
+
+SOCI 148
+  text:  upper-division standing. Will not receive credit for SOCI 148 and SOCC 148.
+  regex: [["SOCI 148"]]
+  llm:   []
+
+SOCI 148E
+  text:  upper-division standing. Will not receive credit for SOCI 148E and SOCC 148L.
+  regex: [["SOCI 148E"]]
+  llm:   []
+
+SOCI 148GS
+  text:  students must apply and be accepted to the Global Seminar Program. Students cannot receive credit for both SOCI 148 and SOCI 148GS.
+  regex: [["SOCI 148"],["SOCI 148GS"]]
+  llm:   []
+
+SOCI 150
+  text:  upper-division standing. Will not receive credit for SOCI 150 and SOCC 150.
+  regex: [["SOCI 150"]]
+  llm:   []
+
+SOCI 152
+  text:  upper-division standing. Will not receive credit for SOCI 152 and SOCC 152.
+  regex: [["SOCI 152"]]
+  llm:   []
+
+SOCI 153
+  text:  upper-division standing or consent of instructor. Will not receive credit for SOCI 153 and SOCC 153.
+  regex: [["SOCI 153"]]
+  llm:   []
+
+SOCI 154
+  text:  upper-division standing. Will not receive credit for SOCI 154 and SOCC 154.
+  regex: [["SOCI 154"]]
+  llm:   []
+
+SOCI 156
+  text:  upper-division standing. Will not receive credit for SOCI 156 and SOCC 156.
+  regex: [["SOCI 156"]]
+  llm:   []
+
+SOCI 157
+  text:  upper-division standing. Will not receive credit for SOCI 157 and SOCC 157.
+  regex: [["SOCI 157"]]
+  llm:   []
+
+SOCI 158
+  text:  upper-division standing. Will not receive credit for SOCI 158 and SOCD 158.
+  regex: [["SOCI 158"]]
+  llm:   []
+
+SOCI 160
+  text:  upper-division standing. Will not receive credit for SOCI 160 and SOCB 160.
+  regex: [["SOCI 160"]]
+  llm:   []
+
+SOCI 160E
+  text:  upper-division standing. Will not receive credit for SOCI 160E and SOCB 160L.
+  regex: [["SOCI 160E"]]
+  llm:   []
+
+SOCI 161
+  text:  upper-division standing. Will not receive credit for SOCI 161 and SOCB 161.
+  regex: [["SOCI 161"]]
+  llm:   []
+
+SOCI 163
+  text:  upper-division standing. Will not receive credit for SOCI 163 and SOCC 163.
+  regex: [["SOCI 163"]]
+  llm:   []
+
+SOCI 165A
+  text:  upper-division standing. Will not receive credit for SOCI 165A and SOCC 165A.
+  regex: [["SOCI 165A"]]
+  llm:   []
+
+SOCI 166
+  text:  upper-division standing. Will not receive credit for SOCI 166 and SOCB 166.
+  regex: [["SOCI 166"]]
+  llm:   []
+
+SOCI 167
+  text:  upper-division standing. Will not receive credit for SOCI 167 and SOCC 167.
+  regex: [["SOCI 167"]]
+  llm:   []
+
+SOCI 168E
+  text:  upper-division standing. Will not receive credit for SOCI 168E and SOCC 168E.
+  regex: [["SOCI 168E"]]
+  llm:   []
+
+SOCI 169
+  text:  upper-division standing. Will not receive credit for SOCI 169 and SOCD 169.
+  regex: [["SOCI 169"]]
+  llm:   []
+
+SOCI 171
+  text:  upper-division standing. Will not receive credit for SOCI 168T and SOCI 171.
+  regex: [["SOCI 171"]]
+  llm:   []
+
+SOCI 172
+  text:  upper-division standing. Will not receive credit for SOCI 172 and SOCB 172.
+  regex: [["SOCI 172"]]
+  llm:   []
+
+SOCI 175
+  text:  upper-division standing. Will not receive credit for SOCI 175 and SOCD 175.
+  regex: [["SOCI 175"]]
+  llm:   []
+
+SOCI 178
+  text:  upper-division standing. Will not receive credit for SOCI 178 and SOCD 178.
+  regex: [["SOCI 178"]]
+  llm:   []
+
+SOCI 179
+  text:  upper-division standing. Will not receive credit for SOCI 179 and SOCD 179.
+  regex: [["SOCI 179"]]
+  llm:   []
+
+SOCI 180
+  text:  upper-division standing. Will not receive credit for SOCI 180 and SOCC 180.
+  regex: [["SOCI 180"]]
+  llm:   []
+
+SOCI 181
+  text:  upper-division standing. Will not receive credit for SOCI 181 and SOCD 181.
+  regex: [["SOCI 181"]]
+  llm:   []
+
+SOCI 182
+  text:  upper-division standing. Will not receive credit for SOCI 182 and SOCD 182.
+  regex: [["SOCI 182"]]
+  llm:   []
+
+SOCI 183
+  text:  upper-division standing. Will not receive credit for SOCI 183 and USP 183.
+  regex: [["SOCI 183"],["USP 183"]]
+  llm:   []
+
+SOCI 184
+  text:  upper-division standing. Will not receive credit for SOCI 184 and SOCC 184.
+  regex: [["SOCI 184"]]
+  llm:   []
+
+SOCI 185
+  text:  upper-division standing. Will not receive credit for SOCI 185 and SOCD 185.
+  regex: [["SOCI 185"]]
+  llm:   []
+
+SOCI 187
+  text:  upper-division standing. Will not receive credit for SOCI 187 and SOCD 187.
+  regex: [["SOCI 187"]]
+  llm:   []
+
+SOCI 188D
+  text:  upper-division standing. Will not receive credit for SOCI 188D and SOCD 188D.
+  regex: [["SOCI 188D"]]
+  llm:   []
+
+SOCI 188E
+  text:  upper-division standing. Will not receive credit for SOCI 188E and SOCD 188A.
+  regex: [["SOCI 188E"]]
+  llm:   []
+
+SOCI 188F
+  text:  upper-division standing. Will not receive credit for SOCI 188F and SOCD 188F.
+  regex: [["SOCI 188F"]]
+  llm:   []
+
+SOCI 188G
+  text:  upper-division standing. Will not receive credit for SOCI 188G and SOCD 188B.
+  regex: [["SOCI 188G"]]
+  llm:   []
+
+SOCI 188J
+  text:  upper-division standing. Will not receive credit for SOCI 188J and SOCD 188J.
+  regex: [["SOCI 188J"]]
+  llm:   []
+
+SOCI 188K
+  text:  upper-division standing. Will not receive credit for SOCI 188K and SOCD 188K.
+  regex: [["SOCI 188K"]]
+  llm:   []
+
+SOCI 194
+  text:  department approval. Participating in UCDC Program. Will not receive credit for SOCI 194 and SOCE 194.
+  regex: [["SOCI 194"]]
+  llm:   []
+
+SYN 1
+  text:  Seventh College students only, completion of UC Entry Level Writing requirement, must be taken for a letter grade to count toward Seventh College general-education requirements. Duplicate credit with 
+  regex: [["SYN 1R"]]
+  llm:   []
+
+SYN 100
+  text:  restricted to Seventh College students only, upper-division standing, completion of SYN 1/1R and SYN 2/2R, must be taken for a letter grade to count toward Seventh College general-education requiremen
+  regex: [["SYN 1"],["SYN 2"]]
+  llm:   [["SYN 1","SYN 1R"],["SYN 2","SYN 2R"]]
+
+SYN 100GS
+  text:  upper-division standing, completion of SYN 1/1R and SYN 2/2R, must be taken for a letter grade to count toward Seventh College general-education requirements. Students must apply and be accepted to th
+  regex: [["SYN 1"],["SYN 2"],["SYN 100"]]
+  llm:   [["SYN 1","SYN 1R"],["SYN 2","SYN 2R"]]
+
+SYN 150
+  text:  restricted to Seventh College transfer students only, must be taken for a letter grade to count toward Seventh College high-impact requirement, cannot be taken concurrently or after SYN 100. Duplicate
+  regex: [["SYN 100","SYN 150R"]]
+  llm:   []
+
+SYN 150R
+  text:  restricted to Seventh College transfer students only, must be taken for a letter grade to count toward Seventh College high-impact requirement, cannot be taken concurrently or after SYN 100. Duplicate
+  regex: [["SYN 100","SYN 150"]]
+  llm:   []
+
+SYN 1R
+  text:  Seventh College students only, completion of UC Entry Level Writing requirement, must be taken for a letter grade to count toward Seventh College general-education requirements. Duplicate credit with 
+  regex: [["SYN 1"]]
+  llm:   []
+
+SYN 2
+  text:  Seventh College students only, SYN 1/1R, must be taken for a letter grade to count toward Seventh College general-education requirements. Duplicate credit with SYN 2R.
+  regex: [["SYN 1","SYN 2R"]]
+  llm:   [["SYN 1","SYN 1R"]]
+
+SYN 2R
+  text:  Seventh College students only, SYN 1/1R, must be taken for a letter grade to count toward Seventh College general-education requirements. Duplicate credit with SYN 2.
+  regex: [["SYN 1","SYN 2"]]
+  llm:   [["SYN 1","SYN 1R"]]
+
+TDDR 190
+  text:  TDDR 108, TDDR 111, consent of instructor, and department stamp.
+  regex: [["TDDR 108","TDDR 111"]]
+  llm:   [["TDDR 108"],["TDDR 111"]]
+
+TDGR 270C
+  text:  THGR 270A or TDGR 270A, THGR 270B or TDGR 270B, graduate standing, and consent of instructor.
+  regex: [["TDGR 270A","TDGR 270B"]]
+  llm:   [["TDGR 270A"],["TDGR 270B"]]
+
+TDPF 161
+  text:  audition, department approval, concurrent enrollment in TDMV 110 or TDMV 111 or TDMV 112 or TDMV 120 or TDMV 122 or TDMV 130 or TDMV 133.
+  regex: [["TDMV 110","TDMV 111","TDMV 112","TDMV 120","TDMV 122","TDMV 130","TDMV 133"]]
+  llm:   []
+
+TDPF 162
+  text:  audition, department approval, concurrent enrollment in TDMV 110 or TDMV 111 or TDMV 112 or TDMV 120 or TDMV 122 or TDMV 130 or TDMV 133.
+  regex: [["TDMV 110","TDMV 111","TDMV 112","TDMV 120","TDMV 122","TDMV 130","TDMV 133"]]
+  llm:   []
+
+TDPF 163
+  text:  concurrent enrollment in TDPF 160.
+  regex: [["TDPF 160"]]
+  llm:   []
+
+USP 102
+  text:  ECON 2 or 100A and MATH 10A or 20A and upper-division standing or consent of instructor.
+  regex: [["ECON 2"],["MATH 10A"]]
+  llm:   [["ECON 2","ECON 100A"],["MATH 10A","MATH 20A"]]
+
+USP 152A
+  text:  USP 15, USP 25, and upper-division standing or consent of instructor.
+  regex: [["USP 15","USP 25"]]
+  llm:   [["USP 15"],["USP 25"]]
+
+USP 185A
+  text:  USP 5, USP 15, USP 25, USP 50, USP 124, USP 151, USP 152A, and USP 153. Restricted to seniors within the Real Estate and Development major. (Only offered fall quarter.)
+  regex: [["USP 124","USP 15","USP 151","USP 152A","USP 25","USP 5","USP 50"],["USP 153"]]
+  llm:   [["USP 5"],["USP 15"],["USP 25"],["USP 50"],["USP 124"],["USP 151"],["USP 152A"],["USP 153"]]
+
+USP 186
+  text:  USP 30, USP 60, USP 124, one USP technical elective, and one USP Research Methods course. Restricted to seniors within the Urban Studies and Planning major. (Only offered fall quarter.)
+  regex: [["USP 124","USP 30","USP 60"]]
+  llm:   [["USP 30"],["USP 60"],["USP 124"]]
+
+VIS 129A
+  text:  VIS 112 or two upper-division courses in art history (VIS 113AN–129F).
+  regex: [["VIS 112","VIS 113AN"]]
+  llm:   [["VIS 112"]]
+
+VIS 129B
+  text:  VIS 112 or two upper-division courses in art history (VIS 113AN–129F).
+  regex: [["VIS 112","VIS 113AN"]]
+  llm:   [["VIS 112"]]
+
+VIS 129C
+  text:  VIS 112 or two upper-division courses in art history (VIS 113AN–129F).
+  regex: [["VIS 112","VIS 113AN"]]
+  llm:   [["VIS 112"]]
+
+VIS 129E
+  text:  VIS 112 or two upper-division courses in art history (VIS 113AN–129F).
+  regex: [["VIS 112","VIS 113AN"]]
+  llm:   [["VIS 112","VIS 113AN","VIS 129F"]]
+
+VIS 129F
+  text:  VIS 112 or two upper-division courses in art history (VIS 113AN–129F).
+  regex: [["VIS 112","VIS 113AN"]]
+  llm:   [["VIS 112"]]
+
+VIS 135
+  text:  VIS 30 and 41.
+  regex: [["VIS 30"]]
+  llm:   [["VIS 30"],["VIS 41"]]
+
+VIS 180A
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 180B
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 181
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 182
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 182A
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 183A
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 183B
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 184
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]
+
+VIS 185
+  text:  VIS 174 and two from VIS 164, 165, 165A, 165B, 171, 172, 175, 176, 177, 178, 179. Open to media majors with senior standing only.
+  regex: [["VIS 174"],["VIS 164"]]
+  llm:   [["VIS 174"],["VIS 164","VIS 165","VIS 165A","VIS 165B","VIS 171","VIS 172","VIS 175","VIS 176","VIS 177","VIS 178","VIS 179"]]

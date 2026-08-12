@@ -75,14 +75,14 @@ In `mern/client/src/components/LeftSidebar.jsx`:
 
 ### Step 2: The Real Upload is Already Connected!
 The real PDF upload functionality is already implemented in the `handleUpload` function (lines ~143-230). It:
-- ✅ Sends PDF to `/upload-degree-audit` endpoint
+- ⚠️ OUT OF DATE: there is no `/upload-degree-audit` endpoint. The audit is parsed in the browser (`SidebarAuditTracker.jsx`) and never uploaded.
 - ✅ Receives parsed JSON response
 - ✅ Updates the planner via `onParsedDataUpdate`
 - ✅ Shows loading spinner during processing
 - ✅ Handles errors with detailed logging
 
 ### Step 3: Update Backend (if needed)
-Make sure your backend at `mern/server/routes/upload.js` is working and that the Python parser at `mern/parse_logic.py` returns JSON in this format:
+⚠️ OUT OF DATE: `mern/server/routes/upload.js` was deleted (no callers, three parsing bugs). No backend step is involved — parsing happens client-side. The shape below is still roughly what the client parser produces:
 
 ```javascript
 {

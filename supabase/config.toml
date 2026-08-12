@@ -1,0 +1,14 @@
+# Supabase project config — pushed with:
+#   SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=<secret> supabase config push --project-ref aisoonveggmbqfufiisv
+# The Google client secret is intentionally env-referenced so it never lives in the repo.
+
+project_id = "TritonPlanner"
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/**"]
+
+[auth.external.google]
+enabled = true
+client_id = "1057491249300-8fe2c8rtkp2s599dcqg2u0di7ek7pt72.apps.googleusercontent.com"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"

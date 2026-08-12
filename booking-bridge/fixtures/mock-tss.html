@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mock TSS — adapter harness</title>
+<style>
+  body { font: 13px system-ui, sans-serif; margin: 0; padding: 20px 380px 40px 20px; color: #182b49; }
+  h1 { font-size: 16px; }
+  h2 { font-size: 13px; margin-top: 22px; text-transform: uppercase; letter-spacing: .05em; color: #6b7688; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { border: 1px solid #dde3ea; padding: 5px 8px; text-align: left; }
+  th { background: #f2f5f9; }
+  #results { margin-top: 18px; padding: 12px; border-radius: 8px; background: #0f172a; color: #e2e8f0;
+             font: 11px/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+  .pass { color: #4ade80; } .fail { color: #f87171; }
+  button { padding: 8px 12px; margin-right: 8px; border-radius: 6px; border: 1px solid #182b49;
+           background: #182b49; color: #ffcd00; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>Mock TSS — Schedule of Classes</h1>
+<p>
+  Approximates SAP Fiori's generated markup (<code>sapUiTable*</code> classes,
+  <code>__xmlview0--</code> id prefixes, <code>role</code> attributes) so the real
+  adapter can be exercised without a signed-in session. Column order is
+  deliberately non-obvious to prove header-based discovery works.
+</p>
+
+<!--
+  Rebuilt 2026-08-09 from a live TSS capture (UI5 1.120.46). Now mirrors the
+  real Fiori Elements List Report: sap.m responsive-table markup, the
+  <appId>::<entity>List--fe::table::<entity>::LineItem-innerTable-* id pattern,
+  and the presentational highlight/navigated spacer cells that carry no label.
+
+  Two deliberate traps:
+   1. Columns are ordered Status, Section, Days, Module... so position-based
+      mapping fails and only header-text mapping works.
+   2. A filter value-help popup table is rendered FIRST, exactly as TSS does
+      inside sap-ui-static. A bare sap.m.Table selector grabs it by mistake.
+-->
+
+<div id="sap-ui-static">
+  <div class="sapMPopover">
+    <table id="customer.schedule.soc.yucsdsoc::YUCSD_CON_MODULEList--fe::FilterBar::YUCSD_CON_MODULE::FilterFieldValueHelp::AcademicYear::Popover::qualifier::::SuggestTable-listUl"
+           class="sapMListTbl sapMListUl" role="grid">
+      <thead class="sapMTableTHead">
+        <tr class="sapMListTblHeaderNone" role="row">
+          <th class="sapMTableTH sapMListTblHighlightCol" role="presentation"></th>
+          <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Academic Year</th>
+        </tr>
+      </thead>
+      <tbody class="sapMListItems sapMTableTBody">
+        <tr class="sapMLIB sapMListTblRow" role="row">
+          <td class="sapMListTblHighlightCell" role="presentation"></td>
+          <td class="sapMListTblCell" role="gridcell">2026/2027</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="customer.schedule.soc.yucsdsoc::YUCSD_CON_MODULEList--fe::table::YUCSD_CON_MODULE::LineItem" class="sapUiMdcTable">
+ <div id="customer.schedule.soc.yucsdsoc::YUCSD_CON_MODULEList--fe::table::YUCSD_CON_MODULE::LineItem-innerTable" class="sapMList">
+  <table id="customer.schedule.soc.yucsdsoc::YUCSD_CON_MODULEList--fe::table::YUCSD_CON_MODULE::LineItem-innerTable-listUl"
+         class="sapMListTbl sapMListUl" role="grid">
+    <thead class="sapMTableTHead">
+      <tr class="sapMListTblHeader" role="row">
+        <th class="sapMTableTH sapMListTblHighlightCol" role="presentation"></th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Status</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Section ID</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Day of the Week</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Module</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Meeting Time</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Instructor</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Seats Available</th>
+        <th class="sapMListTblCell sapMTableTH sapMListTblHeaderCell" role="columnheader">Event Type</th>
+        <th class="sapMTableTH sapMListTblNavigatedCol" role="presentation"></th>
+      </tr>
+    </thead>
+    <tbody id="customer.schedule.soc.yucsdsoc::YUCSD_CON_MODULEList--fe::table::YUCSD_CON_MODULE::LineItem-innerTable-tblBody"
+           class="sapMListItems sapMTableTBody">
+      <tr class="sapMLIB sapMListTblRow" role="row">
+        <td class="sapMListTblHighlightCell" role="presentation"></td>
+        <td class="sapMListTblCell" role="gridcell">Available</td>
+        <td class="sapMListTblCell" role="gridcell">A00</td>
+        <td class="sapMListTblCell" role="gridcell">MWF</td>
+        <td class="sapMListTblCell" role="gridcell">CSE-8A</td>
+        <td class="sapMListTblCell" role="gridcell">10:00a-10:50a</td>
+        <td class="sapMListTblCell" role="gridcell">Politz, Joe</td>
+        <td class="sapMListTblCell" role="gridcell">245 of 300</td>
+        <td class="sapMListTblCell" role="gridcell">LE</td>
+        <td class="sapMListTblNavigatedCell" role="presentation"></td>
+      </tr>
+      <tr class="sapMLIB sapMListTblRow" role="row">
+        <td class="sapMListTblHighlightCell" role="presentation"></td>
+        <td class="sapMListTblCell" role="gridcell">Waitlist Active</td>
+        <td class="sapMListTblCell" role="gridcell">B00</td>
+        <td class="sapMListTblCell" role="gridcell">TuTh</td>
+        <td class="sapMListTblCell" role="gridcell">CSE-11</td>
+        <td class="sapMListTblCell" role="gridcell">2:00p - 3:20p</td>
+        <td class="sapMListTblCell" role="gridcell">Cao, Yingjun</td>
+        <td class="sapMListTblCell" role="gridcell">200 of 200</td>
+        <td class="sapMListTblCell" role="gridcell">LE</td>
+        <td class="sapMListTblNavigatedCell" role="presentation"></td>
+      </tr>
+      <tr class="sapMLIB sapMListTblRow" role="row">
+        <td class="sapMListTblHighlightCell" role="presentation"></td>
+        <td class="sapMListTblCell" role="gridcell">Waitlist Inactive</td>
+        <td class="sapMListTblCell" role="gridcell">A01</td>
+        <td class="sapMListTblCell" role="gridcell">TH</td>
+        <td class="sapMListTblCell" role="gridcell">MATH 20A</td>
+        <td class="sapMListTblCell" role="gridcell">9:00 to 9:50</td>
+        <td class="sapMListTblCell" role="gridcell">Staff</td>
+        <td class="sapMListTblCell" role="gridcell">12 available</td>
+        <td class="sapMListTblCell" role="gridcell">DI</td>
+        <td class="sapMListTblNavigatedCell" role="presentation"></td>
+      </tr>
+    </tbody>
+  </table>
+ </div>
+</div>
+
+<h2>Booking screen controls</h2>
+<label>Grading Option
+  <select id="__xmlview0--gradingOptionSelect">
+    <option value="LG">Letter Grade</option>
+    <option value="PN">Pass / No Pass</option>
+  </select>
+</label>
+<label style="margin-left:16px">Credit Hours
+  <input id="__xmlview0--creditHoursInput" type="text" value="" size="4" />
+</label>
+<div style="margin-top:12px">
+  <button class="sapMBtn" data-sap-ui-control-type="sap.m.Button">Go To Booking</button>
+  <button class="sapMBtn" data-sap-ui-control-type="sap.m.Button">Book/Save</button>
+</div>
+<div class="sapMMessageStrip" role="alert" style="margin-top:12px;padding:8px;background:#e8f5ec">
+  Booking successful. Status: Booked.
+</div>
+
+<h2>Harness</h2>
+<button id="run">Run adapter assertions</button>
+<div id="results">Not run yet.</div>
+
+<script>
+  // The adapter and overlay call chrome.* APIs; stub just enough that the
+  // scraping and control-resolution paths can run outside an extension host.
+  window.chrome = {
+    runtime: { sendMessage() {}, getURL: (p) => p },
+    storage: { local: { get: () => Promise.resolve({}), set: () => Promise.resolve() },
+               onChanged: { addListener() {} } },
+  };
+
+  // Load the extension sources with a cache-busting query. Plain <script src>
+  // tags let the browser serve a stale selectors.js, which produces a bogus
+  // PASS against code that is no longer on disk — the most misleading possible
+  // failure for a test whose whole job is validating selectors.
+  const bust = `?v=${performance.now()}`;
+  window.__sourcesReady = ["selectors", "parsing", "adapter"].reduce(
+    (chain, name) =>
+      chain.then(
+        () =>
+          new Promise((resolve, reject) => {
+            const s = document.createElement("script");
+            s.src = `../extension/content/${name}.js${bust}`;
+            s.onload = resolve;
+            s.onerror = () => reject(new Error(`failed to load ${name}.js`));
+            document.head.appendChild(s);
+          })
+      ),
+    Promise.resolve()
+  );
+</script>
+<script>
+(() => {
+  const out = document.getElementById("results");
+  const checks = [];
+  const check = (name, condition, detail = "") =>
+    checks.push({ name, pass: Boolean(condition), detail });
+
+  document.getElementById("run").addEventListener("click", async () => {
+    checks.length = 0;
+    try {
+      await window.__sourcesReady;
+    } catch (error) {
+      out.innerHTML = `<span class="fail">FAIL</span>  ${error.message}`;
+      return;
+    }
+    const adapter = window.__TPBB_adapter;
+
+    // Guards against testing stale code: selectors.js sets capturedAgainst
+    // once it has been reconciled with a live capture.
+    check("loaded the current selectors.js (not a cached copy)",
+      Boolean(window.TPBB_SELECTORS.capturedAgainst),
+      `capturedAgainst=${window.TPBB_SELECTORS.capturedAgainst}`);
+
+    // Control resolution
+    check("resolves Book/Save button", adapter.resolve("bookSaveButton").ok);
+    check("resolves Go To Booking button", adapter.resolve("goToBookingButton").ok);
+    check("resolves grading control", adapter.resolve("gradingOptionControl").ok);
+    check("resolves result message", adapter.resolve("resultMessage").ok);
+
+    // prepareBooking should prefill and locate the submit control
+    const report = adapter.prepareBooking({
+      courseId: "CSE 8A", units: 4, variableUnits: true, gradingOption: "pnp",
+    });
+    check("prepareBooking finds submit control", report.ready);
+    check("prefills grading option to P/NP",
+      document.getElementById("__xmlview0--gradingOptionSelect").value === "PN");
+    check("prefills credit hours for variable-unit course",
+      document.getElementById("__xmlview0--creditHoursInput").value === "4");
+
+    const result = adapter.readResult();
+    check("readResult() detects 'Booked'", result.ok && result.status === "booked",
+      result.status || result.reason);
+
+    // A missing target must report a named failure, not fail silently.
+    const missing = adapter.resolve("socSearchInput");
+    check("missing target reports a named reason",
+      !missing.ok && /socSearchInput/.test(missing.reason), missing.reason || "");
+
+    const failed = checks.filter((c) => !c.pass);
+    out.innerHTML =
+      checks.map((c) =>
+        `<span class="${c.pass ? "pass" : "fail"}">${c.pass ? "PASS" : "FAIL"}</span>  ${c.name}` +
+        (c.detail && !c.pass ? `   <em>(${c.detail})</em>` : "")
+      ).join("\n") +
+      `\n\n${checks.length - failed.length}/${checks.length} passed`;
+    document.title = failed.length ? `FAIL ${failed.length}` : `PASS ${checks.length}`;
+  });
+})();
+</script>
+</body>
+</html>

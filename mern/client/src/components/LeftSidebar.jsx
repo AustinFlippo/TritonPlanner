@@ -1,88 +1,79 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import SidebarAuditTracker from "./audit/SidebarAuditTracker";
 
 // Main LeftSidebar Component
-const LeftSidebar = ({ onParsedDataUpdate }) => {
-  // State for parsed data from uploaded degree audit
-  const [auditData, setAuditData] = useState({
-    sections: [],
-    metadata: {}
-  });
-
-  // State for sidebar width
-  const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
+// auditData is owned by MainLayout (parsedCourseData) so restored sessions —
+// including the reload after the Google OAuth redirect — show up here too
+const LeftSidebar = ({
+  auditData = { sections: [], metadata: {} },
+  schedule = [],
+  onParsedDataUpdate,
+  width,
+  onWidthChange,
+  expanded = false,
+  onToggleExpand,
+  onMinimize,
+}) => {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
 
-  // Handle audit data updates from the SidebarAuditTracker
+  // A fresh upload parsed by SidebarAuditTracker — report it up
   const handleAuditDataUpdate = (newAuditData) => {
-    setAuditData(newAuditData);
-    
-    // Update the parent component with all parsed data
     if (onParsedDataUpdate) {
       onParsedDataUpdate(newAuditData);
     }
   };
 
-  // Handle mouse down on resize handle
-  const handleMouseDown = (e) => {
-    setIsResizing(true);
-    e.preventDefault();
-  };
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isResizing || !onWidthChange) return;
+      const left = sidebarRef.current?.getBoundingClientRect().left ?? 0;
+      onWidthChange(e.clientX - left);
+    },
+    [isResizing, onWidthChange]
+  );
 
-  // Handle mouse move for resizing
-  const handleMouseMove = React.useCallback((e) => {
-    if (!isResizing) return;
-    
-    const newWidth = e.clientX;
-    if (newWidth >= 250 && newWidth <= 600) { // Min 250px, Max 600px
-      setSidebarWidth(newWidth);
-    }
-  }, [isResizing]);
-
-  // Handle mouse up to stop resizing
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsResizing(false);
-  };
+  }, []);
 
-  // Add global mouse event listeners
-  React.useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    }
-
+  useEffect(() => {
+    if (!isResizing) return;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
     };
-  }, [isResizing, handleMouseMove]);
-  
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
   return (
-    <div 
+    <div
       ref={sidebarRef}
       className="bg-white border-r border-gray-200 h-full flex flex-col overflow-hidden relative"
-      style={{ width: `${sidebarWidth}px` }}
+      style={{ width: `${width}px` }}
     >
-      <SidebarAuditTracker 
+      <SidebarAuditTracker
         auditData={auditData}
+        schedule={schedule}
         onAuditDataUpdate={handleAuditDataUpdate}
+        expandState={expanded ? "expanded" : null}
+        onToggleExpand={onToggleExpand}
+        onMinimize={expanded ? undefined : onMinimize}
       />
-      
-      {/* Resize Handle */}
+
+      {/* Resize handle — stays available in full-bleed so you can drag back */}
       <div
-        className="absolute top-0 right-0 w-1 h-full bg-gray-300 hover:bg-blue-400 cursor-col-resize opacity-0 hover:opacity-100 transition-opacity"
-        onMouseDown={handleMouseDown}
-        title="Drag to resize sidebar"
+        className="absolute top-0 right-0 w-1.5 h-full hover:bg-navy-300 cursor-col-resize z-10 transition-colors"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setIsResizing(true);
+        }}
+        title="Drag to resize"
       />
     </div>
   );
