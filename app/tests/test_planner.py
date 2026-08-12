@@ -275,6 +275,7 @@ def test_live_upcoming_does_not_block_later_quarters(monkeypatch):
     r = check_placements(
         [],
         [place(0, "fall", "CSE 21"), place(0, "winter", "CSE 158")],
+        completed_ids={"CSE 100"},
         today=TODAY,
     )
     assert not any("not on the live" in m for m in messages_of(r, "error"))
@@ -310,25 +311,32 @@ def test_no_live_upcoming_does_not_block_enrollment_quarter():
     assert "CSE 158" in placed
 
 
-def test_prereq_unsatisfied_is_warning():
+def test_prereq_unsatisfied_is_error_and_skips():
     r = check_placements([], [place(0, "fall", "CSE 100")], today=TODAY)
-    assert any("needs CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 21" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 100" not in placed
 
 
 def test_prereq_satisfied_by_earlier_placement():
     r = check_placements(
         [], [place(0, "fall", "CSE 21"), place(0, "winter", "CSE 100")], today=TODAY)
+    assert messages_of(r, "error") == []
     assert messages_of(r, "warning") == []
 
 
 def test_prereq_not_satisfied_by_same_term():
     r = check_placements([], [place(0, "fall", "CSE 21", "CSE 100")], today=TODAY)
-    assert any("needs CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 21" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 100" not in placed
+    assert "CSE 21" in placed
 
 
 def test_prereq_satisfied_by_audit_completed():
     r = check_placements([], [place(0, "fall", "CSE 100")],
                          completed_ids={"CSE 21"}, today=TODAY)
+    assert messages_of(r, "error") == []
     assert messages_of(r, "warning") == []
 
 
@@ -364,10 +372,11 @@ def test_self_reference_does_not_drop_a_real_alternative():
     catalog._prereq_graph["CSE 101"] = {
         "requires": [["CSE 101", "CSE 21"]], "confidence": "parsed", "notes": ""}
     r = check_placements([], [place(0, "fall", "CSE 101")], today=TODAY)
-    assert any("needs CSE 101 or CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 101 or CSE 21" in m for m in messages_of(r, "error"))
     r = check_placements(
         [], [place(0, "fall", "CSE 21"), place(0, "winter", "CSE 101")],
         today=TODAY)
+    assert messages_of(r, "error") == []
     assert messages_of(r, "warning") == []
 
 
@@ -399,17 +408,19 @@ def test_corequisite_already_on_the_grid_in_the_same_term_is_accepted():
     assert messages_of(r) == []
 
 
-def test_corequisite_missing_entirely_still_warns_and_says_same_quarter():
+def test_corequisite_missing_entirely_still_errors_and_says_same_quarter():
     r = check_placements([], [place(0, "fall", "ECE 100")], today=TODAY)
     assert any("ECE 65" in m and "same quarter or earlier" in m
-               for m in messages_of(r, "warning"))
+               for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "ECE 100" not in placed
 
 
-def test_plain_prerequisite_in_the_same_quarter_still_warns():
+def test_plain_prerequisite_in_the_same_quarter_still_errors():
     # CSE 21 is NOT flagged concurrent for CSE 100, so nothing changes for it.
     r = check_placements([], [place(0, "fall", "CSE 21", "CSE 100")], today=TODAY)
     assert any("needs CSE 21 in an earlier quarter" in m
-               for m in messages_of(r, "warning"))
+               for m in messages_of(r, "error"))
 
 
 def test_removal_fallout_accepts_a_corequisite_left_in_the_same_term():
@@ -432,7 +443,7 @@ def test_sequence_member_inherits_the_parent_entrys_prereqs():
     assert entry is not None and entry["requires"] == [["CSE 21"]]
     assert planner_agent._prereq_groups("HIST 4A")[0][0] == {"CSE 21"}
     r = check_placements([], [place(0, "fall", "HIST 4A")], today=TODAY)
-    assert any("needs CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 21" in m for m in messages_of(r, "error"))
 
 
 def test_sequence_member_prereqs_reach_the_prompt_closure():
@@ -445,9 +456,11 @@ def test_sequence_member_prereqs_reach_the_prompt_closure():
 # ---------------------------------------------------------------------------
 
 def test_overloaded_quarter_warns_but_still_places():
+    # Five 4-unit courses with prereqs already satisfied via the audit.
     r = check_placements(
-        [], [place(0, "fall", "CSE 21", "CSE 100", "CSE 101", "CSE 158",
-                   "DSC 80")], today=TODAY)
+        [], [place(0, "fall", "CSE 101", "CSE 158", "DSC 80", "ECE 65", "MUS 1A")],
+        completed_ids={"CSE 100", "CSE 21"},
+        today=TODAY)
     assert any("over UCSD's 19.5-unit quarter limit" in m
                for m in messages_of(r, "warning"))
     placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
@@ -516,13 +529,14 @@ def test_removing_a_planned_course_is_still_fine():
 # merge + build_plan_grid
 # ---------------------------------------------------------------------------
 
-def test_merge_skips_errors_places_warnings():
+def test_merge_skips_errors_places_valid():
+    # FAKE 999 is missing; CSE 100 without CSE 21 is now an error and skipped.
     grid, summaries, warnings = build_plan_grid(
-        [], [place(0, "fall", "CSE 100", "FAKE 999")], today=TODAY)
+        [], [place(0, "fall", "CSE 100", "FAKE 999", "CSE 21")], today=TODAY)
     ids = planner_agent._grid_course_ids(grid)
-    assert "CSE 100" in ids and "FAKE 999" not in ids
-    assert any("not found" in w for w in warnings)       # the error surfaced
-    assert any("needs CSE 21" in w for w in warnings)     # the warning surfaced
+    assert "CSE 21" in ids and "FAKE 999" not in ids and "CSE 100" not in ids
+    assert any("not found" in w for w in warnings)
+    assert any("needs CSE 21" in w for w in warnings)
 
 
 def test_merge_keeps_open_slot_and_existing_courses():
@@ -651,9 +665,42 @@ def test_format_seat_availability_includes_open_counts():
         }],
     })
     assert "Fall 2026" in text
-    assert "live TSS" in text
+    assert "live seats (Class Planner)" in text
     assert "CSE 100" in text
     assert "3/120 open" in text
+
+
+def test_format_seat_availability_snapshot_is_usable_not_tss_gate():
+    text = planner_agent._format_seat_availability({
+        "termLabel": "Fall 2026",
+        "source": "classplanner",
+        "live": False,
+        "courses": [{
+            "courseId": "CSE 100",
+            "offered": True,
+            "sections": [{
+                "sectionId": "A00",
+                "component": "LE",
+                "days": ["M", "W", "F"],
+                "start": "10:00am",
+                "end": "10:50am",
+                "seatsAvailable": 3,
+                "seatsTotal": 120,
+            }],
+        }],
+    })
+    assert "schedule snapshot (classplanner)" in text
+    assert "seats usable this turn" in text
+    assert "live TSS" not in text
+    assert "3/120 open" in text
+
+
+def test_system_prompt_forbids_asking_student_to_refresh_tss():
+    text = planner_agent.SYSTEM_TEMPLATE
+    assert 'refresh TSS' in text
+    assert "never tell the student" in text
+    assert "shared snapshot" not in text
+    assert "live TSS" not in text
 
 
 @pytest.mark.asyncio
@@ -1005,6 +1052,7 @@ def test_graded_from_audit_frontend_format():
 
 def test_transfer_pass_grade_counts_as_completed():
     # TP = transfer pass. Real audits stamp this on MATH 20A, CSE 8A, etc.
+    # (AP/community-college credit posted as the UCSD equivalent).
     audit = [{"title": "Major", "status": "not_fulfilled", "items": [
         "CSE 21 - Math Foundations (SP22, TP)",
         "CSE 100 - Advanced Data Structures (FA23, F)",
@@ -1014,12 +1062,19 @@ def test_transfer_pass_grade_counts_as_completed():
     audit2 = [{"title": "Major", "status": "fulfilled",
                "items": ["COMPLETE: CSE 21 TP, DSC 80 B"]}]
     assert planner_agent._graded_from_audit(audit2) == {"CSE 21", "DSC 80/80R"}
-    # TP'ed prereq must silence the "needs CSE 21" warning for CSE 100.
+    # TP'ed prereq satisfies CSE 100 — no error/warning, course places.
     r = check_placements(
         [], [place(0, "fall", "CSE 100")],
         completed_ids=planner_agent._graded_from_audit(audit), today=TODAY)
+    assert messages_of(r, "error") == []
     assert messages_of(r, "warning") == []
     assert [c["course_id"] for p in r["valid"] for c in p["courses"]] == ["CSE 100"]
+
+
+def test_system_prompt_mentions_transfer_ap_tp_credit():
+    text = planner_agent.SYSTEM_TEMPLATE
+    assert "grade TP" in text and "Transfer and AP credit" in text
+    assert "AP **3" in text
 
 
 def test_graded_from_audit_tolerates_fixed_width_column_padding():
@@ -1052,7 +1107,7 @@ def test_past_term_placement_does_not_satisfy_prereqs():
     r = check_placements(
         [], [place(0, "winter", "CSE 21"), place(1, "fall", "CSE 100")],
         today=date(2025, 7, 1))  # earliest = year 1 fall
-    assert any("needs CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 21" in m for m in messages_of(r, "error"))
 
 
 def test_rejected_duplicate_does_not_move_prereq_earlier():
@@ -1063,7 +1118,7 @@ def test_rejected_duplicate_does_not_move_prereq_earlier():
     r = check_placements(
         grid, [place(0, "fall", "CSE 21"), place(0, "winter", "CSE 100")], today=TODAY)
     assert any("already on the planner" in m for m in messages_of(r, "error"))
-    assert any("needs CSE 21" in m for m in messages_of(r, "warning"))
+    assert any("needs CSE 21" in m for m in messages_of(r, "error"))
 
 
 def test_term_capitalization_is_normalized():
@@ -1714,11 +1769,11 @@ def test_unverified_course_shows_unknown_units_in_the_summary():
 def test_coverage_ignores_placements_validation_dropped():
     # CSE 101 lands in a past term, so it never reaches the grid. Projecting it
     # as coverage would tell the student a requirement is met by a course they
-    # were never given.
+    # were never given. CSE 158 still places (prereq already completed).
     proposal = ProposeSchedule(
         placements=[place(0, "fall", "CSE 101"), place(1, "fall", "CSE 158")],
         explanation="")
-    out = planner_agent._accept(proposal, [], set(), date(2025, 7, 1),
+    out = planner_agent._accept(proposal, [], {"CSE 100"}, date(2025, 7, 1),
                                 audit_sections=AUDIT_WITH_NEEDS)
     assert planner_agent._grid_course_ids(out["proposed_schedule"]) == {"CSE 158"}
     assert any("still short 1" in w for w in out["warnings"])
@@ -1726,22 +1781,55 @@ def test_coverage_ignores_placements_validation_dropped():
 
 @pytest.mark.asyncio
 async def test_checkplan_reports_coverage_to_model():
-    propose = placements_args((0, "fall", ["CSE 101"]))
-    propose["explanation"] = "partial"
+    short = placements_args((0, "fall", ["CSE 21"]))
+    short["explanation"] = "partial"
+    full = {
+        "placements": [
+            {"year_index": 0, "term": "fall", "course_ids": ["CSE 21"]},
+            {"year_index": 0, "term": "winter", "course_ids": ["CSE 100"]},
+            {"year_index": 1, "term": "fall", "course_ids": ["CSE 101", "CSE 158"]},
+        ],
+        "explanation": "electives covered",
+    }
     llm = FakeToolLLM([
-        tool_msg("CheckPlan", placements_args((0, "fall", ["CSE 101"]))),
-        tool_msg("ProposeSchedule", propose),
+        # CSE 21 alone leaves MAJOR ELECTIVES short (no prereq ERROR noise).
+        tool_msg("CheckPlan", placements_args((0, "fall", ["CSE 21"])), call_id="c0"),
+        tool_msg("ProposeSchedule", short, call_id="c1"),
+        tool_msg("ProposeSchedule", full, call_id="c2"),
     ])
     out = await plan_chat("plan", AUDIT_WITH_NEEDS, [], llm=llm, today=TODAY)
     check_reply = llm.seen[1][-1].content
-    assert "still short 1" in check_reply
-    assert any("still short 1" in w for w in out["warnings"])
+    assert "still short" in check_reply
+    # First ProposeSchedule on an empty grid must be rejected for coverage.
+    reject_reply = llm.seen[2][-1].content
+    assert "REJECTED" in reject_reply and "still short" in reject_reply
+    ids = planner_agent._grid_course_ids(out["proposed_schedule"])
+    assert {"CSE 21", "CSE 100", "CSE 101", "CSE 158"} <= ids
+    assert not any("still short" in w for w in out.get("warnings") or [])
+
+
+@pytest.mark.asyncio
+async def test_targeted_add_allows_remaining_coverage_gaps():
+    # Non-empty grid + single-course add: other electives may stay unmet.
+    grid = planned_grid((0, "fall", "CSE 21"))
+    propose = placements_args((0, "winter", ["CSE 100"]))
+    propose["explanation"] = "add cse 100"
+    llm = FakeToolLLM([tool_msg("ProposeSchedule", propose)])
+    out = await plan_chat("add CSE 100", AUDIT_WITH_NEEDS, grid, llm=llm, today=TODAY)
+    assert "CSE 100" in planner_agent._grid_course_ids(out["proposed_schedule"])
+    assert any("still short" in w for w in out["warnings"])
 
 
 @pytest.mark.asyncio
 async def test_search_tool_round_trip():
-    propose = placements_args((0, "fall", ["CSE 158"]))
-    propose["explanation"] = "ml elective added"
+    propose = {
+        "placements": [
+            {"year_index": 0, "term": "fall", "course_ids": ["CSE 21"]},
+            {"year_index": 0, "term": "winter", "course_ids": ["CSE 100"]},
+            {"year_index": 1, "term": "fall", "course_ids": ["CSE 158"]},
+        ],
+        "explanation": "ml elective added",
+    }
     llm = FakeToolLLM([
         tool_msg("SearchCourses", {"query": "machine learning", "levels": ["upper"]}),
         tool_msg("ProposeSchedule", propose),
@@ -1749,7 +1837,9 @@ async def test_search_tool_round_trip():
     out = await plan_chat("add an ML elective", [], [], llm=llm, today=TODAY)
     search_reply = llm.seen[1][-1].content
     assert "CSE 158" in search_reply and "unlocks" not in search_reply.split("CSE 158")[0]
-    assert planner_agent._grid_course_ids(out["proposed_schedule"]) == {"CSE 158"}
+    assert planner_agent._grid_course_ids(out["proposed_schedule"]) == {
+        "CSE 21", "CSE 100", "CSE 158"
+    }
 
 
 SECTION_OPTIONS_FIXTURE = {

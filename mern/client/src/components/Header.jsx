@@ -7,8 +7,8 @@ import ConfirmDialog from "./ConfirmDialog";
 
 const NAV_ITEMS = [
   { key: "planner", label: "Planner" },
-  { key: "storage", label: "Saved Plans" },
   { key: "quarter", label: "Quarter View" },
+  { key: "storage", label: "Saved Plans" },
   // Only rendered for accounts in `app_admins`; everyone else never sees it.
   { key: "admin", label: "Admin", adminOnly: true },
 ];
