@@ -1,5 +1,6 @@
 import express from 'express';
 import { google } from 'googleapis';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -11,19 +12,35 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load the service account key using environment variable. Resolve rather than
-// join: hosted deployments mount the key as a secret file at an ABSOLUTE path
-// (Render uses /etc/secrets/...), which path.join would silently reinterpret as
-// relative to the repo root. A relative value still resolves from there.
-const GOOGLE_SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH || 'credentials/academic-planner-463804-202e89b2e5e4.json';
-const KEYFILE_PATH = path.resolve(__dirname, '../..', GOOGLE_SERVICE_ACCOUNT_PATH);
+// Service-account key for Sheets + Drive. Hosted deploys should set this to the
+// absolute Secret File path (Render: /etc/secrets/<name>.json). Relative values
+// resolve from the repo root (credentials/...), not from mern/.
+const GOOGLE_SERVICE_ACCOUNT_PATH =
+  process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
+  'credentials/academic-planner-463804-202e89b2e5e4.json';
+const KEYFILE_PATH = path.isAbsolute(GOOGLE_SERVICE_ACCOUNT_PATH)
+  ? GOOGLE_SERVICE_ACCOUNT_PATH
+  : path.resolve(__dirname, '../../..', GOOGLE_SERVICE_ACCOUNT_PATH);
 
-// Configure Google Sheets API
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEYFILE_PATH,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/drive']
-});
+function getSheetsAuth() {
+  if (!fs.existsSync(KEYFILE_PATH)) {
+    const err = new Error(
+      `Google service-account key not found at ${KEYFILE_PATH}. ` +
+        'On Render, add the JSON as a Secret File and set ' +
+        'GOOGLE_SERVICE_ACCOUNT_PATH to that absolute path ' +
+        '(e.g. /etc/secrets/google-service-account.json).'
+    );
+    err.code = 'MISSING_GOOGLE_CREDENTIALS';
+    throw err;
+  }
+  return new google.auth.GoogleAuth({
+    keyFile: KEYFILE_PATH,
+    scopes: [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive',
+    ],
+  });
+}
 
 const sheets = google.sheets({ version: 'v4' });
 
@@ -36,9 +53,8 @@ router.post('/google-sheets', async (req, res) => {
       return res.status(400).json({ error: 'Missing schedule or yearLabels data' });
     }
 
-
     // Get authenticated client
-    const authClient = await auth.getClient();
+    const authClient = await getSheetsAuth().getClient();
 
     // Create a new spreadsheet
     const createResponse = await sheets.spreadsheets.create({

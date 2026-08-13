@@ -94,10 +94,16 @@ CORS is a browser control, not an auth boundary.
 **Do not set `EXPRESS_PORT` on Render.** It takes precedence over `PORT`, so
 setting it makes Render's health check fail.
 
-**Google Sheets export.** Add the service-account JSON as a Render *Secret
-File*, then set `GOOGLE_SERVICE_ACCOUNT_PATH` to the absolute path Render gives
-it (typically `/etc/secrets/<filename>.json`). Absolute paths are supported.
-Skip both if you are not using the export feature.
+**Google Sheets export.** The key file is gitignored, so production will 500
+on `/api/export/google-sheets` until you mount it. In the Express service on
+Render:
+
+1. Environment → Secret Files → add the service-account JSON (any filename).
+2. Set `GOOGLE_SERVICE_ACCOUNT_PATH` to the absolute path Render shows
+   (typically `/etc/secrets/<filename>.json`).
+
+Relative paths resolve from the repo root (`credentials/...`). Do not point
+this at `mern/credentials/...`. Skip both if you are not using export.
 
 Verify:
 - `GET /next-quarter` → 200 with `courseCount` around 2,100

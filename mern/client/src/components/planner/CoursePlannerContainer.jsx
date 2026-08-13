@@ -377,10 +377,13 @@ const CoursePlannerContainer = ({
           message: "Your schedule was exported. Google Sheets is opening in a new tab.",
         });
       } else {
-        console.error('Export failed:', data.error);
+        console.error('Export failed:', data.error, data.details);
         setAlertDialog({
           title: "Export failed",
-          message: data.error || "Something went wrong while exporting.",
+          message:
+            data.details ||
+            data.error ||
+            "Something went wrong while exporting.",
         });
       }
     } catch (error) {
