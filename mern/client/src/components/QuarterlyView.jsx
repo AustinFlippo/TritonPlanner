@@ -98,7 +98,7 @@ const QuarterlyView = ({
   }, [enrollmentSlot]);
 
   const title = quarterTitle(yearLabels, selected.yearIndex, selected.term);
-  const { isOffered, tssOfferings, seatChipFor } = useNextQuarterOfferings();
+  const { isOffered, tssOfferings } = useNextQuarterOfferings();
 
   // course_id → { loading, catalog, graph }
   const [details, setDetails] = useState({});
@@ -507,7 +507,6 @@ const QuarterlyView = ({
       const block = enrollmentPlacementBlock(course, {
         offeringsReady: tssOfferings.status === "ready",
         isOffered,
-        seatChip: seatChipFor(course.course_id),
       });
       if (block) return;
     }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   buildOfferedCompactSet,
   enrollmentPlacementBlock,
+  enrollmentSeatWarning,
   isCourseOfferedNext,
   offeringsFromPublished,
   overlayLiveSeats,
@@ -126,18 +127,49 @@ assert.equal(isCourseOfferedNext(null, offered), false);
     isOffered: () => false,
   });
   assert.equal(notLive.type, "not-live");
-  const full = enrollmentPlacementBlock(course, {
-    offeringsReady: true,
-    isOffered: () => true,
-    seatChip: { kind: "full" },
-  });
-  assert.equal(full.type, "full");
-  const waitlist = enrollmentPlacementBlock(course, {
-    offeringsReady: true,
-    isOffered: () => true,
-    seatChip: { kind: "waitlist" },
-  });
-  assert.equal(waitlist.type, "waitlist");
+  assert.equal(
+    enrollmentPlacementBlock(course, {
+      offeringsReady: true,
+      isOffered: () => true,
+      seatChip: { kind: "full" },
+    }),
+    null,
+    "full still places"
+  );
+  assert.equal(
+    enrollmentPlacementBlock(course, {
+      offeringsReady: true,
+      isOffered: () => true,
+      seatChip: { kind: "waitlist" },
+    }),
+    null,
+    "waitlist still places"
+  );
+  assert.equal(
+    enrollmentSeatWarning(course, {
+      offeringsReady: true,
+      isOffered: () => true,
+      seatChip: { kind: "full" },
+    }).type,
+    "full"
+  );
+  assert.equal(
+    enrollmentSeatWarning(course, {
+      offeringsReady: true,
+      isOffered: () => true,
+      seatChip: { kind: "waitlist" },
+    }).type,
+    "waitlist"
+  );
+  assert.equal(
+    enrollmentSeatWarning(course, {
+      offeringsReady: true,
+      isOffered: () => false,
+      seatChip: { kind: "full" },
+    }),
+    null,
+    "not-offered is a block, not a seat warning"
+  );
   assert.equal(
     enrollmentPlacementBlock(course, {
       offeringsReady: true,

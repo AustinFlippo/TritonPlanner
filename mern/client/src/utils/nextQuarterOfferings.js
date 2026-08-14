@@ -67,13 +67,13 @@ export function isCourseOfferedNext(courseId, offeredSet) {
  * Why this course must not be placed in the enrollment quarter, or null.
  *
  * Only when the live Class Planner feed is loaded — without it we do not
- * pretend to know next-quarter offerings or seats. Completed / in-progress
- * cards are history and are never blocked. Waitlist-only is treated as no
- * free slots, same as full.
+ * pretend to know next-quarter offerings. Completed / in-progress cards are
+ * history and are never blocked. Full / waitlist-only still place (see
+ * enrollmentSeatWarning): seats move, and planning a waitlist is normal.
  */
 export function enrollmentPlacementBlock(
   course,
-  { offeringsReady, isOffered, seatChip } = {}
+  { offeringsReady, isOffered } = {}
 ) {
   if (!course?.course_id) return null;
   if (course.status === "completed" || course.status === "current") return null;
@@ -84,6 +84,25 @@ export function enrollmentPlacementBlock(
       type: "not-live",
       message: `${id} is not on the live next-quarter schedule.`,
     };
+  }
+  return null;
+}
+
+/**
+ * Seat heads-up for a course that can still go in the enrollment quarter.
+ * Full and waitlist-only are not blocks — seats open, and students routinely
+ * plan around a waitlist.
+ */
+export function enrollmentSeatWarning(
+  course,
+  { offeringsReady, isOffered, seatChip } = {}
+) {
+  if (!course?.course_id) return null;
+  if (course.status === "completed" || course.status === "current") return null;
+  if (!offeringsReady) return null;
+  const id = course.course_id;
+  if (typeof isOffered === "function" ? !isOffered(id) : isOffered === false) {
+    return null;
   }
   if (seatChip?.kind === "full") {
     return {

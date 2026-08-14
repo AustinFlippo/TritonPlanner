@@ -21,7 +21,10 @@ import {
   prereqWarningFor,
 } from "../../utils/prereqCheck";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
-import { enrollmentPlacementBlock } from "../../utils/nextQuarterOfferings";
+import {
+  enrollmentPlacementBlock,
+  enrollmentSeatWarning,
+} from "../../utils/nextQuarterOfferings";
 import { downloadCsv, scheduleToCsv } from "../../utils/scheduleExport";
 
 // Grid terms -> catalog quarter codes, for offering warnings
@@ -91,6 +94,14 @@ const CoursePlannerContainer = ({
   const getEnrollmentBlock = (course, yearIndex, term) => {
     if (!isEnrollmentTerm(yearIndex, term)) return null;
     return enrollmentPlacementBlock(course, {
+      offeringsReady: tssOfferings.status === "ready",
+      isOffered,
+    });
+  };
+
+  const getEnrollmentSeatWarning = (course, yearIndex, term) => {
+    if (!isEnrollmentTerm(yearIndex, term)) return null;
+    return enrollmentSeatWarning(course, {
       offeringsReady: tssOfferings.status === "ready",
       isOffered,
       seatChip: course?.course_id ? seatChipFor(course.course_id) : null,
@@ -356,6 +367,7 @@ const CoursePlannerContainer = ({
     );
     const warning =
       getEnrollmentBlock(draggedCourseRef.current, yearIndex, term) ||
+      getEnrollmentSeatWarning(draggedCourseRef.current, yearIndex, term) ||
       getPrereqWarning(draggedCourseRef.current, term, yearIndex) ||
       getCourseWarning(draggedCourseRef.current, term);
     setDropWarning((prev) => (prev?.message === warning?.message ? prev : warning));
@@ -439,13 +451,19 @@ const CoursePlannerContainer = ({
     setSchedule(next);
     setPreviewState(null);
 
-    // Non-blocking heads-up: missing prereqs first, then offering history.
+    // Non-blocking heads-up: missing prereqs first, then seats, then history.
     const prereq = getPrereqWarning(course, term, yearIndex, next);
+    const seats = getEnrollmentSeatWarning(course, yearIndex, term);
     const offering = getCourseWarning(course, term);
     if (prereq) {
       showToast(
         prereq.message,
         "Prerequisites must sit in an earlier quarter."
+      );
+    } else if (seats) {
+      showToast(
+        seats.message,
+        "You can still plan it — seats open, and waitlisting is an option."
       );
     } else if (offering) {
       showToast(offering.message);
@@ -481,9 +499,7 @@ const CoursePlannerContainer = ({
       // Amber = droppable but offering history disagrees; navy = normal target
       if (dropWarning) {
         className +=
-          dropWarning.type === "not-live" ||
-          dropWarning.type === "full" ||
-          dropWarning.type === "waitlist"
+          dropWarning.type === "not-live"
             ? "ring-2 ring-red-400 bg-red-50 "
             : "ring-2 ring-amber-400 bg-amber-50 ";
       } else {

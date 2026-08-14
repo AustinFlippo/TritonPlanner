@@ -293,25 +293,28 @@ def test_live_upcoming_does_not_block_later_quarters(monkeypatch):
     assert "CSE 158" in placed
 
 
-def test_live_upcoming_blocks_full_course_in_enrollment_quarter(monkeypatch):
+def test_live_upcoming_warns_but_places_full_course_in_enrollment_quarter(monkeypatch):
     _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 21", "CSE 158"],
                       seats={"CSE 21": "open", "CSE 158": "full"})
     r = check_placements(
-        [], [place(0, "fall", "CSE 21", "CSE 158")], today=TODAY)
-    assert any("no open seats (full)" in m for m in messages_of(r, "error"))
+        [], [place(0, "fall", "CSE 21", "CSE 158")],
+        completed_ids={"CSE 100"}, today=TODAY)
+    assert not any("no open seats (full)" in m for m in messages_of(r, "error"))
+    assert any("no open seats (full)" in m for m in messages_of(r, "warning"))
     placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
     assert "CSE 21" in placed
-    assert "CSE 158" not in placed
+    assert "CSE 158" in placed
 
 
-def test_live_upcoming_blocks_waitlist_only_in_enrollment_quarter(monkeypatch):
+def test_live_upcoming_warns_but_places_waitlist_only_in_enrollment_quarter(monkeypatch):
     _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"],
                       seats={"CSE 158": "waitlist"})
     r = check_placements([], [place(0, "fall", "CSE 158")],
                          completed_ids={"CSE 100"}, today=TODAY)
-    assert any("waitlist only" in m for m in messages_of(r, "error"))
+    assert not any("waitlist only" in m for m in messages_of(r, "error"))
+    assert any("waitlist only" in m for m in messages_of(r, "warning"))
     placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
-    assert "CSE 158" not in placed
+    assert "CSE 158" in placed
 
 
 def test_full_course_still_places_in_a_later_quarter(monkeypatch):
@@ -336,9 +339,10 @@ def test_live_seat_overlay_overrides_snapshot_open(monkeypatch):
     r = check_placements([], [place(0, "fall", "CSE 158")],
                          completed_ids={"CSE 100"}, today=TODAY,
                          seat_availability=overlay)
-    assert any("no open seats (full)" in m for m in messages_of(r, "error"))
+    assert not any("no open seats (full)" in m for m in messages_of(r, "error"))
+    assert any("no open seats (full)" in m for m in messages_of(r, "warning"))
     placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
-    assert "CSE 158" not in placed
+    assert "CSE 158" in placed
 
 
 def test_package_with_full_discussion_is_not_open():

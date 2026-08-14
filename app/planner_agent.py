@@ -26,15 +26,17 @@ Validation severity:
             placement outside the 4-year grid, unsatisfied prerequisites
             (unless prereq-graph confidence is "partial"), (when a live Class
             Planner snapshot covers the enrollment quarter) a course absent
-            from that snapshot — or with no open seats (full / waitlist-only)
-            — placed into the enrollment quarter, or a REMOVAL of a course the
-            degree audit shows as completed (see check_removals — refused,
-            because it is silent, irreversible through the agent, and deletes
-            the student's record of passed coursework)
+            from that snapshot placed into the enrollment quarter, or a
+            REMOVAL of a course the degree audit shows as completed (see
+            check_removals — refused, because it is silent, irreversible
+            through the agent, and deletes the student's record of passed
+            coursework)
   warning — historical catalog offerings mismatch, partial-confidence prereq
             hedges, prereqs a removal broke for courses still on the grid,
             audit coverage shortfalls (blocking on first/full-plan proposes —
-            see ProposeSchedule), and a quarter loaded past MAX_TERM_UNITS.
+            see ProposeSchedule), a quarter loaded past MAX_TERM_UNITS, and
+            a full / waitlist-only course placed in the enrollment quarter
+            (seats move; planning a waitlist is a normal student move).
 
 Corequisites are NOT prerequisites: the prereq graph's meta.concurrent_allowed
 lists courses UCSD lets a student take in the SAME quarter (ECE 65 with ECE
@@ -752,16 +754,14 @@ def check_placements(schedule, placements: List[TermPlacement],
                     why = ("no open seats — waitlist only" if seats == "waitlist"
                            else "no open seats (full)")
                     issues.append({
-                        "severity": "error",
+                        "severity": "warning",
                         "message": (
                             f"{course['course_id']}: {why} on the live "
-                            f"{live_upcoming['term_code']} schedule — skipped "
-                            f"for the enrollment quarter. Pick a course with "
-                            f"open seats, or place this one in a later term."
+                            f"{live_upcoming['term_code']} schedule — placed "
+                            f"anyway. Seats can open, and waitlisting is an "
+                            f"option."
                         ),
                     })
-                    already_placed.discard(cid)
-                    continue
 
             entry = get_prereq_entry(course["course_id"]) or {}
             partial = entry.get("confidence") == "partial"
@@ -2465,8 +2465,8 @@ When the student asks you to plan, fill out, generate, edit, move, or remove cou
 on their multi-quarter schedule: draft placements (and remove_course_ids when needed), \
 run CheckPlan, fix what it reports, then ProposeSchedule. A planning request MUST end \
 with an accepted ProposeSchedule call — never stop at a text explanation. If a course \
-can't be placed (not found, already completed, not offered live next quarter, \
-or no open seats), drop it, place the rest, and mention \
+can't be placed (not found, already completed, or not offered live next \
+quarter), drop it, place the rest, and mention \
 the omission in the explanation. Rules:
 - The grid has year_index 0-{last_year_index} (0 = {base_label} academic year) and terms fall/winter/spring.
 - The earliest term you may place courses into is year_index {earliest_year}, {earliest_term} \
@@ -2488,10 +2488,10 @@ delete the student's record of passed coursework and it will be refused.
 - Only schedule a course in quarters it is offered. Historical catalog seasons \
 ("offered: FA, WI") are approximate. When LIVE NEXT-QUARTER SCHEDULE is loaded, \
 it is authoritative for the enrollment quarter — never place a course marked \
-"live: NO" into that quarter, and never place a course with no open seats \
-(FULL or WAITLIST only) into that quarter (CheckPlan / ProposeSchedule will \
-reject both). Later terms still use historical offerings. If seats are missing \
-for a candidate, call LookupLiveSections before committing that quarter.
+"live: NO" into that quarter. Full / WAITLIST-only courses MAY still go in \
+that quarter (CheckPlan warns; ProposeSchedule accepts). Later terms still \
+use historical offerings. If seats are missing for a candidate, call \
+LookupLiveSections before committing that quarter.
 - Do NOT ProposeSchedule while CheckPlan still reports ERRORS (including unsatisfied \
 prerequisites) or — on a first/full plan — coverage "still short" lines. Place the \
 missing prereq earlier, or SearchCourses / add the listed elective options, then \
@@ -2957,8 +2957,8 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                         output = (
                             "REJECTED — fix these errors and call ProposeSchedule "
                             "again. Drop any course that is not found, already "
-                            "completed, not on the live next-quarter schedule, or "
-                            "has no open seats; place missing prerequisites in an "
+                            "completed, or not on the live next-quarter schedule; "
+                            "place missing prerequisites in an "
                             "earlier term (or the same term for corequisites); to "
                             "move a course already on the planner, include it in "
                             "remove_course_ids. Never try to remove a course the "

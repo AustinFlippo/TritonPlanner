@@ -93,9 +93,7 @@ const TermBlock = ({
               dragTarget.courseIndex === courseIndex ? (
                 <span
                   className={`text-xs px-2 text-center ${
-                    dropWarning.type === "not-live" ||
-                    dropWarning.type === "full" ||
-                    dropWarning.type === "waitlist"
+                    dropWarning.type === "not-live"
                       ? "text-red-600"
                       : "text-amber-600"
                   }`}
