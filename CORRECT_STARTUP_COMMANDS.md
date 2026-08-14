@@ -94,9 +94,7 @@ npm run dev
 ### **1. Test FastAPI Backend**
 ```bash
 # In a new terminal (while server is running):
-cd /Users/austinflippo/Documents/GitHub/AIVac/app
-source venv/bin/activate
-python test_server.py
+curl http://localhost:8000/health
 ```
 
 ### **2. Manual URL Tests**

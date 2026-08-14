@@ -326,18 +326,3 @@ export const applyEnrollmentsToQuarter = (
   }
   return next;
 };
-
-/**
- * Replace one quarter's courses with a snapshot (e.g. a saved enrollment plan).
- * Leaves the other eleven quarters alone.
- */
-export const replaceQuarterCourses = (schedule, yearIndex, term, courses) => {
-  if (!TERMS.includes(term) || yearIndex < 0 || yearIndex >= schedule.length)
-    return schedule;
-  const next = cloneSchedule(schedule);
-  const cleaned = (courses || [])
-    .filter((c) => c && typeof c === "object" && c.course_id)
-    .map((c) => normalizePlacedCourse(c));
-  next[yearIndex][term] = tidySlots(cleaned);
-  return next;
-};

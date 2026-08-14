@@ -6,11 +6,6 @@ import { requirementMode } from '../../utils/auditRequirements';
 import { SHOW_GRADES } from '../../utils/courseGrades';
 import { readCourseGroups } from '../../utils/readCourseGroups';
 
-// Re-exported so existing imports keep working; the implementation lives
-// next to its unit tests in utils/readCourseGroups.js.
-// eslint-disable-next-line react-refresh/only-export-components
-export { readCourseGroups };
-
 const normalizeTitle = (value) =>
   String(value || '')
     .replace(/\u00a0/g, " ")

@@ -113,8 +113,7 @@ This documentation folder contains comprehensive technical documentation for all
 components/
 ├── audit/
 │   ├── SidebarAuditTracker.jsx      # Main audit parser & display
-│   ├── AuditAccordionSection.jsx    # Individual requirement sections
-│   └── AuditSectionBlock.jsx        # Legacy component
+│   └── AuditAccordionSection.jsx    # Individual requirement sections
 ├── planner/
 │   ├── CoursePlannerContainer.jsx   # Main planner logic
 │   ├── CoursePlanner.jsx            # Grid display component
@@ -152,7 +151,7 @@ mern/server/
 app/
 ├── main.py                          # FastAPI application
 ├── rag_pipeline.py                  # RAG system implementation
-├── agent.py                         # LLM agent logic
+├── planner_agent.py                 # Planner agent tool loop
 ├── requirements.txt                 # Python dependencies
 └── .env                             # Environment variables
 ```

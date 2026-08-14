@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test controllers/*.test.mjs routes/*.test.mjs scripts/lib/*.test.mjs"
   },
   "keywords": [],
   "author": "",

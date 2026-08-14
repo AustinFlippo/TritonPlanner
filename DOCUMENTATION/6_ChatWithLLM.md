@@ -8,7 +8,7 @@ The ChatWithLLM system provides an AI-powered course advisory feature using a so
 - **Express Middleware**: `/mern/server/routes/chat.js`
 - **FastAPI Backend**: `/app/main.py`
 - **RAG Pipeline**: `/app/rag_pipeline.py`
-- **Agent Logic**: `/app/agent.py`
+- **Agent Logic**: `/app/planner_agent.py`
 - **Configuration**: `/app/.env` (environment variables)
 
 ## Architecture Overview

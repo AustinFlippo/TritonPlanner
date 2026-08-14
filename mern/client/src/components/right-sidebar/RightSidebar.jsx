@@ -18,7 +18,6 @@ import {
   buildSeatAvailability,
   courseIdsFromText,
   courseIdsInQuarter,
-  unseenSeatCourseIds,
 } from "../../utils/seatAvailability";
 import { buildSectionOptions } from "../../utils/sectionOptimizer";
 import { extractCourseMentions } from "../../utils/chatCourseMentions";
@@ -26,8 +25,8 @@ import { courseIdVariants } from "../../utils/courseIds";
 import { normalizeCourseCredits } from "../../utils/courseCredits";
 import { codesNamedByAudit } from "../../utils/auditProgress";
 import { coursesInQuarter } from "../../utils/quarterPlans";
+import { API_URL } from "../../utils/api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
 const EMPTY_MESSAGES = [];
 const NEXT_QUARTER_RESULT_CAP = 50;
 

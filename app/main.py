@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Query
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -212,21 +212,6 @@ async def chat(request: ChatRequest):
                 "content": "Sorry, I'm experiencing technical difficulties. Please try again in a moment."
             }]
         }
-
-
-@app.post("/upload-degree-audit")
-async def upload_degree_audit(pdf: UploadFile = File(...)):
-    """Upload and parse degree audit PDF."""
-    if not pdf.filename.endswith('.pdf'):
-        return {"error": "Only PDF files are allowed"}
-    
-    # TODO: Implement PDF parsing functionality
-    # For now, return a placeholder response
-    return {
-        "error": "PDF parsing functionality is not yet implemented", 
-        "filename": pdf.filename,
-        "size": pdf.size if hasattr(pdf, 'size') else "unknown"
-    }
 
 
 @app.get("/")
