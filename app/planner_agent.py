@@ -5,8 +5,8 @@ The LLM plans against eight tools:
     discovering courses (electives by interest) instead of recalling codes
   - LookupCourses: real catalog entries (offerings, credits, structured prereqs)
     for any course codes, or "not found"
-  - LookupLiveSections: browser-assisted TSS lookup for current sections,
-    instructors, and seats
+  - LookupLiveSections: browser-assisted live seat/section lookup (Class
+    Planner proxy; TSS extension only as fallback)
   - LoadSectionOptions: browser-assisted enrollable packages for the
     enrollment quarter (agent chooses packages from user priorities)
   - CheckSectionSelection / ProposeSectionSelection: validate and commit
@@ -23,17 +23,18 @@ drop the offending course, warnings surface to the student.
 
 Validation severity:
   error   — course doesn't exist, duplicate placement, term in the past,
-            placement outside the 4-year grid, (when a live Class Planner
-            snapshot covers the enrollment quarter) a course absent from that
-            snapshot — or with no open seats (full / waitlist-only) — placed
-            into the enrollment quarter, or a REMOVAL of a
-            course the degree audit shows as completed (see check_removals —
-            refused, because it is silent, irreversible through the agent, and
-            deletes the student's record of passed coursework)
-  warning — historical catalog offerings mismatch, unsatisfied prereqs
-            (audit parsing is fuzzy), prereqs a removal broke for courses
-            still on the grid, and a quarter loaded past MAX_TERM_UNITS. All
-            advisory: the model should fix them, but they never hard-block.
+            placement outside the 4-year grid, unsatisfied prerequisites
+            (unless prereq-graph confidence is "partial"), (when a live Class
+            Planner snapshot covers the enrollment quarter) a course absent
+            from that snapshot — or with no open seats (full / waitlist-only)
+            — placed into the enrollment quarter, or a REMOVAL of a course the
+            degree audit shows as completed (see check_removals — refused,
+            because it is silent, irreversible through the agent, and deletes
+            the student's record of passed coursework)
+  warning — historical catalog offerings mismatch, partial-confidence prereq
+            hedges, prereqs a removal broke for courses still on the grid,
+            audit coverage shortfalls (blocking on first/full-plan proposes —
+            see ProposeSchedule), and a quarter loaded past MAX_TERM_UNITS.
 
 Corequisites are NOT prerequisites: the prereq graph's meta.concurrent_allowed
 lists courses UCSD lets a student take in the SAME quarter (ECE 65 with ECE
@@ -126,12 +127,14 @@ class LookupCourses(BaseModel):
 
 
 class LookupLiveSections(BaseModel):
-    """Fetch current TSS sections, instructors, and seat counts for specific
-    course codes. Use this after discovering courses when the student asks
-    about current offerings, professors, sections, or seats."""
+    """Fetch current sections, instructors, and seat counts for specific course
+    codes via the student's browser (Class Planner live-seat proxy; TSS
+    extension only if the proxy fails). Use after discovering courses when they
+    are not already listed under LIVE SECTIONS / SEATS. Just call the tool —
+    never tell the student you need to refresh TSS or WebReg."""
 
     codes: List[str] = Field(
-        description='Course codes to refresh from TSS, e.g. ["MGT 167", "MAE 154"]'
+        description='Course codes to load live seats for, e.g. ["MGT 167", "MAE 154"]'
     )
 
 
@@ -154,10 +157,11 @@ class SearchCourses(BaseModel):
 
 class CheckPlan(BaseModel):
     """Validate draft placements before proposing. Returns ERROR lines (must
-    fix: nonexistent course, duplicate, past term) and WARNING lines
-    (double-check: offerings mismatch, unsatisfied prerequisite).
+    fix: nonexistent course, duplicate, past term, unsatisfied prerequisite)
+    and WARNING lines (offerings mismatch, audit coverage still short, overload).
 
-    To move or drop courses already on the planner, list them in
+    Fix ERRORS and coverage shortfalls before ProposeSchedule on a first/full
+    plan. To move or drop courses already on the planner, list them in
     remove_course_ids — they are cleared from the grid before validation, so
     they can be re-placed in a new term without a duplicate error."""
 
@@ -171,8 +175,10 @@ class CheckPlan(BaseModel):
 
 
 class ProposeSchedule(BaseModel):
-    """Submit the final schedule. Rejected if error-level issues remain — fix
-    them and resubmit. Warnings are allowed but mention them in the explanation.
+    """Submit the final schedule. Rejected while ERRORs remain, and rejected on
+    first/full plans while audit coverage is still short — fix those and
+    resubmit. Historical-offerings / overload warnings may remain; mention
+    them in the explanation.
 
     placements alone only ADD courses. To remove or move a course already on
     the planner, put it in remove_course_ids (and, for a move, also place it in
@@ -198,7 +204,7 @@ class CoursePackagePick(BaseModel):
 
 
 class LoadSectionOptions(BaseModel):
-    """Ask the student's browser for enrollable TSS section packages for the
+    """Ask the student's browser for enrollable section packages for the
     current enrollment quarter (lecture + discussion/lab grouped by packageId).
     Use this when the student wants to rearrange sections, remove time conflicts,
     pick professors/times, or otherwise organize Quarter View sections.
@@ -758,18 +764,27 @@ def check_placements(schedule, placements: List[TermPlacement],
                     continue
 
             entry = get_prereq_entry(course["course_id"]) or {}
-            hedge = (" (prereq parsing was partial — verify)"
-                     if entry.get("confidence") == "partial" else "")
+            partial = entry.get("confidence") == "partial"
+            hedge = (" (prereq parsing was partial — verify)" if partial else "")
+            prereq_blocked = False
             for members, opts, concurrent in _prereq_groups(course["course_id"]):
                 if _prereq_satisfied(members, concurrent, position, key):
                     continue
                 when = _prereq_timing_phrase(members, concurrent)
+                # Hard-block when we trust the graph: placing CSE 100 without
+                # CSE 21 is a real plan bug the agent must fix. Partial parses
+                # stay warnings so fuzzy audit text cannot strand a student.
                 issues.append({
-                    "severity": "warning",
+                    "severity": "warning" if partial else "error",
                     "message": f"{course['course_id']} in {label}: needs {opts} {when} "
                                f"— not found in the audit, grid, or "
                                f"this plan{hedge}.",
                 })
+                if not partial:
+                    prereq_blocked = True
+            if prereq_blocked:
+                already_placed.discard(cid)
+                continue
 
             # Unverified courses keep credits=None rather than 0: the unit
             # total must be able to say "unknown", not quietly under-count.
@@ -1277,6 +1292,30 @@ def check_coverage(audit_sections, schedule, placements: List[TermPlacement]) ->
     return issues
 
 
+def _grid_has_courses(schedule) -> bool:
+    for year in schedule or []:
+        if not isinstance(year, dict):
+            continue
+        for term in TERMS:
+            if year.get(term):
+                return True
+    return False
+
+
+def _is_full_plan_proposal(schedule, proposal: ProposeSchedule) -> bool:
+    """First plans and multi-term fills must close audit coverage gaps.
+
+    A targeted "add CSE 158" / single-term tweak may leave other electives
+    unmet — those stay advisory. An empty grid, 2+ terms touched, or 4+
+    courses in one proposal is treated as a full planning pass.
+    """
+    if not _grid_has_courses(schedule):
+        return True
+    n_courses = sum(len(p.course_ids or []) for p in (proposal.placements or []))
+    n_terms = sum(1 for p in (proposal.placements or []) if p.course_ids)
+    return n_terms >= 2 or n_courses >= 4
+
+
 def check_removals(schedule, remove_course_ids, completed_ids=None) -> dict:
     """Validate removals BEFORE they touch the grid.
 
@@ -1581,24 +1620,41 @@ def _format_ui_context(ui_context) -> str:
 
 
 def _format_seat_availability(seat_availability) -> str:
-    """Compact TSS seat/section block for the system prompt.
+    """Compact seat/section block for the system prompt.
 
     Frontend sends a dict shaped like:
       { termLabel, source, live, refreshedAt, courses: [
           { courseId, offered, sections: [{ sectionId, component, days,
             start, end, instructor, seatsAvailable, seatsTotal, waitlisted,
             status }] } ] }
+
+    `live` means the client refreshed seats this turn (Class Planner
+    /next-quarter/seats, or TSS extension fallback). Otherwise rows still
+    come from the Class Planner schedule snapshot — usable seat counts, not
+    a reason to ask the student for a TSS refresh.
     """
     if not isinstance(seat_availability, dict):
-        return "(no live seat data for this turn)"
+        return (
+            "(no seat data attached this turn — call LookupLiveSections for "
+            "any course codes you need seats for; the client refreshes "
+            "automatically)"
+        )
     courses = seat_availability.get("courses") or []
     if not courses:
-        return "(no live seat data for this turn)"
+        return (
+            "(no seat data attached this turn — call LookupLiveSections for "
+            "any course codes you need seats for; the client refreshes "
+            "automatically)"
+        )
 
     term = seat_availability.get("termLabel") or "enrollment quarter"
     source = seat_availability.get("source") or "unknown"
     live = bool(seat_availability.get("live"))
-    age = "live TSS" if live else f"shared snapshot ({source})"
+    age = (
+        "live seats (Class Planner)"
+        if live
+        else f"schedule snapshot ({source}) — seats usable this turn"
+    )
     lines = [f"Term: {term} · source: {age}"]
     if seat_availability.get("refreshedAt"):
         lines.append(f"Refreshed at (ms epoch): {seat_availability['refreshedAt']}")
@@ -1685,7 +1741,8 @@ def _seat_course_keys(seat_availability) -> set:
     alias each of them answers to (see _course_key_aliases).
 
     Courses with zero rows still count as attempted: asking the browser again
-    in the same turn cannot manufacture an offering that TSS did not return.
+    in the same turn cannot manufacture an offering that the schedule feed
+    did not return.
     """
     keys = set()
     if not isinstance(seat_availability, dict):
@@ -1736,8 +1793,13 @@ def _format_section_options(section_options) -> str:
     if not courses:
         return "(no courses in the enrollment quarter)"
     term = section_options.get("termLabel") or "enrollment quarter"
-    source = "live TSS" if section_options.get("live") else (
-        f"shared snapshot ({section_options.get('source') or 'unknown'})"
+    source = (
+        "live seats (Class Planner)"
+        if section_options.get("live")
+        else (
+            f"schedule snapshot ({section_options.get('source') or 'unknown'}) "
+            "— seats usable this turn"
+        )
     )
     lines = [
         f"Term: {term} · source: {source}",
@@ -2364,8 +2426,8 @@ SYSTEM_TEMPLATE = """You are the TritonPlanner course assistant for a UC San Die
 
 You can see the student's degree audit, their current 4-year planner grid, \
 catalog data (credits, quarter offerings, prerequisites) for relevant courses, \
-TSS seat/section availability, and — when loaded — enrollable section packages \
-for the current enrollment quarter.
+live seat/section availability (Class Planner), and — when loaded — enrollable \
+section packages for the current enrollment quarter.
 
 You have eight tools:
 - SearchCourses: keyword/filter search over the full UCSD catalog. Use it whenever \
@@ -2374,18 +2436,20 @@ anything you'd otherwise recall from memory. Never invent a course code.
 - LookupCourses: catalog data for specific course codes. Before placing a course \
 whose data is NOT already in the context below, look it up (batch all codes into \
 one call). Never place a course you haven't seen catalog data for.
-- LookupLiveSections: asks the student's browser to fetch current TSS sections, \
-instructors, and seats for specific course codes. When the student asks for current \
-offerings, professors, sections, or seats and the relevant courses are not already \
-listed under LIVE SECTIONS / SEATS, call this tool after discovering the course codes. \
-Batch all needed codes into one call. Never claim current availability from catalog \
-quarter history alone.
-- LoadSectionOptions: asks the browser for enrollable TSS packages (lecture + DI/lab) \
-for courses in the enrollment quarter (Quarter View). Call this whenever SECTION \
-PACKAGES says they are not loaded and the student asks about conflicts, section \
-times, professors, or rearranging packages. Summarize their priorities in plain \
-language — do NOT invent fixed ranking weights. Choose packageIds yourself from \
-the returned options.
+- LookupLiveSections: asks the student's browser to refresh seat/section rows for \
+specific course codes (Class Planner live-seat proxy; TSS extension only if that \
+fails). When the student asks for current offerings, professors, sections, or seats \
+and the relevant courses are not already listed under LIVE SECTIONS / SEATS, call \
+this tool after discovering the course codes. Batch all needed codes into one call. \
+The client retries the turn automatically — never tell the student you need to \
+"refresh TSS", open WebReg, or pull live data yourself. Never claim current \
+availability from catalog quarter history alone.
+- LoadSectionOptions: asks the browser for enrollable section packages (lecture + \
+DI/lab) for courses in the enrollment quarter (Quarter View). Call this whenever \
+SECTION PACKAGES says they are not loaded and the student asks about conflicts, \
+section times, professors, or rearranging packages. Summarize their priorities in \
+plain language — do NOT invent fixed ranking weights. Choose packageIds yourself \
+from the returned options.
 - CheckSectionSelection: validates a draft package selection (invalid ids, time \
 conflicts). Fix ERROR lines before proposing.
 - ProposeSectionSelection: submits the final section arrangement. Rejected while \
@@ -2410,6 +2474,11 @@ the omission in the explanation. Rules:
 - Do NOT re-place courses the student already completed (they appear in the audit with \
 grades). Courses already on the planner grid must be listed in remove_course_ids before \
 you can place them again in a different term.
+- Transfer and AP credit: the audit posts these as UCSD equivalents with grade TP \
+(transfer pass), e.g. "MATH 20A - … (SP22, TP)" or "CSE 8A - … (TP)". Treat TP (and \
+WIP / letter grades / P / S) as already completed for prerequisites — do not re-place \
+those courses and do not ask the student to take them again. Raw placeholders like \
+"AP **3" or "IB MU5" are NOT course codes; only the UCSD equivalent line counts.
 - Prioritize unmet requirements (sections marked not_fulfilled, especially NEEDS lines), \
 and satisfy prerequisites in an earlier quarter than the course that needs them. \
 COREQUISITES are the exception: when CheckPlan says a requirement may be taken in the \
@@ -2421,10 +2490,18 @@ delete the student's record of passed coursework and it will be refused.
 it is authoritative for the enrollment quarter — never place a course marked \
 "live: NO" into that quarter, and never place a course with no open seats \
 (FULL or WAITLIST only) into that quarter (CheckPlan / ProposeSchedule will \
-reject both). Later terms still use historical offerings.
-- When LIVE SECTIONS / SEATS data is present, treat it as current for this turn \
-and do not plan a course whose sections are all full or waitlist-only. \
-Treat "shared snapshot" seats as approximate when no live overlay is attached.
+reject both). Later terms still use historical offerings. If seats are missing \
+for a candidate, call LookupLiveSections before committing that quarter.
+- Do NOT ProposeSchedule while CheckPlan still reports ERRORS (including unsatisfied \
+prerequisites) or — on a first/full plan — coverage "still short" lines. Place the \
+missing prereq earlier, or SearchCourses / add the listed elective options, then \
+CheckPlan again. Only leave coverage shortfalls on a targeted single-course add/move \
+when the student did not ask for a full plan; say what is still unmet in the explanation.
+- When LIVE SECTIONS / SEATS lists a course, answer open/full/waitlisted from that \
+data. Snapshot rows and live-refreshed rows are both Class Planner seat counts for \
+this turn — do not hedge that you still need a TSS refresh when a course is listed. \
+If a course you care about is missing from that block, call LookupLiveSections \
+(silent browser refresh) instead of asking the student to refresh anything.
 - Aim for 3-4 courses (roughly 12-16 units) per quarter unless asked otherwise. \
 A quarter over {max_term_units:g} units exceeds UCSD's limit without an approved \
 overload and CheckPlan will warn about it.
@@ -2754,17 +2831,18 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                         if not (keys & seat_course_keys):
                             requested.append(code)
                     if requested:
-                        # TSS authentication lives in the browser extension,
-                        # so pause this stateless run and let the frontend fetch
-                        # the requested rows before automatically retrying.
+                        # Live seats come from the browser (Class Planner
+                        # proxy, TSS extension fallback). Pause this
+                        # stateless run; the frontend fetches and retries.
                         return _finish(
                             {"seat_lookup": requested[:15]},
                             "seat_lookup",
                         )
                     output = (
-                        "TSS lookup already completed for these courses. Use the "
-                        "LIVE SECTIONS / SEATS data in the system context; a course "
-                        "with no section rows was not returned by TSS for this term."
+                        "Live seat lookup already completed for these courses. "
+                        "Use the LIVE SECTIONS / SEATS data in the system context; "
+                        "a course with no section rows is not on this term's "
+                        "schedule feed."
                     )
                 elif name == "LoadSectionOptions":
                     load = LoadSectionOptions(**args)
@@ -2846,11 +2924,25 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                         working, proposal.placements, completed_ids, today,
                         satisfied_ids, base_year, audit_codes,
                         seat_availability)
+                    merged, _s = merge_into_grid(working, result["valid"])
+                    coverage = check_coverage(audit_sections, merged, [])
+                    fallout = check_removal_fallout(
+                        merged, removals["allowed"], completed_ids,
+                        satisfied_ids)
                     errors = [i for i in removals["issues"] + result["issues"]
                               if i["severity"] == "error"]
+                    # First/full plans: coverage shortfalls must be fixed before
+                    # commit (same loop pattern as errors). Targeted single-course
+                    # edits may leave other electives unmet.
+                    coverage_block = (
+                        coverage
+                        if _is_full_plan_proposal(schedule, proposal)
+                        else []
+                    )
+                    blocking = errors + coverage_block
                     # Remove-only proposals (empty placements after removals) are
                     # valid — _accept ships the cleared grid.
-                    if not errors:
+                    if not blocking:
                         return _finish(
                             _accept(proposal, schedule, completed_ids, today,
                                     satisfied_ids,
@@ -2861,14 +2953,36 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                             "propose_schedule",
                         )
                     last_proposal = proposal
-                    output = ("REJECTED — fix these errors and call ProposeSchedule "
-                              "again. Drop any course that is not found, already "
-                              "completed, not on the live next-quarter schedule, or "
-                              "has no open seats; to move a course already on the planner, "
-                              "include it in remove_course_ids. Never try to remove "
-                              "a course the audit shows as completed. Keep the rest; "
-                              "do not answer with text until a proposal is "
-                              "accepted:\n" + _format_issues(errors))
+                    if errors and not coverage_block:
+                        output = (
+                            "REJECTED — fix these errors and call ProposeSchedule "
+                            "again. Drop any course that is not found, already "
+                            "completed, not on the live next-quarter schedule, or "
+                            "has no open seats; place missing prerequisites in an "
+                            "earlier term (or the same term for corequisites); to "
+                            "move a course already on the planner, include it in "
+                            "remove_course_ids. Never try to remove a course the "
+                            "audit shows as completed. Keep the rest; do not "
+                            "answer with text until a proposal is accepted:\n"
+                            + _format_issues(errors)
+                        )
+                    elif coverage_block and not errors:
+                        output = (
+                            "REJECTED — this plan still leaves degree requirements "
+                            "unmet. Add the missing courses (SearchCourses / the "
+                            "Options listed below), run CheckPlan, then "
+                            "ProposeSchedule again. Do not answer with text until "
+                            "coverage is closed or you truly cannot fill a "
+                            "requirement:\n"
+                            + _format_issues(coverage_block)
+                        )
+                    else:
+                        output = (
+                            "REJECTED — fix these errors and unmet requirements, "
+                            "then call ProposeSchedule again. Do not answer with "
+                            "text until a proposal is accepted:\n"
+                            + _format_issues(blocking + fallout)
+                        )
                 else:
                     output = f"Unknown tool: {name}"
             except ValidationError as e:

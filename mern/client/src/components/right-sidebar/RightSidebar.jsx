@@ -128,6 +128,8 @@ const RightSidebar = ({
   const chatEndRef = useRef(null);
   // Per-plan sync guard — one plan's request must not block or update another.
   const sendingContextsRef = useRef(new Set());
+  // AbortControllers keyed by chat context so Stop cancels only that plan's turn.
+  const abortControllersRef = useRef({});
 
   const toggleExpandedPanel = (panel) => {
     if (!onExpandedPanelChange) return;
@@ -703,6 +705,19 @@ const RightSidebar = ({
 
   const handleDragEnd = () => {};
 
+  const stopMessage = (contextKey) => {
+    // onClick may pass a SyntheticEvent — only treat real string keys as overrides.
+    const key =
+      typeof contextKey === "string" && contextKey
+        ? contextKey
+        : chatContextKey;
+    const controller = abortControllersRef.current[key];
+    if (controller) {
+      controller.abort();
+      delete abortControllersRef.current[key];
+    }
+  };
+
   const sendMessage = async () => {
     const requestContextKey = chatContextKey;
     if (
@@ -718,6 +733,9 @@ const RightSidebar = ({
       role,
       content,
     }));
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    abortControllersRef.current[requestContextKey] = abortController;
     sendingContextsRef.current.add(requestContextKey);
     updateChatMessages(requestContextKey, (prev) => [...prev, userMessage]);
     setCurrentMessage("");
@@ -726,10 +744,19 @@ const RightSidebar = ({
       [requestContextKey]: true,
     }));
 
+    const throwIfAborted = () => {
+      if (signal.aborted) {
+        const err = new Error("Aborted");
+        err.name = "AbortError";
+        throw err;
+      }
+    };
+
     try {
-      // Seat context: enrollment-quarter plan courses + anything named in the
-      // message. Refresh live TSS seats via the extension when available, then
-      // fall back to the published snapshot already in context.
+      // Seat context: enrollment-quarter courses + codes named in the message +
+      // unmet audit options that Class Planner says are offered next quarter.
+      // First plans often have an empty grid — without the unmet/upcoming set
+      // the agent would draft the enrollment quarter with no seat signal.
       const planCourseIds = enrollmentSlot
         ? courseIdsInQuarter(
             schedule,
@@ -738,21 +765,34 @@ const RightSidebar = ({
           )
         : [];
       const mentionedIds = courseIdsFromText(messageText);
-      let seatCourseIds = [...new Set([...planCourseIds, ...mentionedIds])];
+      const unmetOfferedIds = extractUnmetRequirements(
+        parsedCourseData?.sections || []
+      )
+        .flatMap((r) => r.codes || [])
+        .filter((id) => id && isOffered(id));
+      // /next-quarter/seats caps at 24 courses per request.
+      let seatCourseIds = [
+        ...new Set([...planCourseIds, ...mentionedIds, ...unmetOfferedIds]),
+      ].slice(0, 24);
       let sectionsForChat = tssSections || {};
       let seatLive = Boolean(tssOfferings.live);
       let seatRefreshedAt = tssOfferings.refreshedAt || null;
       if (seatCourseIds.length) {
         try {
           const liveResult = await syncLiveSeats(seatCourseIds);
+          throwIfAborted();
           if (liveResult?.sections) {
             sectionsForChat = liveResult.sections;
           }
           if (liveResult?.ok) {
-            seatLive = true;
-            seatRefreshedAt = liveResult.updatedAt || Date.now();
+            // Proxy may echo snapshot numbers with stale:true — still usable,
+            // but only mark live when the refresh was fresh.
+            seatLive = !liveResult.stale;
+            seatRefreshedAt =
+              liveResult.updatedAt || liveResult.checkedAt || Date.now();
           }
-        } catch {
+        } catch (err) {
+          if (err?.name === "AbortError") throw err;
           /* published snapshot is enough */
         }
       }
@@ -834,6 +874,9 @@ const RightSidebar = ({
           const response = await fetch(`${API_URL}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            // Austin's abort support: the Stop button aborts the in-flight
+            // request rather than letting a dead turn finish silently.
+            signal,
             body: JSON.stringify(payload),
           });
           const text = await response.text();
@@ -854,6 +897,8 @@ const RightSidebar = ({
         try {
           return await attempt();
         } catch (error) {
+          // An aborted turn is not a failure to retry: AbortError falls
+          // through both tests below and propagates to the Stop handler.
           const retryable =
             error?.retryable ||
             error?.name === "TypeError" ||
@@ -865,14 +910,18 @@ const RightSidebar = ({
       };
 
       // The agent may discover relevant courses only after SearchCourses runs,
-      // or pause for enrollable packages via LoadSectionOptions. Refresh TSS
-      // through the browser extension and transparently retry the same turn.
+      // or pause for enrollable packages via LoadSectionOptions. Refresh seats
+      // through the Class Planner proxy (TSS fallback) and transparently retry.
       let data = null;
       for (let lookupRound = 0; lookupRound < 4; lookupRound += 1) {
+        throwIfAborted();
+        // postChat already parses (and retries) — it returns the payload, not
+        // a Response, so there is no .json() call to make here.
         data = await postChat({
           seatAvailability: buildSeats(),
           sectionOptions,
         });
+        throwIfAborted();
 
         const sectionReq = data?.section_options_request;
         if (sectionReq && typeof sectionReq === "object") {
@@ -884,19 +933,21 @@ const RightSidebar = ({
           ];
           if (refreshIds.length) {
             const liveResult = await syncLiveSeats(refreshIds);
+            throwIfAborted();
             if (liveResult?.sections) {
               sectionsForChat = liveResult.sections;
             }
             if (liveResult?.ok) {
-              seatLive = true;
-              seatRefreshedAt = liveResult.updatedAt || Date.now();
+              seatLive = !liveResult.stale;
+              seatRefreshedAt =
+                liveResult.updatedAt || liveResult.checkedAt || Date.now();
             }
             seatCourseIds = [
               ...new Set([...seatCourseIds, ...refreshIds]),
             ];
           }
           sectionOptions = buildSectionOptionsPayload(refreshIds);
-          // Empty quarter / no TSS rows: retry with an explicit empty payload so
+          // Empty quarter / no section rows: retry with an explicit empty payload so
           // the agent can explain instead of pausing forever.
           if (!sectionOptions) {
             sectionOptions = {
@@ -923,17 +974,19 @@ const RightSidebar = ({
           (courseId) => !known.has(compactCourseId(courseId))
         );
         if (!additions.length) {
-          throw new Error("The assistant repeated an already completed TSS lookup.");
+          throw new Error("The assistant repeated an already completed seat lookup.");
         }
         seatCourseIds = [...seatCourseIds, ...additions];
 
         const liveResult = await syncLiveSeats(additions);
+        throwIfAborted();
         if (liveResult?.sections) {
           sectionsForChat = liveResult.sections;
         }
         if (liveResult?.ok) {
-          seatLive = true;
-          seatRefreshedAt = liveResult.updatedAt || Date.now();
+          seatLive = !liveResult.stale;
+          seatRefreshedAt =
+            liveResult.updatedAt || liveResult.checkedAt || Date.now();
         }
       }
       if (data?.section_options_request) {
@@ -942,7 +995,7 @@ const RightSidebar = ({
         );
       }
       if (Array.isArray(data?.seat_lookup) && data.seat_lookup.length) {
-        throw new Error("The assistant requested too many consecutive TSS lookups.");
+        throw new Error("The assistant requested too many consecutive seat lookups.");
       }
 
       // Extract the actual content from the response
@@ -962,6 +1015,7 @@ const RightSidebar = ({
         assistantContent = "No response received";
       }
 
+      throwIfAborted();
       updateChatMessages(requestContextKey, (prev) => [
         ...prev,
         {
@@ -975,17 +1029,24 @@ const RightSidebar = ({
         },
       ]);
     } catch (err) {
-      const localHint = import.meta.env.PROD
-        ? "The planning server may still be starting — wait a few seconds and try again."
-        : "Is the Express server running on port 5050?";
-      updateChatMessages(requestContextKey, (prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Sorry, something went wrong. ${localHint}`,
-        },
-      ]);
+      // Stop / abort: leave the user message, drop the thinking indicator,
+      // and do not append a fake error reply.
+      if (err?.name !== "AbortError") {
+        const localHint = import.meta.env.PROD
+          ? "The planning server may still be starting — wait a few seconds and try again."
+          : "Is the Express server running on port 5050?";
+        updateChatMessages(requestContextKey, (prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Sorry, something went wrong. ${localHint}`,
+          },
+        ]);
+      }
     } finally {
+      if (abortControllersRef.current[requestContextKey] === abortController) {
+        delete abortControllersRef.current[requestContextKey];
+      }
       sendingContextsRef.current.delete(requestContextKey);
       setLoadingByContext((current) => ({
         ...current,
@@ -995,9 +1056,14 @@ const RightSidebar = ({
   };
 
   const handleKeyPress = (e) => {
+    if (e.key === "Escape" && isLoading) {
+      e.preventDefault();
+      stopMessage();
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (!isLoading) sendMessage();
     }
   };
 
@@ -1158,6 +1224,7 @@ const RightSidebar = ({
             setCurrentMessage={setCurrentMessage}
             isLoading={isLoading}
             sendMessage={sendMessage}
+            stopMessage={stopMessage}
             chatEndRef={chatEndRef}
             onKeyPress={handleKeyPress}
             onApplyPlan={onApplyPlan}

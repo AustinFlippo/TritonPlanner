@@ -127,7 +127,13 @@ export function NextQuarterOfferingsProvider({ children }) {
           live: !live.stale,
           refreshedAt: live.checkedAt || prev.refreshedAt,
         }));
-        return { ok: true, stale: live.stale, sections: merged };
+        return {
+          ok: true,
+          stale: live.stale,
+          checkedAt: live.checkedAt || null,
+          updatedAt: live.checkedAt || Date.now(),
+          sections: merged,
+        };
       }
 
       // Proxy unreachable: fall back to the student's own TSS session, when

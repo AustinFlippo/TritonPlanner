@@ -9,6 +9,7 @@ import React, {
 import ReactMarkdown from "react-markdown";
 import {
   SendHorizonal,
+  Square,
   Check,
   TriangleAlert,
   Maximize2,
@@ -242,6 +243,7 @@ const CourseAssistant = ({
   setCurrentMessage,
   isLoading,
   sendMessage,
+  stopMessage,
   chatEndRef,
   onKeyPress,
   onApplyPlan,
@@ -455,7 +457,7 @@ const CourseAssistant = ({
                       {msg.proposedSections.termLabel || "Enrollment quarter"}
                       {" · "}
                       {msg.proposedSections.live
-                        ? "live TSS"
+                        ? "live seats"
                         : `snapshot${
                             msg.proposedSections.source
                               ? ` (${msg.proposedSections.source})`
@@ -567,25 +569,39 @@ const CourseAssistant = ({
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Ask about courses…"
+            placeholder={
+              isLoading ? "Generating… Esc to stop" : "Ask about courses…"
+            }
             className="flex-grow px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-navy-400 focus:ring-2 focus:ring-navy-100 transition-colors"
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
-            onKeyPress={onKeyPress}
-            disabled={isLoading}
+            onKeyDown={onKeyPress}
           />
-          <button
-            className={`flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 ${
-              isLoading || !currentMessage.trim()
-                ? "bg-slate-100 text-slate-300 cursor-not-allowed"
-                : "bg-navy-700 hover:bg-navy-600 text-white"
-            }`}
-            onClick={sendMessage}
-            disabled={isLoading || !currentMessage.trim()}
-            aria-label="Send message"
-          >
-            <SendHorizonal className="w-4 h-4" />
-          </button>
+          {isLoading ? (
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 bg-navy-700 hover:bg-navy-600 text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+              onClick={stopMessage}
+              aria-label="Stop generating"
+              title="Stop generating (Esc)"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 ${
+                !currentMessage.trim()
+                  ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                  : "bg-navy-700 hover:bg-navy-600 text-white"
+              }`}
+              onClick={sendMessage}
+              disabled={!currentMessage.trim()}
+              aria-label="Send message"
+            >
+              <SendHorizonal className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
