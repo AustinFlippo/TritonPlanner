@@ -158,3 +158,67 @@ describe("placed-course credits", () => {
     assert.equal(grid[0].fall[0].status, "planned");
   });
 });
+
+describe("placeCourseAt — already taken courses", () => {
+  it("refuses a sidebar drop of a course completed on the grid", () => {
+    const schedule = [
+      {
+        fall: [course("CSE 21", "completed"), null, null],
+        winter: [null, null, null],
+        spring: [null, null, null],
+      },
+      {
+        fall: [null, null, null],
+        winter: [null, null, null],
+        spring: [null, null, null],
+      },
+    ];
+
+    const next = placeCourseAt(schedule, 1, "fall", 0, {
+      course_id: "CSE 21",
+      credits: 4,
+    });
+
+    assert.equal(next, schedule);
+  });
+
+  it("refuses a sidebar drop listed as taken even if it is not on the grid", () => {
+    const schedule = gridWith([null, null, null]);
+
+    const next = placeCourseAt(
+      schedule,
+      0,
+      "fall",
+      0,
+      { course_id: "DSC 80", credits: 4 },
+      null,
+      ["DSC 80/80R"]
+    );
+
+    assert.equal(next, schedule);
+  });
+
+  it("still places a failed course so it can be retaken", () => {
+    const schedule = [
+      {
+        fall: [course("CSE 21", "failed"), null, null],
+        winter: [null, null, null],
+        spring: [null, null, null],
+      },
+      {
+        fall: [null, null, null],
+        winter: [null, null, null],
+        spring: [null, null, null],
+      },
+    ];
+
+    const next = placeCourseAt(schedule, 1, "fall", 0, {
+      course_id: "CSE 21",
+      credits: 4,
+    });
+
+    assert.equal(next[1].fall[0].course_id, "CSE 21");
+    assert.equal(next[1].fall[0].status, "planned");
+    assert.equal(next[0].fall[0].status, "failed");
+  });
+});

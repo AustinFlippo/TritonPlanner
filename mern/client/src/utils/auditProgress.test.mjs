@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   calculateAuditProgress,
+  codesNamedByAudit,
   evaluateRequirement,
 } from "./auditProgress.js";
 
@@ -942,4 +943,128 @@ test("a level-scoped unit row with no major list still counts any course at that
     scheduleWith({ course_id: "SOCI 188", credits: 4, status: "planned" })
   );
   assert.equal(progress.sectionProgress[0].requirementResults[0].progress, 4);
+});
+
+test("a planned course inside ECON 100 to ECON 199 credits the range", () => {
+  // The audit prints the endpoints as two spans; the parser stores one token.
+  const section = {
+    status: "not_fulfilled",
+    subrequirements: [
+      {
+        status: "not_fulfilled",
+        needType: "courses",
+        needAmount: 1,
+        groups: [["ECON 100TO199"]],
+        availableCodes: ["ECON 100TO199"],
+        mode: "any",
+      },
+    ],
+  };
+  const hit = evaluateRequirement(
+    section,
+    scheduleWith({ course_id: "ECON 120", credits: 4 })
+  );
+  assert.equal(hit.requirementResults[0].progress, 1);
+  assert.equal(hit.projected, true);
+
+  const miss = evaluateRequirement(
+    section,
+    scheduleWith({ course_id: "ECON 2", credits: 4 })
+  );
+  assert.equal(miss.requirementResults[0].progress, 0);
+  assert.equal(miss.projected, false);
+
+  const legacy = evaluateRequirement(
+    {
+      status: "not_fulfilled",
+      items: ["NEEDS: 1 Courses | Available: ECON 100TO199"],
+    },
+    scheduleWith({ course_id: "ECON 120", credits: 4 })
+  );
+  assert.equal(legacy.projected, true);
+});
+
+test("NEEDS 2 from a range is filled by two in-band courses, not the endpoints", () => {
+  const section = {
+    status: "not_fulfilled",
+    subrequirements: [
+      {
+        status: "not_fulfilled",
+        needType: "courses",
+        needAmount: 2,
+        groups: [["ECON 100TO199"]],
+        availableCodes: ["ECON 100TO199"],
+        mode: "any",
+      },
+    ],
+  };
+  const one = evaluateRequirement(
+    section,
+    scheduleWith({ course_id: "ECON 120", credits: 4 })
+  );
+  assert.equal(one.requirementResults[0].progress, 1);
+  assert.equal(one.projected, false);
+
+  const two = evaluateRequirement(
+    section,
+    scheduleWith(
+      { course_id: "ECON 120", credits: 4 },
+      { course_id: "ECON 139", credits: 4 }
+    )
+  );
+  assert.equal(two.requirementResults[0].progress, 2);
+  assert.equal(two.projected, true);
+});
+
+test("range tokens are not vouched as placeable course ids", () => {
+  const codes = codesNamedByAudit([
+    {
+      subrequirements: [
+        {
+          groups: [["ECON 100TO199", "DSC 100"]],
+          availableCodes: ["ECON 100TO199", "DSC 100"],
+        },
+      ],
+    },
+  ]);
+  assert.equal(codes.has("ECON 100TO199"), false);
+  assert.equal(codes.has("DSC 100"), true);
+});
+
+test("a range in a major row counts in-band courses toward the major", () => {
+  const sections = [
+    {
+      title: "MAJOR REQUIREMENTS",
+      status: "not_fulfilled",
+      subrequirements: [
+        {
+          status: "not_fulfilled",
+          needType: "units",
+          needAmount: 4,
+          groups: [["ECON 100TO199"]],
+          availableCodes: ["ECON 100TO199"],
+        },
+      ],
+    },
+    {
+      title: "Minimum of 48 upper division units in the major",
+      status: "not_fulfilled",
+      items: ["NEEDS: 4 Units"],
+      subrequirements: [
+        {
+          title: "Minimum of 48 upper division units in the major",
+          status: "not_fulfilled",
+          needType: "units",
+          needAmount: 4,
+          groups: [],
+          availableCodes: [],
+        },
+      ],
+    },
+  ];
+  const progress = calculateAuditProgress(
+    sections,
+    scheduleWith({ course_id: "ECON 120", credits: 4, status: "planned" })
+  );
+  assert.equal(progress.sectionProgress[1].requirementResults[0].progress, 4);
 });

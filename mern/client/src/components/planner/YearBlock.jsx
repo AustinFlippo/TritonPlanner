@@ -23,6 +23,7 @@ const YearBlock = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  getPrereqWarning,
   onOpenCourse,
 }) => {
   const annualUnits = calculateAnnualUnits(yearIndex);
@@ -159,6 +160,7 @@ const YearBlock = ({
               dragTarget={dragTarget}
               dropWarning={dropWarning}
               getCourseWarning={getCourseWarning}
+              getPrereqWarning={getPrereqWarning}
               onOpenCourse={onOpenCourse}
             />
           ))}

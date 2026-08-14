@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import { offeringsFor, recommendCourses, searchCourses } from "./searchController.js";
+import { courseGraph, graphsFor, offeringsFor, recommendCourses, searchCourses } from "./searchController.js";
 import { aliasesFor, sequenceMembers } from "../scripts/lib/course-ids.mjs";
 
 const graph = JSON.parse(fs.readFileSync("./controllers/prereq_graph.json", "utf-8"));
@@ -306,6 +306,14 @@ test("a token still lists each course only once", () => {
   assert.equal(new Set(ids).size, ids.length);
 });
 
+test("a spaced 'DEPT N TO DEPT M' range expands the same as DEPT NTOM", () => {
+  const compact = recommendCourses(["CSE 100TO199"]).map((r) => r.course.course_id);
+  const spaced = recommendCourses(["CSE 100 TO CSE 199"]).map((r) => r.course.course_id);
+  assert.deepEqual(spaced, compact);
+  assert.ok(compact.includes("CSE 101"));
+  assert.ok(!compact.some((id) => id.startsWith("CSE 2") && parseInt(id.match(/(\d+)/)[1], 10) < 100));
+});
+
 test("the vouching budget is spent on stubs, not on codes examined", () => {
   // codesNamedByAudit harvests every code an audit names and most of them
   // resolve; capping the INPUT meant the handful of genuinely uncataloged ones
@@ -322,4 +330,26 @@ test("a trailing letter that is part of the number is left alone", () => {
   for (const id of ["MATH 20B", "DSC 140A", "CSE 100"]) {
     assert.equal(searchCourses(id).results[0]?.course_id, id);
   }
+});
+
+test("graphsFor resolves the same aliases offeringsFor does", () => {
+  // Planner cards hold registrar-style codes; the graph is keyed by catalog
+  // ids. A miss here is a silent "no prereq warning" on a course that has them.
+  const codes = ["MUS 20R", "MUS 8GS", "HILD 2A", "DSC 80R", "ANSC 185", "CSE 100"];
+  const graphs = graphsFor(codes);
+  for (const code of codes) {
+    assert.equal(graphs[code].known, true, `${code} must have a prereq-graph row`);
+    assert.ok(Array.isArray(graphs[code].requires));
+    assert.ok(Array.isArray(graphs[code].concurrent_allowed));
+  }
+  assert.equal(graphsFor([UNCATALOGED])[UNCATALOGED].known, false);
+});
+
+test("courseGraph follows a registrar alias to the catalog row", () => {
+  const asWritten = courseGraph("DSC 80");
+  const canonical = courseGraph("DSC 80/80R");
+  assert.ok(asWritten, "DSC 80 should resolve");
+  assert.equal(asWritten.course_id, canonical?.course_id);
+  assert.deepEqual(asWritten.requires, canonical.requires);
+  assert.ok(Array.isArray(asWritten.concurrent_allowed));
 });

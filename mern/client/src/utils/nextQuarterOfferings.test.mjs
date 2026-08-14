@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildOfferedCompactSet,
+  enrollmentPlacementBlock,
   isCourseOfferedNext,
   offeringsFromPublished,
   overlayLiveSeats,
@@ -103,6 +104,48 @@ assert.equal(isCourseOfferedNext(null, offered), false);
   });
   assert.equal(zeroed["BILD 1"][0].seatsAvailable, 0, "0 is a real count, not a missing one");
   assert.equal(zeroed["BILD 1"][0].status, "full");
+}
+
+{
+  const course = { course_id: "CSE 100" };
+  assert.equal(
+    enrollmentPlacementBlock(course, { offeringsReady: false, isOffered: () => false }),
+    null,
+    "no live feed → do not block"
+  );
+  assert.equal(
+    enrollmentPlacementBlock(
+      { course_id: "CSE 100", status: "completed" },
+      { offeringsReady: true, isOffered: () => false }
+    ),
+    null,
+    "completed cards stay put"
+  );
+  const notLive = enrollmentPlacementBlock(course, {
+    offeringsReady: true,
+    isOffered: () => false,
+  });
+  assert.equal(notLive.type, "not-live");
+  const full = enrollmentPlacementBlock(course, {
+    offeringsReady: true,
+    isOffered: () => true,
+    seatChip: { kind: "full" },
+  });
+  assert.equal(full.type, "full");
+  const waitlist = enrollmentPlacementBlock(course, {
+    offeringsReady: true,
+    isOffered: () => true,
+    seatChip: { kind: "waitlist" },
+  });
+  assert.equal(waitlist.type, "waitlist");
+  assert.equal(
+    enrollmentPlacementBlock(course, {
+      offeringsReady: true,
+      isOffered: () => true,
+      seatChip: { kind: "open", seatsAvailable: 12 },
+    }),
+    null
+  );
 }
 
 console.log("nextQuarterOfferings.test.mjs: ok");

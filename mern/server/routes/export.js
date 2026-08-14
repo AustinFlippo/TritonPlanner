@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 // resolve from the repo root (credentials/...), not from mern/.
 const GOOGLE_SERVICE_ACCOUNT_PATH =
   process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
-  'credentials/academic-planner-463804-202e89b2e5e4.json';
+  'credentials/triton-planner-3f3e351a505c.json';
 const KEYFILE_PATH = path.isAbsolute(GOOGLE_SERVICE_ACCOUNT_PATH)
   ? GOOGLE_SERVICE_ACCOUNT_PATH
   : path.resolve(__dirname, '../../..', GOOGLE_SERVICE_ACCOUNT_PATH);

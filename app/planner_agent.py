@@ -25,7 +25,8 @@ Validation severity:
   error   — course doesn't exist, duplicate placement, term in the past,
             placement outside the 4-year grid, (when a live Class Planner
             snapshot covers the enrollment quarter) a course absent from that
-            snapshot placed into the enrollment quarter, or a REMOVAL of a
+            snapshot — or with no open seats (full / waitlist-only) — placed
+            into the enrollment quarter, or a REMOVAL of a
             course the degree audit shows as completed (see check_removals —
             refused, because it is silent, irreversible through the agent, and
             deletes the student's record of passed coursework)
@@ -62,6 +63,8 @@ from catalog import (
     extract_course_codes,
     iter_course_codes,
     is_offered_in_upcoming_term,
+    upcoming_seat_status,
+    seat_status_from_sections,
     level_of,
     load_upcoming_term,
     search_courses,
@@ -401,6 +404,20 @@ def _canonical(code: str) -> Optional[str]:
     return course["course_id"].upper() if course else None
 
 
+def _completed_key(code) -> Optional[str]:
+    """Canonical catalog id, or a tidy code if the catalog doesn't know it.
+
+    Catalog-missing completed courses must still block re-placement: a degree
+    audit is an authoritative record that the student took the class, even
+    when v5.json has never listed it.
+    """
+    cid = _canonical(code)
+    if cid:
+        return cid
+    tidy = " ".join(str(code or "").split()).upper()
+    return tidy or None
+
+
 def _grid_positions(grid, satisfied_ids=None) -> dict:
     """Canonical course id -> term sort key, for prereq ordering checks.
     Courses the student already has sit at -1, before every term."""
@@ -486,10 +503,78 @@ def _prereq_timing_phrase(members, concurrent) -> str:
 def _codes_match(course_id: str, code: str) -> bool:
     """Course-code equality for requirement matching, via the catalog so
     cross-listings resolve ("DSC 80/80R" in the audit vs "DSC 80R" planned).
-    Falls back to normalized string equality for codes not in the catalog."""
+    Falls back to normalized string equality for codes not in the catalog.
+
+    Range tokens ("ECON 100TO199", "CSE 100 TO 199") match any alias whose
+    department and number sit in the band. Port of codeMatches in
+    auditProgress.js / parseCourseRange in courseRanges.js."""
+    rng = _parse_course_range(code)
+    if rng:
+        return any(_course_fits_range(v, rng) for v in _code_variants(course_id))
     a = _canonical(course_id) or " ".join(str(course_id or "").upper().split())
     b = _canonical(code) or " ".join(str(code or "").upper().split())
     return a == b
+
+
+# "ECON 100TO199" / "MATH 100 TO 199" / "ECON 100 TO ECON 199" / "ECON 100-199"
+_RANGE_RE = re.compile(
+    r"^([A-Z][A-Z&]*)\s+(\d+)[A-Z]*\s*(?:TO|[-–—])\s*(?:([A-Z][A-Z&]*)\s+)?(\d+)[A-Z]*$",
+    re.I,
+)
+
+
+def _parse_course_range(token):
+    """{dept, lo, hi} when token names a numeric band, else None.
+
+    Mirrors parseCourseRange in mern/client/src/utils/courseRanges.js."""
+    text = " ".join(str(token or "").upper().split())
+    m = _RANGE_RE.match(text)
+    if not m:
+        return None
+    dept = m.group(1).upper()
+    other = (m.group(3) or "").upper()
+    if other and other != dept:
+        return None
+    lo, hi = int(m.group(2)), int(m.group(4))
+    if lo > hi:
+        lo, hi = hi, lo
+    return {"dept": dept, "lo": lo, "hi": hi}
+
+
+def _course_fits_range(course_id: str, rng: dict) -> bool:
+    """Leading subject + first number sit in the band. Mirrors courseFitsRange."""
+    text = " ".join(str(course_id or "").upper().split())
+    dm = re.match(r"^([A-Z]+)", text)
+    nm = re.search(r"(\d+)", text)
+    if not dm or not nm:
+        return False
+    n = int(nm.group(1))
+    return dm.group(1) == rng["dept"] and rng["lo"] <= n <= rng["hi"]
+
+
+def _enrollment_seat_status(course_id, seat_availability=None) -> Optional[str]:
+    """'open' | 'waitlist' | 'full' | None for the enrollment quarter.
+
+    Prefers the per-turn live overlay the browser sent (TSS or the seats
+    proxy). Falls back to the Class Planner snapshot. None means we do not
+    know — do not invent a full/open call.
+    """
+    wanted = _course_key_aliases(course_id)
+    if isinstance(seat_availability, dict):
+        for course in seat_availability.get("courses") or []:
+            if not isinstance(course, dict):
+                continue
+            keys = _course_key_aliases(course.get("courseId"))
+            if not (keys & wanted):
+                continue
+            sections = course.get("sections") or []
+            if not sections:
+                break
+            overlay = seat_status_from_sections(sections)
+            if overlay:
+                return overlay
+            break
+    return upcoming_seat_status(course_id)
 
 
 # ---------------------------------------------------------------------------
@@ -499,7 +584,7 @@ def _codes_match(course_id: str, code: str) -> bool:
 def check_placements(schedule, placements: List[TermPlacement],
                      completed_ids=None, today: Optional[date] = None,
                      satisfied_ids=None, base_year: Optional[int] = None,
-                     audit_codes=None) -> dict:
+                     audit_codes=None, seat_availability=None) -> dict:
     """Validate placements against the catalog, prereq graph, and current grid.
 
     Returns {"issues": [...], "valid": [...]}:
@@ -589,6 +674,14 @@ def check_placements(schedule, placements: List[TermPlacement],
 
         placed_here = []
         for code in p.course_ids:
+            completed_key = _completed_key(code)
+            if completed_key and completed_key in completed_ids:
+                issues.append({
+                    "severity": "error",
+                    "message": f"{code}: already completed per the "
+                               "degree audit — skipped.",
+                })
+                continue
             course = get_course(code)
             unverified = False
             if not course:
@@ -611,14 +704,7 @@ def check_placements(schedule, placements: List[TermPlacement],
                                "and offered quarters could not be checked. Placed as "
                                "unverified — confirm the units with your advisor.",
                 })
-            cid = course["course_id"].upper()
-            if cid in completed_ids:
-                issues.append({
-                    "severity": "error",
-                    "message": f"{course['course_id']}: already completed per the "
-                               "degree audit — skipped.",
-                })
-                continue
+            cid = _completed_key(course["course_id"]) or course["course_id"].upper()
             if cid in already_placed:
                 issues.append({
                     "severity": "error",
@@ -641,19 +727,35 @@ def check_placements(schedule, placements: List[TermPlacement],
             # use historical offerings only — we only scrape the next term.
             if (live_upcoming
                     and p.year_index == enroll_yi
-                    and p.term == enroll_term
-                    and is_offered_in_upcoming_term(course["course_id"]) is False):
-                issues.append({
-                    "severity": "error",
-                    "message": (
-                        f"{course['course_id']}: not on the live "
-                        f"{live_upcoming['term_code']} Class Planner schedule — "
-                        f"skipped for the enrollment quarter. Place it in a later "
-                        f"term, or pick a course that is offered {live_upcoming['term_code']}."
-                    ),
-                })
-                already_placed.discard(cid)
-                continue
+                    and p.term == enroll_term):
+                if is_offered_in_upcoming_term(course["course_id"]) is False:
+                    issues.append({
+                        "severity": "error",
+                        "message": (
+                            f"{course['course_id']}: not on the live "
+                            f"{live_upcoming['term_code']} Class Planner schedule — "
+                            f"skipped for the enrollment quarter. Place it in a later "
+                            f"term, or pick a course that is offered {live_upcoming['term_code']}."
+                        ),
+                    })
+                    already_placed.discard(cid)
+                    continue
+                seats = _enrollment_seat_status(
+                    course["course_id"], seat_availability)
+                if seats in ("full", "waitlist"):
+                    why = ("no open seats — waitlist only" if seats == "waitlist"
+                           else "no open seats (full)")
+                    issues.append({
+                        "severity": "error",
+                        "message": (
+                            f"{course['course_id']}: {why} on the live "
+                            f"{live_upcoming['term_code']} schedule — skipped "
+                            f"for the enrollment quarter. Pick a course with "
+                            f"open seats, or place this one in a later term."
+                        ),
+                    })
+                    already_placed.discard(cid)
+                    continue
 
             entry = get_prereq_entry(course["course_id"]) or {}
             hedge = (" (prereq parsing was partial — verify)"
@@ -809,15 +911,26 @@ def _major_course_codes(audit_sections) -> Optional[set]:
         for sub in s.get("subrequirements") or []:
             for group in sub.get("groups") or []:
                 for code in group:
-                    codes |= _code_variants(code)
+                    if _parse_course_range(code):
+                        codes.add(_normalize_code(code))
+                    else:
+                        codes |= _code_variants(code)
     return codes or None
 
 
 def _counts_toward_major(course_id, major_codes) -> bool:
-    """Port of countsTowardMajor in auditProgress.js: any alias in common."""
+    """Port of countsTowardMajor in auditProgress.js: any alias in common,
+    or a course whose dept+number sits in a stored range token."""
     if not major_codes:
         return False
-    return bool(_code_variants(course_id) & major_codes)
+    variants = _code_variants(course_id)
+    if variants & major_codes:
+        return True
+    for stored in major_codes:
+        rng = _parse_course_range(stored)
+        if rng and any(_course_fits_range(v, rng) for v in variants):
+            return True
+    return False
 
 
 # Requirements the audit prints with NO Available list — attribute-based
@@ -1334,13 +1447,14 @@ def merge_into_grid(schedule, valid_placements):
 def build_plan_grid(current_schedule, placements: List[TermPlacement],
                     completed_ids=None, today: Optional[date] = None,
                     satisfied_ids=None, remove_course_ids=None,
-                    base_year=None, audit_codes=None):
+                    base_year=None, audit_codes=None, seat_availability=None):
     """One-shot check + merge (the pre-agent API, kept for the fallback path).
     Returns (grid, placement_summaries, warning_strings)."""
     removals = check_removals(current_schedule, remove_course_ids, completed_ids)
     working, removed = remove_from_grid(current_schedule, removals["allowed"])
     result = check_placements(working, placements, completed_ids, today,
-                              satisfied_ids, base_year, audit_codes)
+                              satisfied_ids, base_year, audit_codes,
+                              seat_availability)
     grid, summaries = merge_into_grid(working, result["valid"])
     fallout = check_removal_fallout(grid, removals["allowed"], completed_ids,
                                     satisfied_ids)
@@ -1352,6 +1466,40 @@ def build_plan_grid(current_schedule, placements: List[TermPlacement],
 # ---------------------------------------------------------------------------
 # Context formatting
 # ---------------------------------------------------------------------------
+
+def _structured_completed_lines(section) -> list:
+    """Display lines for completedCourses nested on the section or its subs.
+
+    Newer audits keep taken courses as structured rows (course_id + grade)
+    under subrequirements. Older saved audits, and the items-only prompt
+    format, can omit those rows from `items` — the model then has no way to
+    see that the student already took the class.
+    """
+    courses = list(section.get("completedCourses") or [])
+    for sub in section.get("subrequirements") or []:
+        courses.extend(sub.get("completedCourses") or [])
+    lines = []
+    seen = set()
+    for c in courses:
+        if not isinstance(c, dict):
+            continue
+        display = str(c.get("display") or "").strip()
+        if not display:
+            cid = str(c.get("course_id") or "").strip()
+            if not cid:
+                continue
+            desc = str(c.get("description") or c.get("course_name") or "").strip()
+            extra = ", ".join(
+                x for x in (str(c.get("term") or "").strip(),
+                            str(c.get("grade") or "").strip()) if x)
+            display = f"{cid} - {desc} ({extra})" if extra else f"{cid} - {desc}"
+        key = display.upper()
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(display)
+    return lines
+
 
 def _format_audit(audit_sections) -> str:
     """The FULL audit — never truncated.
@@ -1367,8 +1515,14 @@ def _format_audit(audit_sections) -> str:
         title = s.get("title", "Untitled")
         status = s.get("status", "unknown")
         parts.append(f"## {title} [{status}]")
-        for item in s.get("items") or []:
+        items = [str(i) for i in (s.get("items") or [])]
+        blob = "\n".join(items).upper()
+        for item in items:
             parts.append(f"- {item}")
+        for line in _structured_completed_lines(s):
+            if line.upper() not in blob:
+                parts.append(f"- {line}")
+                blob += "\n" + line.upper()
     return "\n".join(parts) or "(no degree audit uploaded)"
 
 
@@ -1935,6 +2089,14 @@ def _format_course_entry(course, live_upcoming=None) -> str:
     if live_upcoming:
         on_live = is_offered_in_upcoming_term(course["course_id"])
         flag = "yes" if on_live else "NO"
+        if on_live:
+            seats = upcoming_seat_status(course["course_id"])
+            if seats == "open":
+                flag = "yes, seats open"
+            elif seats == "waitlist":
+                flag = "yes, WAITLIST only (no open seats)"
+            elif seats == "full":
+                flag = "yes, FULL (no open seats)"
         line += f" | {live_upcoming['term_code']} live: {flag}"
     unlocks = (entry or {}).get("unlocks") or []
     if unlocks:
@@ -2009,11 +2171,11 @@ def _format_live_upcoming(today: Optional[date] = None,
         f"This is authoritative for what is offered in the enrollment quarter "
         f"(year_index / term of {snap['term_code']}). "
         f"Do NOT place a course into that enrollment quarter unless COURSE "
-        f"CATALOG DATA marks it \"{snap['term_code']} live: yes\", or "
-        f"LookupCourses / CheckPlan confirms it. Courses marked "
-        f"\"{snap['term_code']} live: NO\" will be rejected for that quarter — "
-        f"schedule them in a later term instead. Later quarters still use "
-        f"historical catalog offerings only."
+        f"CATALOG DATA marks it \"{snap['term_code']} live: yes\" (seats open), "
+        f"or LookupCourses / CheckPlan confirms it. Courses marked "
+        f"\"{snap['term_code']} live: NO\", FULL, or WAITLIST only will be "
+        f"rejected for that quarter — schedule them in a later term instead. "
+        f"Later quarters still use historical catalog offerings only."
     )
 
 
@@ -2034,9 +2196,32 @@ _IMMEDIATE_GRADE_RE = re.compile(
     r"^\s*[:\-]?\s*(A\+|A-|B\+|B-|C\+|C-|D\+|D-|WIP|TP|[ABCDPS])(?=[\s,;.)]|$)")
 
 
+def _add_completed_id(ids, code) -> None:
+    cid = _completed_key(code)
+    if cid:
+        ids.add(cid)
+
+
+def _add_completed_course_row(ids, course) -> None:
+    """A structured completedCourses row counts iff its grade completes."""
+    if not isinstance(course, dict):
+        return
+    grade = str(course.get("grade") or "").strip().upper()
+    if grade not in _COMPLETED_GRADES:
+        return
+    _add_completed_id(ids, course.get("course_id"))
+
+
 def _graded_from_audit(audit_sections) -> set:
     """Canonical ids of courses the audit shows with a completing grade.
-    These must not be re-placed and satisfy prereqs."""
+    These must not be re-placed and satisfy prereqs.
+
+    Reads both the items-string format ("CSE 21 - Title (FA23, A-)") and the
+    structured `completedCourses` rows the frontend parser now stores on
+    subrequirements. A completing grade on a course the catalog has never
+    published still counts — `_completed_key` keeps the tidy code so
+    check_placements can refuse to re-place it as unverified.
+    """
     ids = set()
     for s in audit_sections or []:
         for item in s.get("items") or []:
@@ -2049,16 +2234,36 @@ def _graded_from_audit(audit_sections) -> set:
                 # Completed-course line: the leading code is the course itself
                 # (later codes may just appear in the description).
                 if m.group(2) in _COMPLETED_GRADES:
-                    cid = _canonical(codes[0][0])
-                    if cid:
-                        ids.add(cid)
+                    _add_completed_id(ids, codes[0][0])
                 continue
             for code, end in codes:
                 gm = _IMMEDIATE_GRADE_RE.match(upper[end:])
                 if gm and gm.group(1) in _COMPLETED_GRADES:
-                    cid = _canonical(code)
-                    if cid:
-                        ids.add(cid)
+                    _add_completed_id(ids, code)
+        for c in s.get("completedCourses") or []:
+            _add_completed_course_row(ids, c)
+        for sub in s.get("subrequirements") or []:
+            for c in sub.get("completedCourses") or []:
+                _add_completed_course_row(ids, c)
+    return ids
+
+
+def _completed_from_grid(schedule) -> set:
+    """Courses already on the grid as completed or in-progress.
+
+    The audit is the usual source, but a card the student (or a previous
+    upload) already marked completed/current must not be re-planned into a
+    future term if grade parsing missed it. Failed attempts are excluded so
+    a retake can still be placed.
+    """
+    ids = set()
+    for year in schedule or []:
+        for t in TERMS:
+            for c in (year or {}).get(t) or []:
+                if not isinstance(c, dict) or not c.get("course_id"):
+                    continue
+                if _infer_course_status(c) in ("completed", "current"):
+                    _add_completed_id(ids, c["course_id"])
     return ids
 
 
@@ -2085,11 +2290,14 @@ def _codes_named_by_audit(audit_sections) -> set:
             for c in sub.get("completedCourses") or []:
                 if isinstance(c, dict) and c.get("course_id"):
                     codes.add(c["course_id"])
+        for c in s.get("completedCourses") or []:
+            if isinstance(c, dict) and c.get("course_id"):
+                codes.add(c["course_id"])
         for item in s.get("items") or []:
             if isinstance(item, str):
                 codes.update(_parse_available_codes(item))
     tidy = {" ".join(str(c).split()).upper() for c in codes if c}
-    return {c for c in tidy if _plausible_code(c)}
+    return {c for c in tidy if _plausible_code(c) and not _parse_course_range(c)}
 
 
 def _mentioned_in_audit(audit_sections) -> set:
@@ -2193,7 +2401,8 @@ When the student asks you to plan, fill out, generate, edit, move, or remove cou
 on their multi-quarter schedule: draft placements (and remove_course_ids when needed), \
 run CheckPlan, fix what it reports, then ProposeSchedule. A planning request MUST end \
 with an accepted ProposeSchedule call — never stop at a text explanation. If a course \
-can't be placed (not found, already completed), drop it, place the rest, and mention \
+can't be placed (not found, already completed, not offered live next quarter, \
+or no open seats), drop it, place the rest, and mention \
 the omission in the explanation. Rules:
 - The grid has year_index 0-{last_year_index} (0 = {base_label} academic year) and terms fall/winter/spring.
 - The earliest term you may place courses into is year_index {earliest_year}, {earliest_term} \
@@ -2210,9 +2419,12 @@ delete the student's record of passed coursework and it will be refused.
 - Only schedule a course in quarters it is offered. Historical catalog seasons \
 ("offered: FA, WI") are approximate. When LIVE NEXT-QUARTER SCHEDULE is loaded, \
 it is authoritative for the enrollment quarter — never place a course marked \
-"live: NO" into that quarter (CheckPlan / ProposeSchedule will reject it).
-- When LIVE SECTIONS / SEATS data is present, mention open/full/waitlisted honestly. \
-Treat "shared snapshot" seats as approximate; treat "live TSS" as current for this turn.
+"live: NO" into that quarter, and never place a course with no open seats \
+(FULL or WAITLIST only) into that quarter (CheckPlan / ProposeSchedule will \
+reject both). Later terms still use historical offerings.
+- When LIVE SECTIONS / SEATS data is present, treat it as current for this turn \
+and do not plan a course whose sections are all full or waitlist-only. \
+Treat "shared snapshot" seats as approximate when no live overlay is attached.
 - Aim for 3-4 courses (roughly 12-16 units) per quarter unless asked otherwise. \
 A quarter over {max_term_units:g} units exceeds UCSD's limit without an approved \
 overload and CheckPlan will warn about it.
@@ -2283,22 +2495,18 @@ def _default_llm():
     from langchain_openai import ChatOpenAI
 
     # Planning is low-volume but reasoning-heavy (prereq ordering across
-    # quarters), so it defaults to the GPT-5.6 flagship (Sol). Chat path
+    # quarters), so it uses the GPT-5.6 flagship (Sol). Chat path
     # uses Terra/Luna. GPT-5.6 rejects custom temperature — omit it.
-    model = os.getenv("PLANNER_MODEL", "gpt-5.6-sol")
-    kwargs = {}
-    if model.startswith(("gpt-5", "o")):
-        # GPT-5.x on /v1/chat/completions only allows function tools with
-        # reasoning_effort "none" (reasoning + tools needs /v1/responses,
-        # which this langchain-openai version doesn't drive).
-        kwargs["reasoning_effort"] = os.getenv("PLANNER_REASONING_EFFORT", "none")
+    # GPT-5.x on /v1/chat/completions only allows function tools with
+    # reasoning_effort "none" (reasoning + tools needs /v1/responses,
+    # which this langchain-openai version doesn't drive).
     return ChatOpenAI(
-        model=model,
+        model="gpt-5.6-sol",
         openai_api_key=os.getenv("OPENAI_API_KEY"),
+        reasoning_effort=os.getenv("PLANNER_REASONING_EFFORT", "none"),
         # The loop makes several calls per request, so a TPM blip mid-loop
         # would otherwise kill an almost-finished plan.
         max_retries=6,
-        **kwargs,
     ).bind_tools([
         SearchCourses,
         LookupCourses,
@@ -2313,7 +2521,7 @@ def _default_llm():
 
 def _accept(proposal: ProposeSchedule, schedule, completed_ids, today,
             satisfied_ids=None, extra_warnings=None, audit_sections=None,
-            base_year=None, describe_actual=False):
+            base_year=None, describe_actual=False, seat_availability=None):
     """Server-side commit: validate once more, merge, and build the response.
     Error-level courses are dropped; all issue messages surface to the student.
 
@@ -2326,7 +2534,8 @@ def _accept(proposal: ProposeSchedule, schedule, completed_ids, today,
     working, removed = remove_from_grid(schedule, removals["allowed"])
     result = check_placements(working, proposal.placements, completed_ids, today,
                               satisfied_ids, base_year,
-                              _codes_named_by_audit(audit_sections))
+                              _codes_named_by_audit(audit_sections),
+                              seat_availability)
     grid, summaries = merge_into_grid(working, result["valid"])
     # Both read the FINAL grid: the raw placements still include courses
     # check_placements just dropped as errors (which would project coverage the
@@ -2376,10 +2585,14 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
 
     earliest_year, earliest_term = next_enrollable_term(today, base_year)
     base, year_count = plan_window(base_year, today)
-    completed_ids = _graded_from_audit(audit_sections)
+    audit_completed = _graded_from_audit(audit_sections)
+    # Grid cards already marked completed/current also block re-placement, even
+    # if the audit string didn't parse — a retake of a failed attempt is still
+    # allowed because _completed_from_grid skips status=failed.
+    completed_ids = audit_completed | _completed_from_grid(schedule)
     # Grade parsing found nothing? Unfamiliar audit format — fall back to
     # letting every audit mention satisfy prereqs so we don't nag falsely.
-    satisfied_ids = _mentioned_in_audit(audit_sections) if not completed_ids else set()
+    satisfied_ids = _mentioned_in_audit(audit_sections) if not audit_completed else set()
     # That fallback switches prereq checking off in all but name: every course
     # the audit names counts as already held, including ones still needed. It
     # is the right default (better quiet than wrong), but silent it is a trap —
@@ -2389,7 +2602,7 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
     # (DSC 152) can still be planned — as unverified. See check_placements.
     audit_codes = _codes_named_by_audit(audit_sections)
     fallback_warnings = []
-    if not completed_ids and satisfied_ids:
+    if not audit_completed and satisfied_ids:
         fallback_warnings.append(
             "Heads up: I couldn't read any course grades from your degree "
             "audit, so I treated every course it mentions as already done when "
@@ -2500,7 +2713,8 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                     _accept(last_proposal, schedule, completed_ids, today,
                             satisfied_ids, extra_warnings=fallback_warnings,
                             audit_sections=audit_sections,
-                            base_year=base_year),
+                            base_year=base_year,
+                            seat_availability=seat_availability),
                     "propose_after_text",
                 )
             return _finish(
@@ -2612,7 +2826,8 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                         schedule, removals["allowed"])
                     result = check_placements(
                         working, draft.placements, completed_ids, today,
-                        satisfied_ids, base_year, audit_codes)
+                        satisfied_ids, base_year, audit_codes,
+                        seat_availability)
                     merged, _s = merge_into_grid(working, result["valid"])
                     coverage = check_coverage(audit_sections, merged, [])
                     fallout = check_removal_fallout(
@@ -2629,7 +2844,8 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                         schedule, removals["allowed"])
                     result = check_placements(
                         working, proposal.placements, completed_ids, today,
-                        satisfied_ids, base_year, audit_codes)
+                        satisfied_ids, base_year, audit_codes,
+                        seat_availability)
                     errors = [i for i in removals["issues"] + result["issues"]
                               if i["severity"] == "error"]
                     # Remove-only proposals (empty placements after removals) are
@@ -2640,13 +2856,15 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                                     satisfied_ids,
                                     extra_warnings=fallback_warnings,
                                     audit_sections=audit_sections,
-                                    base_year=base_year),
+                                    base_year=base_year,
+                                    seat_availability=seat_availability),
                             "propose_schedule",
                         )
                     last_proposal = proposal
                     output = ("REJECTED — fix these errors and call ProposeSchedule "
-                              "again. Drop any course that is not found or already "
-                              "completed; to move a course already on the planner, "
+                              "again. Drop any course that is not found, already "
+                              "completed, not on the live next-quarter schedule, or "
+                              "has no open seats; to move a course already on the planner, "
                               "include it in remove_course_ids. Never try to remove "
                               "a course the audit shows as completed. Keep the rest; "
                               "do not answer with text until a proposal is "
@@ -2681,6 +2899,7 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                 audit_sections=audit_sections,
                 base_year=base_year,
                 describe_actual=True,
+                seat_availability=seat_availability,
             ),
             "cap_propose_schedule",
             hit_cap=True,

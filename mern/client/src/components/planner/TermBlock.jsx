@@ -18,6 +18,7 @@ const TermBlock = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  getPrereqWarning,
   onOpenCourse,
 }) => {
   const termUnits = calculateTermUnits(courses);
@@ -65,6 +66,11 @@ const TermBlock = ({
             <CourseCard
               course={course}
               warning={getCourseWarning ? getCourseWarning(course, termKey) : null}
+              prereqWarning={
+                getPrereqWarning
+                  ? getPrereqWarning(course, termKey, yearIndex)
+                  : null
+              }
               isPreviewing={
                 previewState &&
                 previewState.sourceYearIndex === yearIndex &&
@@ -85,8 +91,20 @@ const TermBlock = ({
               dragTarget.yearIndex === yearIndex &&
               dragTarget.term === termKey &&
               dragTarget.courseIndex === courseIndex ? (
-                <span className="text-xs text-amber-600 px-2 text-center">
-                  May not be offered in {termName}
+                <span
+                  className={`text-xs px-2 text-center ${
+                    dropWarning.type === "not-live" ||
+                    dropWarning.type === "full" ||
+                    dropWarning.type === "waitlist"
+                      ? "text-red-600"
+                      : "text-amber-600"
+                  }`}
+                >
+                  {dropWarning.type === "prereq"
+                    ? "Missing prerequisites"
+                    : dropWarning.type === "quarter" || dropWarning.type === "no-history"
+                    ? `May not be offered in ${termName}`
+                    : dropWarning.message}
                 </span>
               ) : previewState &&
                 previewState.targetYearIndex === yearIndex &&

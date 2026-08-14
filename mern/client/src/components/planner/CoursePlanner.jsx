@@ -20,6 +20,7 @@ const CoursePlanner = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  getPrereqWarning,
   getSlotClassName,
   onExportToSheets,
   activeSavedPlan,
@@ -63,6 +64,7 @@ const CoursePlanner = ({
           dragTarget={dragTarget}
           dropWarning={dropWarning}
           getCourseWarning={getCourseWarning}
+          getPrereqWarning={getPrereqWarning}
           getSlotClassName={getSlotClassName}
           onOpenCourse={onOpenCourse}
         />

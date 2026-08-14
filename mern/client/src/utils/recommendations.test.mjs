@@ -105,4 +105,21 @@ assert.ok(
 const takenWithPlan = extractTakenCourses([], schedule);
 assert.ok(takenWithPlan.includes("DSC 100"), "planned still counts for prereqs");
 
+const rangeElective = extractUnmetRequirements([
+  {
+    title: "MAJOR ELECTIVES",
+    status: "not_fulfilled",
+    subrequirements: [
+      {
+        status: "not_fulfilled",
+        needType: "courses",
+        needAmount: 1,
+        groups: [["ECON 100TO199"]],
+        availableCodes: ["ECON 100TO199"],
+      },
+    ],
+  },
+]);
+assert.deepEqual(rangeElective[0].codes, ["ECON 100TO199"]);
+
 console.log("recommendations tests passed");

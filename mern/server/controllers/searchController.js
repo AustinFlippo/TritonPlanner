@@ -61,6 +61,9 @@ const COURSE_CODE_RE = /^[A-Z]{2,6}\s*\d/;
 // ...and never contains "*", which is how audits write AP/IB credit
 // placeholders ("AP 2D*", "AP 3D*").
 const PLACEHOLDER_RE = /\*/;
+// "CSE 100TO199" / "MATH 100 TO 199" / "ECON 100 TO ECON 199" / "ECON 100-199"
+const RANGE_RE =
+  /^([A-Z&]+)\s*(\d+)[A-Z]*\s*(?:TO|[-–—])\s*(?:[A-Z&]+\s+)?(\d+)[A-Z]*$/i;
 
 const tidyCode = (code) =>
   String(code || "").trim().toUpperCase().replace(/\s+/g, " ");
@@ -121,7 +124,9 @@ function vouchedEntries(codes = []) {
   for (const raw of codes) {
     if (out.length >= VOUCHED_STUB_CAP) break;
     const id = tidyCode(raw);
-    if (!COURSE_CODE_RE.test(id) || PLACEHOLDER_RE.test(id)) continue;
+    if (!COURSE_CODE_RE.test(id) || PLACEHOLDER_RE.test(id) || RANGE_RE.test(id)) {
+      continue;
+    }
     const key = normalizeCourseID(id);
     if (!key || seen.has(key) || resolveEntry(id)) continue;
     seen.add(key);
@@ -415,9 +420,10 @@ function checkPrereqsMet(courseId, takenNormSet) {
 }
 
 /**
- * Resolve degree-audit course tokens ("DSC 100", "CSE 100TO199") to catalog
- * courses, drop ones already completed (or otherwise excluded), and annotate
- * whether their prerequisites are satisfied by the taken/planned set.
+ * Resolve degree-audit course tokens ("DSC 100", "CSE 100TO199",
+ * "ECON 100 TO ECON 199") to catalog courses, drop ones already completed
+ * (or otherwise excluded), and annotate whether their prerequisites are
+ * satisfied by the taken/planned set.
  *
  * `exclude` defaults to `taken` for backward compatibility. Callers that want
  * planned courses to remain visible should pass completed-only as `exclude`
@@ -454,16 +460,18 @@ export function recommendCourses(tokens = [], taken = [], exclude = null) {
     const token = String(rawToken || "").trim();
     if (!token) continue;
 
-    // Range tokens: "CSE 100TO199" / "MATH 100 TO 199"
-    const range = token.match(/^([A-Z&]+)\s*(\d+)[A-Z]*\s*TO\s*(\d+)[A-Z]*$/i);
+    // Range tokens: "CSE 100TO199" / "MATH 100 TO 199" / "ECON 100 TO ECON 199"
+    const range = token.match(RANGE_RE);
     if (range) {
       const dept = range[1].toUpperCase();
       const lo = parseInt(range[2], 10);
       const hi = parseInt(range[3], 10);
+      const from = Math.min(lo, hi);
+      const to = Math.max(lo, hi);
       for (const e of indexed) {
         if (e.dept !== dept) continue;
         const n = courseNumberOf(e.id);
-        if (n !== null && n >= lo && n <= hi) push(token, e);
+        if (n !== null && n >= from && n <= to) push(token, e);
       }
       continue;
     }
@@ -473,7 +481,8 @@ export function recommendCourses(tokens = [], taken = [], exclude = null) {
       push(token, entry);
     } else if (
       COURSE_CODE_RE.test(tidyCode(token)) &&
-      !PLACEHOLDER_RE.test(token)
+      !PLACEHOLDER_RE.test(token) &&
+      !RANGE_RE.test(token)
     ) {
       // Every token here came from the degree audit's own requirement lists,
       // so a code the catalog cannot resolve is vouched for by definition —
@@ -487,11 +496,27 @@ export function recommendCourses(tokens = [], taken = [], exclude = null) {
 }
 
 /**
+ * Prereq-graph row for a written code, or null.
+ *
+ * The graph is keyed by catalog ids, so a bare lookup misses registrar-style
+ * aliases ("DSC 80" while the row is "DSC 80/80R") and sequence members
+ * ("HILD 2A" while the row is "HILD 2A-B-C"). resolveEntry is the same path
+ * offeringsFor uses.
+ */
+function graphEntryFor(code) {
+  const resolved = resolveEntry(code);
+  if (resolved && prereqGraph[resolved.id]) return prereqGraph[resolved.id];
+  const tidy = tidyCode(code);
+  if (tidy && prereqGraph[tidy]) return prereqGraph[tidy];
+  return null;
+}
+
+/**
  * Prereq-graph info for one course: parsed requirement groups plus the
  * reverse edges ("unlocks"), enriched into lightweight course stubs.
  */
 export function courseGraph(courseId) {
-  const entry = prereqGraph[courseId];
+  const entry = graphEntryFor(courseId);
   if (!entry) return null;
 
   const stub = (id) => {
@@ -505,13 +530,45 @@ export function courseGraph(courseId) {
       : { course_id: id, course_name: "", credits: null };
   };
 
+  const resolved = resolveEntry(courseId);
   return {
-    course_id: courseId,
+    course_id: resolved?.id || tidyCode(courseId),
     confidence: entry.confidence,
     requires: entry.requires,
     notes: entry.notes,
-    unlocks: entry.unlocks.map(stub),
+    concurrent_allowed: (entry.meta && entry.meta.concurrent_allowed) || [],
+    unlocks: (entry.unlocks || []).map(stub),
   };
+}
+
+/**
+ * Batch prereq-graph lookup for planner-grid warnings. Keyed by the raw
+ * requested code so a card holding "DSC 80" can look itself up even when
+ * the graph row is "DSC 80/80R". known:false = no graph (and usually no
+ * catalog) entry — the client stays silent rather than guessing.
+ */
+export function graphsFor(codes = []) {
+  const out = {};
+  for (const raw of codes) {
+    if (typeof raw !== "string" || !raw.trim()) continue;
+    const entry = graphEntryFor(raw);
+    if (!entry) {
+      out[raw] = {
+        known: false,
+        requires: [],
+        concurrent_allowed: [],
+        confidence: "unknown",
+      };
+      continue;
+    }
+    out[raw] = {
+      known: true,
+      requires: entry.requires || [],
+      concurrent_allowed: (entry.meta && entry.meta.concurrent_allowed) || [],
+      confidence: entry.confidence || "unknown",
+    };
+  }
+  return out;
 }
 
 /**

@@ -6,6 +6,8 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { AUDIT_REQUIREMENT_DRAG_TYPE } from '../../utils/recommendations';
+import { hideGradeInDisplay } from '../../utils/courseGrades';
+import { formatCourseToken, parseCourseRange } from '../../utils/courseRanges';
 
 // Expansion state lives in the parent so "Expand all / Collapse all" works
 const AuditAccordionSection = ({
@@ -256,7 +258,11 @@ const AuditAccordionSection = ({
   const optionsSummary = (requirement) => {
     const groups = requirement.groups;
     if (!groups?.length) {
-      const n = requirement.availableCodes?.length || 0;
+      const codes = requirement.availableCodes || [];
+      if (codes.length === 1 && parseCourseRange(codes[0])) {
+        return `choose from ${formatCourseToken(codes[0])}`;
+      }
+      const n = codes.length;
       return n ? `${n} audit-listed option${n === 1 ? '' : 's'}` : null;
     }
     if (requirement.mode === 'all') {
@@ -266,7 +272,11 @@ const AuditAccordionSection = ({
         (withChoice ? ` · ${withChoice} with a choice` : '')
       );
     }
-    const n = groups.flat().length;
+    const flat = groups.flat();
+    if (flat.length === 1 && parseCourseRange(flat[0])) {
+      return `choose from ${formatCourseToken(flat[0])}`;
+    }
+    const n = flat.length;
     return `choose from ${n} option${n === 1 ? '' : 's'}`;
   };
 
@@ -274,10 +284,13 @@ const AuditAccordionSection = ({
   // "+" so an AND-of-ORs never reads as one long flat list.
   const optionsDetail = (requirement) => {
     const groups = requirement.groups;
-    if (!groups?.length) return (requirement.availableCodes || []).join(', ');
+    const joinAlts = (g) => g.map((code) => formatCourseToken(code)).join(' or ');
+    if (!groups?.length) {
+      return (requirement.availableCodes || []).map(formatCourseToken).join(', ');
+    }
     return requirement.mode === 'all'
-      ? groups.map((g) => g.join(' or ')).join('  +  ')
-      : groups.map((g) => g.join(' or ')).join(', ');
+      ? groups.map(joinAlts).join('  +  ')
+      : groups.map(joinAlts).join(', ');
   };
 
   return (
@@ -414,7 +427,7 @@ const AuditAccordionSection = ({
                         <span
                           key={`done-${course.course_id || course.display}`}
                           className="inline-flex items-center gap-1 rounded bg-white/80 border border-emerald-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-700"
-                          title={course.display || undefined}
+                          title={hideGradeInDisplay(course.display) || undefined}
                         >
                           <Check className="w-3 h-3 text-emerald-500" />
                           {course.course_id || course}
@@ -469,7 +482,7 @@ const AuditAccordionSection = ({
                                       or
                                     </span>
                                   )}
-                                  {code}
+                                  {formatCourseToken(code)}
                                 </span>
                               ))}
                             </span>
@@ -506,7 +519,7 @@ const AuditAccordionSection = ({
                       {isCompleted && (
                         <Check className="w-3 h-3 mt-0.5 text-emerald-500 flex-shrink-0" />
                       )}
-                      <span>{item}</span>
+                      <span>{hideGradeInDisplay(item)}</span>
                     </p>
                   </div>
                 );

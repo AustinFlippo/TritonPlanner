@@ -105,12 +105,21 @@ def fixture_catalog(monkeypatch):
     monkeypatch.setattr(planner_agent, "load_upcoming_term", lambda: None)
 
 
-def _install_upcoming(monkeypatch, term_code, term, course_ids):
-    """Fake Class Planner snapshot for live-enrollment-quarter tests."""
+def _install_upcoming(monkeypatch, term_code, term, course_ids, seats=None):
+    """Fake Class Planner snapshot for live-enrollment-quarter tests.
+
+    seats: optional {course_id: 'open'|'waitlist'|'full'} overlay stored as
+    seat_by_norm. Omitted (the historical default) means unknown seats — we
+    still allow the course as long as it is on the feed.
+    """
     norms = set()
+    seat_by_norm = {}
     for cid in course_ids:
         for alias in catalog.aliases_for(cid):
-            norms.add(catalog._normalize(alias))
+            key = catalog._normalize(alias)
+            norms.add(key)
+            if seats and cid in seats:
+                seat_by_norm[key] = seats[cid]
     snap = {
         "term_code": term_code,
         "term": term,
@@ -118,6 +127,7 @@ def _install_upcoming(monkeypatch, term_code, term, course_ids):
         "scraped_at": "test",
         "course_count": len(course_ids),
         "course_norms": norms,
+        "seat_by_norm": seat_by_norm,
     }
 
     def _load():
@@ -280,6 +290,77 @@ def test_live_upcoming_does_not_block_later_quarters(monkeypatch):
     assert not any("not on the live" in m for m in messages_of(r, "error"))
     placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
     assert "CSE 158" in placed
+
+
+def test_live_upcoming_blocks_full_course_in_enrollment_quarter(monkeypatch):
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 21", "CSE 158"],
+                      seats={"CSE 21": "open", "CSE 158": "full"})
+    r = check_placements(
+        [], [place(0, "fall", "CSE 21", "CSE 158")], today=TODAY)
+    assert any("no open seats (full)" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 21" in placed
+    assert "CSE 158" not in placed
+
+
+def test_live_upcoming_blocks_waitlist_only_in_enrollment_quarter(monkeypatch):
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"],
+                      seats={"CSE 158": "waitlist"})
+    r = check_placements([], [place(0, "fall", "CSE 158")],
+                         completed_ids={"CSE 100"}, today=TODAY)
+    assert any("waitlist only" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 158" not in placed
+
+
+def test_full_course_still_places_in_a_later_quarter(monkeypatch):
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 21"],
+                      seats={"CSE 21": "open"})
+    r = check_placements(
+        [], [place(0, "winter", "CSE 158")],
+        completed_ids={"CSE 100"}, today=TODAY)
+    assert not any("no open seats" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 158" in placed
+
+
+def test_live_seat_overlay_overrides_snapshot_open(monkeypatch):
+    # Snapshot thinks CSE 158 is open; the turn's live overlay says full.
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"],
+                      seats={"CSE 158": "open"})
+    overlay = {"courses": [{"courseId": "CSE 158", "offered": True, "sections": [
+        {"sectionId": "A00", "component": "LE", "packageId": "p1",
+         "seatsAvailable": 0, "seatsTotal": 80, "status": "full"},
+    ]}]}
+    r = check_placements([], [place(0, "fall", "CSE 158")],
+                         completed_ids={"CSE 100"}, today=TODAY,
+                         seat_availability=overlay)
+    assert any("no open seats (full)" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 158" not in placed
+
+
+def test_package_with_full_discussion_is_not_open():
+    # Lecture has seats; the only discussion does not — no enrollable package.
+    status = catalog.seat_status_from_sections([
+        {"sectionId": "A00", "component": "LE", "packageId": "p1",
+         "packageIds": ["p1"], "seatsAvailable": 40, "status": "open"},
+        {"sectionId": "A01", "component": "DI", "packageId": "p1",
+         "packageIds": ["p1"], "seatsAvailable": 0, "status": "full"},
+    ])
+    assert status == "full"
+
+
+def test_one_open_package_keeps_the_course_open():
+    status = catalog.seat_status_from_sections([
+        {"sectionId": "A00", "component": "LE", "packageIds": ["p1", "p2"],
+         "seatsAvailable": 40, "status": "open"},
+        {"sectionId": "A01", "component": "DI", "packageId": "p1",
+         "packageIds": ["p1"], "seatsAvailable": 0, "status": "full"},
+        {"sectionId": "A02", "component": "DI", "packageId": "p2",
+         "packageIds": ["p2"], "seatsAvailable": 5, "status": "open"},
+    ])
+    assert status == "open"
 
 
 def test_live_upcoming_ignored_when_term_mismatches(monkeypatch):
@@ -1003,6 +1084,88 @@ def test_graded_from_audit_frontend_format():
     assert planner_agent._graded_from_audit(audit) == {"CSE 21", "DSC 80/80R"}
 
 
+def test_graded_from_audit_reads_structured_completed_courses():
+    # The frontend parser stores taken courses on subrequirements.completedCourses
+    # (and sometimes a section-level list). Items may be empty on older saved
+    # audits — those rows must still block re-placement.
+    audit = [{"title": "Major", "status": "not_fulfilled", "items": [],
+              "completedCourses": [
+                  {"course_id": "CSE 21", "grade": "A-", "term": "FA23"},
+              ],
+              "subrequirements": [{
+                  "title": "Core",
+                  "completedCourses": [
+                      {"course_id": "DSC 80", "grade": "WIP", "term": "WI24"},
+                      {"course_id": "CSE 100", "grade": "F", "term": "FA23"},
+                  ],
+              }]}]
+    assert planner_agent._graded_from_audit(audit) == {"CSE 21", "DSC 80/80R"}
+    r = check_placements(
+        [], [place(0, "fall", "CSE 21"), place(0, "winter", "CSE 100")],
+        completed_ids=planner_agent._graded_from_audit(audit), today=TODAY)
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert placed == ["CSE 100"]  # failed attempt is a retake, not completed
+    assert any("already completed" in m for m in messages_of(r, "error"))
+
+
+def test_structured_completed_courses_appear_in_the_audit_prompt():
+    audit = [{"title": "Major", "status": "fulfilled", "items": [],
+              "subrequirements": [{
+                  "completedCourses": [{
+                      "course_id": "CSE 21",
+                      "description": "Math for Algorithms",
+                      "term": "FA23",
+                      "grade": "A-",
+                  }],
+              }]}]
+    text = planner_agent._format_audit(audit)
+    assert "CSE 21" in text
+    assert "A-" in text
+
+
+def test_catalog_missing_completed_course_still_blocks_replacement():
+    # A completing grade on a code v5.json has never listed must still refuse
+    # a future placement — otherwise it lands as "unverified" planned work.
+    audit = [{"title": "Major", "status": "fulfilled", "items": [],
+              "subrequirements": [{
+                  "completedCourses": [
+                      {"course_id": "ZZZ 999", "grade": "A", "term": "FA23"},
+                  ],
+              }]}]
+    completed = planner_agent._graded_from_audit(audit)
+    assert "ZZZ 999" in completed
+    r = check_placements(
+        [], [place(0, "fall", "ZZZ 999")],
+        completed_ids=completed, today=TODAY,
+        audit_codes=planner_agent._codes_named_by_audit(audit))
+    assert r["valid"] == []
+    assert any("already completed" in m for m in messages_of(r, "error"))
+    assert not any("unverified" in m for m in messages_of(r, "warning"))
+
+
+def test_completed_grid_card_blocks_replanning_without_an_audit():
+    grid = planner_agent.empty_grid()
+    grid[0]["fall"][0] = {
+        "course_id": "CSE 21", "credits": 4, "status": "completed", "grade": "A",
+    }
+    completed = planner_agent._completed_from_grid(grid)
+    assert "CSE 21" in completed
+    r = check_placements(
+        grid, [place(1, "fall", "CSE 21")],
+        completed_ids=completed, today=TODAY)
+    assert any("already completed" in m for m in messages_of(r, "error"))
+    placed = [c["course_id"] for p in r["valid"] for c in p["courses"]]
+    assert "CSE 21" not in placed
+
+
+def test_failed_grid_card_does_not_block_a_retake():
+    grid = planner_agent.empty_grid()
+    grid[0]["fall"][0] = {
+        "course_id": "CSE 21", "credits": 4, "status": "failed", "grade": "F",
+    }
+    assert planner_agent._completed_from_grid(grid) == set()
+
+
 def test_transfer_pass_grade_counts_as_completed():
     # TP = transfer pass. Real audits stamp this on MATH 20A, CSE 8A, etc.
     audit = [{"title": "Major", "status": "not_fulfilled", "items": [
@@ -1407,7 +1570,47 @@ def test_requirements_prefer_structured_and_skip_fulfilled():
     assert reqs[0]["candidates"] == ["CSE 101", "CSE 158", "DSC 106"]
 
 
-def test_coverage_warns_when_short():
+def test_coverage_range_token_matches_courses_in_the_band():
+    audit = [{
+        "title": "MAJOR ELECTIVES", "status": "not_fulfilled",
+        "subrequirements": [
+            {"status": "not_fulfilled", "needType": "courses", "needAmount": 1,
+             "groups": [["CSE 100TO199"]], "availableCodes": ["CSE 100TO199"],
+             "mode": "any"},
+        ],
+    }]
+    assert planner_agent.check_coverage(
+        audit, [], [place(0, "fall", "CSE 158")]) == []
+    issues = planner_agent.check_coverage(
+        audit, [], [place(0, "fall", "CSE 21")])
+    assert issues and "still short" in issues[0]["message"]
+
+
+def test_major_codes_range_token_counts_in_band_courses():
+    audit = [{
+        "title": "MAJOR REQUIREMENTS", "status": "not_fulfilled", "items": [],
+        "subrequirements": [
+            {"title": "Electives", "status": "not_fulfilled", "needType": "courses",
+             "needAmount": 1, "groups": [["CSE 100TO199"]],
+             "availableCodes": ["CSE 100TO199"]},
+        ],
+    }]
+    codes = planner_agent._major_course_codes(audit)
+    assert codes and planner_agent._counts_toward_major("CSE 158", codes)
+    assert not planner_agent._counts_toward_major("CSE 21", codes)
+
+
+def test_codes_named_by_audit_skip_range_tokens():
+    audit = [{
+        "title": "MAJOR ELECTIVES", "status": "not_fulfilled",
+        "subrequirements": [
+            {"groups": [["CSE 100TO199", "CSE 101"]],
+             "availableCodes": ["CSE 100TO199", "CSE 101"]},
+        ],
+    }]
+    named = planner_agent._codes_named_by_audit(audit)
+    assert "CSE 101" in named
+    assert "CSE 100TO199" not in named
     issues = planner_agent.check_coverage(
         AUDIT_WITH_NEEDS, [], [place(0, "fall", "CSE 101")])
     assert len(issues) == 1 and issues[0]["severity"] == "warning"

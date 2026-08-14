@@ -877,6 +877,7 @@ const MainLayout = () => {
           onNavigate={setCurrentPage}
           onOpenCourse={handleOpenCourse}
           buildFreshSchedule={buildFreshSchedule}
+          enrollmentSlot={enrollmentSlot}
         />
       </div>
       {currentPage === "storage" && (
@@ -896,6 +897,7 @@ const MainLayout = () => {
           setSchedule={setSchedule}
           yearLabels={yearLabels}
           enrollmentSlot={enrollmentSlot}
+          parsedCourseData={parsedCourseData}
           activeSavedPlan={activeSavedPlan}
           onSavedPlanChange={handleSavedPlanChange}
           onNavigate={setCurrentPage}

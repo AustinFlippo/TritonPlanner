@@ -2,7 +2,20 @@
 //
 // Port of _COMPLETED_GRADES / _is_wip_grade in app/planner_agent.py — keep the
 // two in sync.
-//
+
+/** Temporary UI flag. Flip to `false` to hide letter grades. Parsing
+ *  and storage are unchanged — this only gates display. */
+export const SHOW_GRADES = true;
+
+/**
+ * Audit display lines look like "CSE 21 - Title (FA23, A-)". When grades
+ * are hidden, keep the term and drop the letter.
+ */
+export const hideGradeInDisplay = (text) => {
+  if (SHOW_GRADES || typeof text !== "string") return text;
+  return text.replace(/\(([^,)]+),\s*[^)]+\)\s*$/, "($1)");
+};
+
 // This exists because three separate call sites had independently spelled
 // "completed" as "has a grade that isn't work-in-progress", which quietly made
 // F, W, NP and I mean PASSED:

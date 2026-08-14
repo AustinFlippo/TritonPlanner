@@ -812,39 +812,67 @@ const RightSidebar = ({
           : null,
       };
 
-      const postChat = ({ seatAvailability, sectionOptions: opts } = {}) =>
-        fetch(`${API_URL}/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: messageText,
-            // The backend is stateless, so the plan-specific transcript is sent
-            // on every turn. The latest audit/grid are always authoritative.
-            thread_id: requestContextKey,
-            history: requestHistory,
-            audit_sections: parsedCourseData?.sections || [],
-            schedule: Array.isArray(schedule) ? schedule : [],
-            seat_availability: seatAvailability,
-            section_options: opts || undefined,
-            ui_context: uiContext,
-            // Which academic year year_index 0 means, from the audit's Catalog
-            // Year. Without it the agent falls back to the calendar anchor and
-            // would place courses into the wrong rows for any cohort that did
-            // not start in the launch year.
-            base_year: baseYear ?? undefined,
-          }),
-        });
+      const postChat = async ({ seatAvailability, sectionOptions: opts } = {}) => {
+        const payload = {
+          message: messageText,
+          // The backend is stateless, so the plan-specific transcript is sent
+          // on every turn. The latest audit/grid are always authoritative.
+          thread_id: requestContextKey,
+          history: requestHistory,
+          audit_sections: parsedCourseData?.sections || [],
+          schedule: Array.isArray(schedule) ? schedule : [],
+          seat_availability: seatAvailability,
+          section_options: opts || undefined,
+          ui_context: uiContext,
+          // Which academic year year_index 0 means, from the audit's Catalog
+          // Year. Without it the agent falls back to the calendar anchor and
+          // would place courses into the wrong rows for any cohort that did
+          // not start in the launch year.
+          base_year: baseYear ?? undefined,
+        };
+        const attempt = async () => {
+          const response = await fetch(`${API_URL}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const text = await response.text();
+          try {
+            return JSON.parse(text);
+          } catch {
+            const error = new Error(
+              `Chat endpoint returned a non-JSON response (${response.status}).`
+            );
+            error.retryable =
+              response.status === 502 ||
+              response.status === 503 ||
+              response.status === 504 ||
+              !text;
+            throw error;
+          }
+        };
+        try {
+          return await attempt();
+        } catch (error) {
+          const retryable =
+            error?.retryable ||
+            error?.name === "TypeError" ||
+            /failed to fetch|network|load failed/i.test(error?.message || "");
+          if (!retryable) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          return attempt();
+        }
+      };
 
       // The agent may discover relevant courses only after SearchCourses runs,
       // or pause for enrollable packages via LoadSectionOptions. Refresh TSS
       // through the browser extension and transparently retry the same turn.
       let data = null;
       for (let lookupRound = 0; lookupRound < 4; lookupRound += 1) {
-        const response = await postChat({
+        data = await postChat({
           seatAvailability: buildSeats(),
           sectionOptions,
         });
-        data = await response.json();
 
         const sectionReq = data?.section_options_request;
         if (sectionReq && typeof sectionReq === "object") {
@@ -947,12 +975,14 @@ const RightSidebar = ({
         },
       ]);
     } catch (err) {
+      const localHint = import.meta.env.PROD
+        ? "The planning server may still be starting — wait a few seconds and try again."
+        : "Is the Express server running on port 5050?";
       updateChatMessages(requestContextKey, (prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "Sorry, something went wrong. Is the Express server running on port 5050?",
+          content: `Sorry, something went wrong. ${localHint}`,
         },
       ]);
     } finally {

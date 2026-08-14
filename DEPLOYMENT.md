@@ -52,7 +52,6 @@ Environment variables:
 | `PINECONE_API_KEY` | only for RAG chat | omit and `/chat` uses the planner agent |
 | `PINECONE_INDEX_NAME` | only for RAG chat | e.g. `course-embeddings` |
 | `ANTHROPIC_API_KEY` | no | only if using Claude models |
-| `PLANNER_MODEL` | no | defaults in code |
 | `LLM_MODEL` | no | defaults in code |
 | `PLANNER_METRICS_DISABLED` | no | set `1` to stop writing the loop-metrics JSONL |
 
