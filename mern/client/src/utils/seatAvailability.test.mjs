@@ -4,7 +4,14 @@ import {
   courseIdsFromText,
   courseIdsInQuarter,
   mergeSectionMaps,
+  unseenSeatCourseIds,
 } from "./seatAvailability.js";
+
+assert.deepEqual(
+  unseenSeatCourseIds(["DSC 80/80R", "CSE 100"], ["DSC 80R"]),
+  ["CSE 100"]
+);
+assert.deepEqual(unseenSeatCourseIds(["DSC 80"], ["DSC 80R"]), []);
 
 assert.deepEqual(courseIdsFromText("Is CSE 100 open? Also DSC80."), [
   "CSE 100",

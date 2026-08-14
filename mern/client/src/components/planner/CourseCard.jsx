@@ -4,6 +4,22 @@ import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsConte
 import { parseCredits, hasUnknownCredits } from "../../utils/courseCredits";
 import { SHOW_GRADES } from "../../utils/courseGrades";
 
+/** Instant hover label — native `title` is too slow and loses to the card tooltip. */
+function HoverTip({ text, children }) {
+  return (
+    <span className="relative group/tip hover:z-30">
+      {children}
+      <span
+        role="tooltip"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-md bg-slate-800 px-2.5 py-1.5 text-left text-[11px] font-normal leading-snug text-white opacity-0 shadow-panel transition-opacity group-hover/tip:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
 const CourseCard = ({
   course,
   onRemove,
@@ -57,12 +73,11 @@ const CourseCard = ({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={() => onOpen?.(course)}
-      title="Drag to move · click for details"
     >
       {/* The course code is the card's whole identity — "MATH 2…" makes MATH
           20A and MATH 20B indistinguishable, which is worse than any other
           field wrapping. It never truncates; units/grade give way instead. */}
-      <div className="min-w-0">
+      <div className="min-w-0" title="Drag to move · click for details">
         <div className="text-[13px] font-semibold text-slate-800 break-words">
           {course.course_id}
           {isPreviewing && (
@@ -100,39 +115,43 @@ const CourseCard = ({
 
       <div className="flex items-center gap-1.5 flex-shrink-0 self-start">
         {prereqWarning && (
-          <span
-            title={prereqWarning.message}
-            className="cursor-help px-1.5 py-px rounded-full text-[9px] font-semibold bg-amber-50 text-amber-600"
-            aria-label={prereqWarning.message}
-          >
-            Prereqs
-          </span>
+          <HoverTip text={prereqWarning.message}>
+            <span
+              className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-amber-50 text-amber-600"
+              aria-label={prereqWarning.message}
+            >
+              Prereqs
+            </span>
+          </HoverTip>
         )}
         {warning && (
-          <span
-            title={`${warning.message} Based on past schedules — not a guarantee.`}
-            className="cursor-help"
-            aria-label={warning.message}
+          <HoverTip
+            text={`${warning.message} Based on past schedules — not a guarantee.`}
           >
-            <TriangleAlert className="w-3.5 h-3.5 text-amber-500" />
-          </span>
+            <span aria-label={warning.message}>
+              <TriangleAlert className="w-3.5 h-3.5 text-amber-500" />
+            </span>
+          </HoverTip>
         )}
         {/* The degree audit offers this course but the catalog has never
             published it, so its units and prerequisites are genuinely
             unknown. "? u" rather than "0.0 u": a confident zero would read
             as a real number and quietly shrink the unit totals. */}
         {unverified && (
-          <span
-            title={
+          <HoverTip
+            text={
               `${course.course_id} is listed by your degree audit but is not in ` +
               `the course catalog, so its unit count and prerequisites could ` +
               `not be checked. Confirm the units with your advisor.`
             }
-            className="cursor-help px-1.5 py-px rounded text-[9px] font-semibold bg-amber-100 text-amber-700"
-            aria-label={`${course.course_id} is unverified — not found in the course catalog`}
           >
-            UNVERIFIED
-          </span>
+            <span
+              className="px-1.5 py-px rounded text-[9px] font-semibold bg-amber-100 text-amber-700"
+              aria-label={`${course.course_id} is unverified — not found in the course catalog`}
+            >
+              UNVERIFIED
+            </span>
+          </HoverTip>
         )}
         <span
           className={`text-xs tabular-nums whitespace-nowrap ${

@@ -5,6 +5,7 @@ import {
   createSavedPlan,
   updateSavedPlan,
   planStats,
+  isPlanNotFound,
 } from "../../utils/savedPlans";
 import { keepTakenCourses } from "../../utils/scheduleOps";
 
@@ -77,7 +78,14 @@ const SavePlanControl = ({
     setError(null);
     try {
       if (activeSavedPlan) {
-        await updateSavedPlan(user, activeSavedPlan.id, { schedule });
+        try {
+          await updateSavedPlan(user, activeSavedPlan.id, { schedule });
+        } catch (err) {
+          // Session restore can remember a named-plan id whose snapshot was
+          // never in this device's library (signed-out local list, or a
+          // leftover pointer from another localhost tab). Don't block create.
+          if (!isPlanNotFound(err)) throw err;
+        }
       }
       const fresh =
         typeof buildFreshSchedule === "function"

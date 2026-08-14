@@ -18,6 +18,7 @@ import {
   buildSeatAvailability,
   courseIdsFromText,
   courseIdsInQuarter,
+  unseenSeatCourseIds,
 } from "../../utils/seatAvailability";
 import { buildSectionOptions } from "../../utils/sectionOptimizer";
 import { extractCourseMentions } from "../../utils/chatCourseMentions";

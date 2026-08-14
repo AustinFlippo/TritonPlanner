@@ -20,6 +20,21 @@ import { SAVED_PLANS_KEY } from "./plannerStateStore";
 const LOCAL_KEY = SAVED_PLANS_KEY;
 const TERMS = ["fall", "winter", "spring"];
 
+// Thrown when a named-plan id is remembered (session restore) but the
+// snapshot is gone from the library. Create-new treats this as skippable
+// so a stale pointer cannot block starting a fresh plan.
+export const PLAN_NOT_FOUND = "PLAN_NOT_FOUND";
+
+export const isPlanNotFound = (err) =>
+  err?.code === PLAN_NOT_FOUND ||
+  err?.message === "That saved plan no longer exists.";
+
+const planNotFoundError = () => {
+  const err = new Error("That saved plan no longer exists.");
+  err.code = PLAN_NOT_FOUND;
+  return err;
+};
+
 // New rows wrap the grid as { baseYear, grid } inside the existing `schedule`
 // JSONB column, so recording the base year needs no schema change and rows
 // written before this still read back fine. See stampGrid.
@@ -148,13 +163,17 @@ export const updateSavedPlan = async (user, id, patch) => {
       .eq("id", id)
       .select("id, name, schedule, created_at, updated_at")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      // 0 rows: the remembered id isn't in this account's library.
+      if (error.code === "PGRST116") throw planNotFoundError();
+      throw new Error(error.message);
+    }
     return fromRow(data);
   }
 
   const plans = readLocal();
   const index = plans.findIndex((p) => p.id === id);
-  if (index === -1) throw new Error("That saved plan no longer exists.");
+  if (index === -1) throw planNotFoundError();
   const updated = {
     ...plans[index],
     ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),

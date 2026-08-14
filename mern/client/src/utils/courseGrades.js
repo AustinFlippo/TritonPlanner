@@ -5,7 +5,7 @@
 
 /** Temporary UI flag. Flip to `false` to hide letter grades. Parsing
  *  and storage are unchanged — this only gates display. */
-export const SHOW_GRADES = true;
+export const SHOW_GRADES = false;
 
 /**
  * Audit display lines look like "CSE 21 - Title (FA23, A-)". When grades

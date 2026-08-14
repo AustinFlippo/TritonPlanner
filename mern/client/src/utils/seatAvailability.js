@@ -10,6 +10,34 @@ export const compactCourseId = (id) =>
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "");
 
+/** Compact keys for `ids`, including cross-listing / R-suffix aliases. */
+export function compactSeatKeys(ids) {
+  const keys = new Set();
+  for (const id of ids || []) {
+    for (const variant of [id, ...courseIdVariants(id)]) {
+      const key = compactCourseId(variant);
+      if (key) keys.add(key);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Codes in `requested` that are not already covered by `already` — same
+ * compact id or a known alias. Used so a chat seat-lookup pause for
+ * "DSC 80/80R" after "DSC 80R" is not treated as a new fetch.
+ */
+export function unseenSeatCourseIds(requested, already) {
+  const known = compactSeatKeys(already);
+  return (requested || []).filter((id) => {
+    if (!id) return false;
+    if (known.has(compactCourseId(id))) return false;
+    return ![...courseIdVariants(id)].some((variant) =>
+      known.has(compactCourseId(variant))
+    );
+  });
+}
+
 /** Unique course ids mentioned in free text. */
 export function courseIdsFromText(text) {
   const ids = [];
@@ -84,9 +112,27 @@ export function buildSeatAvailability({
 } = {}) {
   const courses = [];
   const seen = new Set();
+  const listedIds = new Set();
   for (const id of courseIds || []) {
     const key = compactCourseId(id);
-    if (!key || seen.has(key)) continue;
+    if (!key) continue;
+    if (seen.has(key)) {
+      // Same course, different spelling ("DSC 80" vs "DSC 80R"). Keep both
+      // so the planner agent will not pause again for a LookupLiveSections
+      // alias it already got an answer for.
+      if (!listedIds.has(id)) {
+        const sibling = courses.find(
+          (course) => compactCourseId(course.courseId) === key
+        );
+        courses.push({
+          courseId: id,
+          offered: sibling?.offered ?? false,
+          sections: sibling?.sections || [],
+        });
+        listedIds.add(id);
+      }
+      continue;
+    }
     seen.add(key);
     const list = lookupSections(sectionsByCourse, id);
     if (!list?.length) {

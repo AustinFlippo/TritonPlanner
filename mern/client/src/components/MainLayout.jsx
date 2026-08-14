@@ -704,7 +704,7 @@ const MainLayout = () => {
     (async () => {
       try {
         const plans = await listSavedPlans(user);
-        if (cancelled || !plans.length) return;
+        if (cancelled) return;
 
         // React state may still be null in the same tick as local hydrate, so
         // also read the pointer from the persisted blob.
@@ -728,11 +728,16 @@ const MainLayout = () => {
           return;
         }
 
+        // Hydrate restores the pointer from tp_planner_state even when the
+        // snapshot is gone from the library. Leaving it set makes "Create
+        // new plan" try to flush a ghost and fail with PLAN_NOT_FOUND.
+        if (rememberedId) setActiveSavedPlan(null);
+
         // No remembered plan resolved. Falling back to the most recently
         // updated snapshot is only safe on an empty editor: with a live grid
         // already restored it dropped an unrelated old snapshot on top of it,
         // and autosave then persisted the replacement.
-        if (!scheduleHasCourses(scheduleRef.current)) {
+        if (plans.length && !scheduleHasCourses(scheduleRef.current)) {
           handleLoadSavedPlan(plans[0]);
         }
       } catch (err) {

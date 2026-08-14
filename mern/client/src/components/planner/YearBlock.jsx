@@ -69,9 +69,9 @@ const YearBlock = ({
   };
 
   return (
-    <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden">
+    <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card">
       {/* Year header */}
-      <div className="w-full px-4 py-3 flex justify-between items-center bg-white border-b border-slate-200">
+      <div className="w-full px-4 py-3 flex justify-between items-center bg-white border-b border-slate-200 rounded-t-xl">
         <button
           type="button"
           className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 rounded"
