@@ -189,15 +189,85 @@ def get_course(code: str) -> Optional[dict]:
     return None
 
 
+_SEAT_STATUS_RANK = {
+    "open": 0,
+    "waitlist-active": 1,
+    "booked-waitlist": 2,
+    "waitlist-inactive": 3,
+    "full": 4,
+}
+
+
+def _norm_section_status(status) -> str:
+    return str(status or "").strip().lower().replace(" ", "-")
+
+
+def seat_status_from_sections(sections) -> Optional[str]:
+    """Whether a course has enrollable open seats, from section rows.
+
+    Groups by packageId so a roomy lecture with every discussion full is
+    FULL, not open — matching courseSeatChip in sectionPackages.js.
+    Returns 'open', 'waitlist', 'full', or None when no seat numbers exist.
+    """
+    if not sections:
+        return None
+    by_pkg = {}
+    ungrouped = []
+    for s in sections:
+        if not isinstance(s, dict):
+            continue
+        ids = list(s.get("packageIds") or [])
+        pid = s.get("packageId")
+        if pid and pid not in ids:
+            ids.append(pid)
+        if ids:
+            for pkg_id in ids:
+                by_pkg.setdefault(pkg_id, []).append(s)
+        else:
+            ungrouped.append(s)
+    packages = list(by_pkg.values()) + [[row] for row in ungrouped]
+    if not packages:
+        return None
+
+    best_open = None
+    statuses = []
+    for members in packages:
+        seats = [
+            m.get("seatsAvailable") for m in members
+            if isinstance(m.get("seatsAvailable"), (int, float))
+        ]
+        if seats:
+            pkg_open = min(seats)
+            best_open = pkg_open if best_open is None else max(best_open, pkg_open)
+        ranked = [
+            _norm_section_status(m.get("status"))
+            for m in members if m.get("status")
+        ]
+        if ranked:
+            statuses.append(max(ranked, key=lambda st: _SEAT_STATUS_RANK.get(st, 3)))
+
+    if best_open is not None and best_open > 0:
+        return "open"
+    waitlist = any(st in ("waitlist-active", "booked-waitlist") for st in statuses)
+    if waitlist:
+        return "waitlist"
+    if best_open == 0 or (statuses and all(st == "full" for st in statuses)):
+        return "full"
+    return None
+
+
 def load_upcoming_term() -> Optional[dict]:
     """Live Class Planner snapshot for the upcoming enrollment quarter.
 
     Returns None when the scrape file is missing, empty, or unreadable —
     common well before registration opens. On success:
-      {term_code, term, year, scraped_at, course_count, course_norms: set[str]}
+      {term_code, term, year, scraped_at, course_count, course_norms: set[str],
+       seat_by_norm: {normalized_id: 'open'|'waitlist'|'full'}}
     course_norms is every normalized alias of every course key in the feed so
-    "DSC 80" matches catalog "DSC 80/80R". Re-reads when the file mtime changes
-    so a mid-process scrape (Express scheduler) is picked up without restart.
+    "DSC 80" matches catalog "DSC 80/80R". seat_by_norm is the same alias
+    expansion of each course's package-aware seat status (snapshot seats are
+    indicative — callers may overlay a fresher payload). Re-reads when the
+    file mtime changes so a mid-process scrape is picked up without restart.
     """
     global _upcoming_cache
     path = UPCOMING_TERM_PATH
@@ -222,9 +292,14 @@ def load_upcoming_term() -> Optional[dict]:
             and term in {"fall", "winter", "spring"}
             and term_code):
         norms = set()
-        for cid in courses:
+        seat_by_norm = {}
+        for cid, sections in courses.items():
+            status = seat_status_from_sections(sections)
             for alias in aliases_for(str(cid)):
-                norms.add(_normalize(alias))
+                key = _normalize(alias)
+                norms.add(key)
+                if status:
+                    seat_by_norm[key] = status
         data = {
             "term_code": str(term_code).upper(),
             "term": term,
@@ -232,6 +307,7 @@ def load_upcoming_term() -> Optional[dict]:
             "scraped_at": (raw or {}).get("scraped_at"),
             "course_count": len(courses),
             "course_norms": norms,
+            "seat_by_norm": seat_by_norm,
         }
     _upcoming_cache = {"mtime": mtime, "data": data}
     return data
@@ -250,6 +326,26 @@ def is_offered_in_upcoming_term(course_id: str) -> Optional[bool]:
         if _normalize(alias) in snap["course_norms"]:
             return True
     return False
+
+
+def upcoming_seat_status(course_id: str) -> Optional[str]:
+    """Snapshot seat status for a course on the live upcoming-term schedule.
+
+    None — no snapshot, course not on it, or no seat numbers.
+    'open' / 'waitlist' / 'full' — package-aware status from the scrape.
+    Snapshot seats drift; prefer a live overlay when the caller has one.
+    """
+    snap = load_upcoming_term()
+    if not snap:
+        return None
+    by_norm = snap.get("seat_by_norm") or {}
+    if not by_norm:
+        return None
+    for alias in aliases_for(" ".join(str(course_id or "").split())):
+        status = by_norm.get(_normalize(alias))
+        if status:
+            return status
+    return None
 
 
 def load_prereq_graph() -> dict:

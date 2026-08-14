@@ -20,6 +20,7 @@ const CoursePlanner = ({
   dragTarget,
   dropWarning,
   getCourseWarning,
+  getPrereqWarning,
   getSlotClassName,
   onExportToSheets,
   activeSavedPlan,
@@ -63,6 +64,7 @@ const CoursePlanner = ({
           dragTarget={dragTarget}
           dropWarning={dropWarning}
           getCourseWarning={getCourseWarning}
+          getPrereqWarning={getPrereqWarning}
           getSlotClassName={getSlotClassName}
           onOpenCourse={onOpenCourse}
         />
@@ -81,7 +83,7 @@ const CoursePlanner = ({
               Export your plan
             </div>
             <div className="text-xs text-slate-500 truncate">
-              Create a shareable Google Sheets version of your 4-year plan
+              Download a spreadsheet of your 4-year plan (CSV for Sheets or Excel)
             </div>
           </div>
         </div>
@@ -95,7 +97,7 @@ const CoursePlanner = ({
           }`}
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {loading ? 'Exporting…' : 'Export to Sheets'}
+          {loading ? "Exporting…" : "Download CSV"}
         </button>
       </div>
     </div>

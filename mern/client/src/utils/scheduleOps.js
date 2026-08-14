@@ -3,6 +3,7 @@
 // always ends with one empty slot ready to receive a drop.
 
 import { normalizeCourseCredits } from "./courseCredits.js";
+import { isTakenCourse } from "./courseIds.js";
 
 const TERMS = ["fall", "winter", "spring"];
 
@@ -75,6 +76,21 @@ export const quarterHasCourse = (schedule, yearIndex, term, courseId) =>
     (c) => c && c.course_id === courseId
   );
 
+/** Completed or in-progress cards anywhere on the grid — not failed retakes. */
+export const scheduleHasTakenCourse = (schedule, courseId) => {
+  if (!courseId) return false;
+  for (const year of schedule || []) {
+    for (const term of TERMS) {
+      for (const c of year?.[term] || []) {
+        if (!c?.course_id) continue;
+        if (c.status !== "completed" && c.status !== "current") continue;
+        if (isTakenCourse(courseId, [c.course_id])) return true;
+      }
+    }
+  }
+  return false;
+};
+
 // Remove the course at a slot, trimming excess empty slots
 export const removeCourseAt = (schedule, yearIndex, term, courseIndex) => {
   const next = cloneSchedule(schedule);
@@ -84,10 +100,18 @@ export const removeCourseAt = (schedule, yearIndex, term, courseIndex) => {
 };
 
 // Add a course to a quarter: first empty slot, keeping a trailing empty one
-export const insertCourse = (schedule, yearIndex, term, course) => {
+export const insertCourse = (
+  schedule,
+  yearIndex,
+  term,
+  course,
+  takenIds = null
+) => {
+  const placed = normalizePlacedCourse(course);
+  if (takenIds && isTakenCourse(placed.course_id, takenIds)) return schedule;
+  if (scheduleHasTakenCourse(schedule, placed.course_id)) return schedule;
   const next = cloneSchedule(schedule);
   const slots = next[yearIndex][term];
-  const placed = normalizePlacedCourse(course);
   const empty = slots.findIndex((c) => c === null);
   if (empty === -1) slots.push(placed);
   else slots[empty] = placed;
@@ -109,6 +133,11 @@ export const insertCourse = (schedule, yearIndex, term, course) => {
  * planned course. The occupant is displaced to the next free slot instead
  * (the term grows one if it has to), and a course already in the term is not
  * added twice, matching the QuarterlyView insert path.
+ *
+ * Sidebar drops of a course the student already completed (or is taking) are
+ * refused — `takenIds` covers the degree audit, and the grid itself covers
+ * completed/current cards even when that list is omitted. Failed attempts
+ * stay placeable so a retake can land in a later term.
  */
 export const placeCourseAt = (
   schedule,
@@ -116,7 +145,8 @@ export const placeCourseAt = (
   term,
   courseIndex,
   course,
-  source = null
+  source = null,
+  takenIds = null
 ) => {
   const next = cloneSchedule(schedule);
   const targetSlot = next[yearIndex]?.[term];
@@ -139,6 +169,12 @@ export const placeCourseAt = (
   }
 
   // Sidebar / catalog drop from here down.
+  if (takenIds && isTakenCourse(placed.course_id, takenIds)) {
+    return schedule;
+  }
+  if (scheduleHasTakenCourse(schedule, placed.course_id)) {
+    return schedule;
+  }
   if (quarterHasCourse(schedule, yearIndex, term, placed.course_id)) {
     return schedule;
   }

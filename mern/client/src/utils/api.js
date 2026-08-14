@@ -16,6 +16,12 @@ if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
   );
 }
 
+// Fire-and-forget: wake the FastAPI planner so the first chat turn is not the
+// request that pays for a Render cold start.
+export function wakePlanner() {
+  return fetch(`${API_URL}/planner-wake`).catch(() => {});
+}
+
 // Saved planner state lives in Supabase Postgres (planner_states table,
 // row-level security scopes every query to the signed-in user)
 export const api = {

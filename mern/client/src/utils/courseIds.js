@@ -137,3 +137,23 @@ export function courseIdVariants(courseId) {
   }
   return variants;
 }
+
+/** True when two written codes name the same course, including cross-listings. */
+export function namesSameCourse(a, b) {
+  if (!a || !b) return false;
+  const other = courseIdVariants(b);
+  for (const variant of courseIdVariants(a)) {
+    if (other.has(variant)) return true;
+  }
+  return false;
+}
+
+/**
+ * True when `courseId` is one the student has already finished or is currently
+ * taking. `takenIds` is typically extractCompletedCourses() — failed attempts
+ * are omitted there so a retake can still be planned.
+ */
+export function isTakenCourse(courseId, takenIds = []) {
+  if (!courseId) return false;
+  return takenIds.some((id) => namesSameCourse(courseId, id));
+}

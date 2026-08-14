@@ -1,4 +1,5 @@
 import { courseIdVariants } from "./courseIds.js";
+import { courseFitsRange, parseCourseRange } from "./courseRanges.js";
 import { parseCredits, hasUnknownCredits } from "./courseCredits.js";
 import { isWipGrade, isPassingGrade } from "./courseGrades.js";
 import {
@@ -140,12 +141,8 @@ const plannedCourses = (schedule = []) =>
 const currentCourses = (schedule = []) =>
   coursesByBestStatus(schedule).filter((course) => course.status === "current");
 
-const courseMatches = (course, availableCodes) => {
-  const allowed = new Set(
-    availableCodes.flatMap((code) => [...codeVariants(code)])
-  );
-  return [...codeVariants(course.course_id)].some((code) => allowed.has(code));
-};
+const courseMatches = (course, availableCodes) =>
+  availableCodes.some((code) => codeMatches(course.course_id, code));
 
 /**
  * Shape a parsed subrequirement for the shared evaluator.
@@ -227,7 +224,11 @@ export const codesNamedByAudit = (sections = []) => {
   const codes = new Set();
   const add = (value) => {
     const code = normalizeCode(value);
-    if (code && COURSE_CODE_RE.test(code)) codes.add(code);
+    // Range tokens name a band, not a placeable course — vouching one would
+    // invent an unverified "ECON 100TO199" stub in search.
+    if (code && COURSE_CODE_RE.test(code) && !parseCourseRange(code)) {
+      codes.add(code);
+    }
   };
   for (const section of sections || []) {
     for (const sub of section?.subrequirements || []) {
@@ -257,6 +258,10 @@ export const majorCourseCodes = (sections = []) => {
     for (const sub of section.subrequirements || []) {
       for (const group of sub.groups || []) {
         for (const code of group) {
+          if (parseCourseRange(code)) {
+            codes.add(normalizeCode(code));
+            continue;
+          }
           for (const variant of codeVariants(code)) codes.add(variant);
         }
       }
@@ -265,12 +270,28 @@ export const majorCourseCodes = (sections = []) => {
   return codes.size ? codes : null;
 };
 
-const countsTowardMajor = (courseId, majorCodes) =>
-  [...codeVariants(courseId)].some((variant) => majorCodes.has(variant));
+const countsTowardMajor = (courseId, majorCodes) => {
+  const variants = [...codeVariants(courseId)];
+  if (variants.some((variant) => majorCodes.has(variant))) return true;
+  for (const stored of majorCodes) {
+    const range = parseCourseRange(stored);
+    if (range && variants.some((variant) => courseFitsRange(variant, range))) {
+      return true;
+    }
+  }
+  return false;
+};
 
 // Cross-listings expand on BOTH sides: the audit may print "DSC 80/80R" while
-// the grid holds "DSC 80R", or the reverse.
+// the grid holds "DSC 80R", or the reverse. Range tokens ("ECON 100TO199")
+// match any alias whose department and number sit in the band.
 const codeMatches = (courseId, code) => {
+  const range = parseCourseRange(code);
+  if (range) {
+    return [...codeVariants(courseId)].some((variant) =>
+      courseFitsRange(variant, range)
+    );
+  }
   const allowed = codeVariants(code);
   return [...codeVariants(courseId)].some((variant) => allowed.has(variant));
 };

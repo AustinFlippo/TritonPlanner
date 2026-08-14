@@ -52,7 +52,6 @@ Environment variables:
 | `PINECONE_API_KEY` | only for RAG chat | omit and `/chat` uses the planner agent |
 | `PINECONE_INDEX_NAME` | only for RAG chat | e.g. `course-embeddings` |
 | `ANTHROPIC_API_KEY` | no | only if using Claude models |
-| `PLANNER_MODEL` | no | defaults in code |
 | `LLM_MODEL` | no | defaults in code |
 | `PLANNER_METRICS_DISABLED` | no | set `1` to stop writing the loop-metrics JSONL |
 
@@ -94,10 +93,15 @@ CORS is a browser control, not an auth boundary.
 **Do not set `EXPRESS_PORT` on Render.** It takes precedence over `PORT`, so
 setting it makes Render's health check fail.
 
-**Google Sheets export.** Add the service-account JSON as a Render *Secret
-File*, then set `GOOGLE_SERVICE_ACCOUNT_PATH` to the absolute path Render gives
-it (typically `/etc/secrets/<filename>.json`). Absolute paths are supported.
-Skip both if you are not using the export feature.
+**Plan export** is a client-side CSV download. Do not add Sheets/Drive OAuth
+scopes to Google sign-in: they are sensitive, and an unverified OAuth client
+in Testing mode will 403 everyone who is not a listed test user.
+
+The Express `/api/export/google-sheets` route is optional. New service accounts
+cannot own Drive files (Google, April 2025). Server-side Sheets only works with
+a Workspace Shared Drive: mount the JSON as a Secret File, set
+`GOOGLE_SERVICE_ACCOUNT_PATH`, share the drive with the bot as Content Manager,
+and set `GOOGLE_SHARED_DRIVE_ID`.
 
 Verify:
 - `GET /next-quarter` → 200 with `courseCount` around 2,100

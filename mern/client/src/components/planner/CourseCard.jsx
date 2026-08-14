@@ -2,6 +2,7 @@
 import { X, TriangleAlert } from "lucide-react";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
 import { parseCredits, hasUnknownCredits } from "../../utils/courseCredits";
+import { SHOW_GRADES } from "../../utils/courseGrades";
 
 const CourseCard = ({
   course,
@@ -11,6 +12,7 @@ const CourseCard = ({
   onOpen,
   isPreviewing = false,
   warning = null,
+  prereqWarning = null,
 }) => {
   const { offeredNextChip, enrollmentQuarter, seatChipFor } =
     useNextQuarterOfferings();
@@ -73,7 +75,7 @@ const CourseCard = ({
               {styling.label}
             </span>
           )}
-          {course.grade &&
+          {SHOW_GRADES && course.grade &&
             (course.status === 'completed' || course.status === 'failed') && (
               <span className="whitespace-nowrap">· {course.grade}</span>
             )}
@@ -97,6 +99,15 @@ const CourseCard = ({
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0 self-start">
+        {prereqWarning && (
+          <span
+            title={prereqWarning.message}
+            className="cursor-help px-1.5 py-px rounded-full text-[9px] font-semibold bg-amber-50 text-amber-600"
+            aria-label={prereqWarning.message}
+          >
+            Prereqs
+          </span>
+        )}
         {warning && (
           <span
             title={`${warning.message} Based on past schedules — not a guarantee.`}

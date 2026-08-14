@@ -51,7 +51,30 @@ app.use(
       : undefined
   )
 );
-app.use(express.json());
+// Degree audits + grid + seat snapshots routinely exceed Express's 100kb
+// default; a 413 HTML page is what the chat UI then reports as "is Express
+// running on port 5050?".
+app.use(express.json({ limit: "2mb" }));
+app.get("/health", (_req, res) => {
+  res.json({ api: "ok" });
+});
+// Wakes the FastAPI planner after a Render spin-down. Cheap GET of `/` so it
+// does not initialize Pinecone. Do not use this as Render's health-check path
+// — a cold planner takes ~1 minute and that would fail the 5s probe.
+app.get("/planner-wake", async (_req, res) => {
+  const fastapi = (process.env.FASTAPI_URL || "http://localhost:8000").replace(
+    /\/$/,
+    ""
+  );
+  try {
+    const response = await fetch(`${fastapi}/`, {
+      signal: AbortSignal.timeout(90_000),
+    });
+    res.json({ planner: response.ok ? "ok" : `http_${response.status}` });
+  } catch {
+    res.status(503).json({ planner: "unreachable" });
+  }
+});
 app.use("/chat", chat);
 app.use("/search-courses", searchRouter);
 // No degree-audit upload route: the audit is parsed in the browser, by
@@ -66,5 +89,10 @@ app.use("/next-quarter", nextQuarterRouter);
 
 
 // start the Express server
-app.listen(PORT, () => {
-});
+const server = app.listen(PORT, "0.0.0.0", () => {});
+// Render's proxy keeps idle sockets ~75–90s. Node's default keepAliveTimeout
+// (5s) closes first, and the next request on that connection 502s — the chat
+// UI then fails to parse HTML and shows the port-5050 catch-all. Retry works
+// because it opens a new connection. See Render "502 Bad Gateway" docs.
+server.keepAliveTimeout = 120_000;
+server.headersTimeout = 125_000;

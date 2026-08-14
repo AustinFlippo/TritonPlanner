@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { nextEnrollmentQuarter } from "../utils/academicCalendar";
+import { wakePlanner } from "../utils/api";
 import {
   buildOfferedCompactSet,
   fetchLiveSeatCounts,
@@ -80,6 +81,7 @@ export function NextQuarterOfferingsProvider({ children }) {
   // a different per-package shape that used to overwrite whole section lists.
   useEffect(() => {
     let cancelled = false;
+    wakePlanner();
     (async () => {
       patchOfferings((prev) =>
         prev.status === "idle" ? { ...prev, status: "loading" } : prev

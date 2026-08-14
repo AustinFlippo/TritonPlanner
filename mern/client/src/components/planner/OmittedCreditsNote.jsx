@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { parseCredits, hasUnknownCredits } from "../../utils/courseCredits";
+import { SHOW_GRADES } from "../../utils/courseGrades";
 
 /**
  * Note under the planner grid for transfer/AP credit that falls outside the
@@ -51,7 +52,9 @@ const OmittedCreditsNote = ({ courses }) => {
       {expanded && (
         <ul className="mt-2 space-y-1 text-sm text-slate-600">
           {courses.map((course) => {
-            const detail = [course.term, course.grade].filter(Boolean).join(", ");
+            const detail = [course.term, SHOW_GRADES ? course.grade : null]
+              .filter(Boolean)
+              .join(", ");
             return (
               <li key={course.course_id}>
                 <span className="font-medium text-slate-700">

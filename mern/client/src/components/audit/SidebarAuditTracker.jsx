@@ -3,81 +3,13 @@ import { UploadCloud, Loader2, Maximize2, Minimize2, ChevronDown, PanelLeftClose
 import AuditAccordionSection from './AuditAccordionSection';
 import { calculateAuditProgress } from '../../utils/auditProgress';
 import { requirementMode } from '../../utils/auditRequirements';
+import { SHOW_GRADES } from '../../utils/courseGrades';
+import { readCourseGroups } from '../../utils/readCourseGroups';
 
-/**
- * Read one subrequirement's course options as OR-groups.
- *
- * Each option in the audit looks like
- *   <span class="course draggable" number="100" department="DSC ">
- *     <span class="number">100</span>          <-- bare: the run continues DSC
- *   </span>
- * so the attributes are authoritative and the visible text is not. Options
- * joined by the literal word "OR" are alternatives for a single slot:
- *   [MATH 189] OR [DSC 152], [DSC 100], ... , [DSC 140A] OR [CSE 150A]
- * is seven slots, four of which offer a choice.
- */
-// Exported for its unit tests; splitting it into another file would separate
-// the parser from the component it exists to serve.
+// Re-exported so existing imports keep working; the implementation lives
+// next to its unit tests in utils/readCourseGroups.js.
 // eslint-disable-next-line react-refresh/only-export-components
-export const readCourseGroups = (container) => {
-  if (!container) return [];
-
-  const codeOf = (el) => {
-    const dept = (el.getAttribute?.('department') || '').trim();
-    const number = (el.getAttribute?.('number') || '').trim();
-    if (dept && number) return `${dept} ${number}`.replace(/\s+/g, ' ');
-    // No attributes (older audit exports): fall back to the visible text.
-    const text = (el.querySelector?.('.number')?.textContent || el.textContent || '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    return text || null;
-  };
-
-  // Read options and the text between them in document order.
-  //
-  // Sibling-walking is NOT enough: long lists wrap onto new table rows, so an
-  // "OR" can sit after </td></tr> in a different row from the option it joins.
-  // That silently split DS25 Core into 8 slots instead of 7, which made the
-  // slot count stop matching NEEDS and demoted the whole requirement to
-  // "pick any 7 of 11" — the exact bug this parser exists to prevent.
-  //
-  // Descendants of an option are skipped so its own label never counts as
-  // separator text.
-  const tokens = []; // {code} for options, {text} for everything between
-  const walk = (node) => {
-    for (const child of node.childNodes) {
-      if (child.nodeType === 3) {
-        tokens.push({ text: child.nodeValue || '' });
-      } else if (child.nodeType === 1) {
-        if (child.classList?.contains('course')) {
-          const code = codeOf(child);
-          if (code) tokens.push({ code });
-        } else {
-          walk(child);
-        }
-      }
-    }
-  };
-  walk(container);
-
-  const groups = [];
-  let current = [];
-  let between = '';
-  for (const token of tokens) {
-    if (token.text !== undefined) {
-      between += token.text;
-      continue;
-    }
-    if (current.length && !/\bOR\b/i.test(between)) {
-      groups.push(current);
-      current = [];
-    }
-    current.push(token.code);
-    between = '';
-  }
-  if (current.length) groups.push(current);
-  return groups;
-};
+export { readCourseGroups };
 
 const normalizeTitle = (value) =>
   String(value || '')
@@ -489,7 +421,9 @@ const SidebarAuditTracker = ({
             // 102" renders the tail entries as bare numbers — but every option
             // carries department/number as attributes, so read those instead of
             // the visible text. Adjacent options joined by "OR" are alternatives
-            // for ONE slot; commas/whitespace separate slots.
+            // for ONE slot; "to" (or a hyphen) between two codes of the same
+            // department is a range ("ECON 100 to ECON 199" → ECON 100TO199);
+            // commas/whitespace separate slots.
             const selectTable = subreq.querySelector('.selectcourses');
             if (selectTable?.querySelector('.course')) {
               groups = readCourseGroups(selectTable);
@@ -925,6 +859,17 @@ const SidebarAuditTracker = ({
                     section.title.toLowerCase().startsWith("the following courses")
                   ) {
                     displayTitle = "In Progress";
+                  }
+
+                  // GPA-only blocks (e.g. "MAJOR GPA") — keep mixed titles like
+                  // "...Requirements and Major GPA", which are real requirement
+                  // sections. Parsing is unchanged; this is display-only.
+                  if (
+                    !SHOW_GRADES &&
+                    /\bgpa\b/i.test(displayTitle || "") &&
+                    !/\b(requirement|course|need)\b/i.test(displayTitle || "")
+                  ) {
+                    return null;
                   }
 
                   return (

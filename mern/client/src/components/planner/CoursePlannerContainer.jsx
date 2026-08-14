@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { TriangleAlert } from "lucide-react";
 import CoursePlanner from "./CoursePlanner";
 import ConfirmDialog from "../ConfirmDialog";
@@ -14,6 +14,15 @@ import {
   placeCourseAt,
   removeCourseAt,
 } from "../../utils/scheduleOps";
+import { extractCompletedCourses } from "../../utils/recommendations";
+import { isTakenCourse } from "../../utils/courseIds";
+import {
+  prereqPositions,
+  prereqWarningFor,
+} from "../../utils/prereqCheck";
+import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
+import { enrollmentPlacementBlock } from "../../utils/nextQuarterOfferings";
+import { downloadCsv, scheduleToCsv } from "../../utils/scheduleExport";
 
 // Grid terms -> catalog quarter codes, for offering warnings
 const QUARTER_OF_TERM = { fall: "FA", winter: "WI", spring: "SP" };
@@ -33,6 +42,7 @@ const CoursePlannerContainer = ({
   onNavigate,
   onOpenCourse,
   buildFreshSchedule = null,
+  enrollmentSlot = null,
 }) => {
   // yearLabels and the grid's length both come from the student's plan window
   // (MainLayout), derived from the audit's Catalog Year — never hardcoded.
@@ -62,11 +72,30 @@ const CoursePlannerContainer = ({
   // on the grid ({ "CSE 100": { known, offerings } }); dropWarning is the
   // live hint while dragging over a term; toast is the post-drop notice.
   const [offeringsMap, setOfferingsMap] = useState({});
+  const [graphsMap, setGraphsMap] = useState({});
   const [dropWarning, setDropWarning] = useState(null);
   const [toast, setToast] = useState(null);
   const draggedCourseRef = useRef(null);
   const toastTimerRef = useRef(null);
   const requestedIdsRef = useRef(new Set()); // ids already looked up (or in flight)
+  const graphsRequestedRef = useRef(new Set());
+  const { isOffered, tssOfferings, seatChipFor } = useNextQuarterOfferings();
+
+  const isEnrollmentTerm = (yearIndex, term) =>
+    Boolean(
+      enrollmentSlot &&
+        yearIndex === enrollmentSlot.yearIndex &&
+        term === enrollmentSlot.term
+    );
+
+  const getEnrollmentBlock = (course, yearIndex, term) => {
+    if (!isEnrollmentTerm(yearIndex, term)) return null;
+    return enrollmentPlacementBlock(course, {
+      offeringsReady: tssOfferings.status === "ready",
+      isOffered,
+      seatChip: course?.course_id ? seatChipFor(course.course_id) : null,
+    });
+  };
 
   // Fetch offerings for any grid course we haven't looked up yet. Covers
   // audit-restored and saved-plan cards, whose payloads lack `offerings`.
@@ -98,6 +127,54 @@ const CoursePlannerContainer = ({
       cancelled = true;
     };
   }, [schedule]);
+
+  // Prereq-graph rows for every grid course, same batch pattern as offerings.
+  useEffect(() => {
+    const ids = new Set();
+    for (const year of schedule) {
+      for (const term of ["fall", "winter", "spring"]) {
+        for (const c of year?.[term] || []) {
+          if (c?.course_id && !graphsRequestedRef.current.has(c.course_id)) {
+            ids.add(c.course_id);
+          }
+        }
+      }
+    }
+    if (ids.size === 0) return;
+    for (const id of ids) graphsRequestedRef.current.add(id);
+    let cancelled = false;
+    fetch(`${API_URL}/search-courses/graphs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codes: [...ids] }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.graphs) {
+          setGraphsMap((prev) => ({ ...prev, ...data.graphs }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [schedule]);
+
+  // Audit-completed and out-of-window (AP/transfer) credit sit before every
+  // grid term, so they satisfy prerequisites without occupying a slot.
+  const prereqExtraIds = useMemo(() => {
+    const sections = parsedCourseData?.sections || [];
+    const completed = extractCompletedCourses(sections, null);
+    const omitted = outOfWindowAuditCourses(sections, planWindow)
+      .map((c) => c.course_id)
+      .filter(Boolean);
+    return [...new Set([...completed, ...omitted])];
+  }, [parsedCourseData, planWindow]);
+
+  const prereqPositionMap = useMemo(
+    () => prereqPositions(schedule, prereqExtraIds),
+    [schedule, prereqExtraIds]
+  );
 
   /**
    * Offering warning for placing `course` in `termKey`, or null.
@@ -131,9 +208,27 @@ const CoursePlannerContainer = ({
     return null;
   };
 
-  const showToast = (message) => {
+  /**
+   * Missing-prereq warning for placing `course` at (yearIndex, termKey).
+   * Pass `grid` after a drop so the toast sees the course in its new seat.
+   */
+  const getPrereqWarning = (course, termKey, yearIndex, grid = null) => {
+    if (!course?.course_id) return null;
+    const position = grid
+      ? prereqPositions(grid, prereqExtraIds)
+      : prereqPositionMap;
+    return prereqWarningFor(
+      course,
+      yearIndex,
+      termKey,
+      graphsMap[course.course_id],
+      position
+    );
+  };
+
+  const showToast = (message, hint) => {
     clearTimeout(toastTimerRef.current);
-    setToast({ message });
+    setToast({ message, hint });
     toastTimerRef.current = setTimeout(() => setToast(null), 6000);
   };
   const dismissToast = () => {
@@ -224,6 +319,23 @@ const CoursePlannerContainer = ({
     // dataTransfer can't be read during dragover, so keep the course in a ref
     // for live offering warnings while hovering terms
     draggedCourseRef.current = course;
+    // Sidebar drops aren't on the grid yet, so the schedule effect hasn't
+    // fetched their graph. Prefetch so the drop overlay / toast can flag
+    // missing prereqs on the first placement, not only after a re-render.
+    if (course?.course_id && !graphsRequestedRef.current.has(course.course_id)) {
+      const id = course.course_id;
+      graphsRequestedRef.current.add(id);
+      fetch(`${API_URL}/search-courses/graphs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codes: [id] }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.graphs) setGraphsMap((prev) => ({ ...prev, ...data.graphs }));
+        })
+        .catch(() => {});
+    }
     e.dataTransfer.setData("course", JSON.stringify(course));
     e.dataTransfer.setData("isFromSidebar", isFromSidebar.toString());
   
@@ -242,7 +354,10 @@ const CoursePlannerContainer = ({
         ? prev
         : { yearIndex, term, courseIndex }
     );
-    const warning = getCourseWarning(draggedCourseRef.current, term);
+    const warning =
+      getEnrollmentBlock(draggedCourseRef.current, yearIndex, term) ||
+      getPrereqWarning(draggedCourseRef.current, term, yearIndex) ||
+      getCourseWarning(draggedCourseRef.current, term);
     setDropWarning((prev) => (prev?.message === warning?.message ? prev : warning));
   };
 
@@ -286,24 +401,57 @@ const CoursePlannerContainer = ({
       };
     }
 
+    const takenIds = extractCompletedCourses(
+      parsedCourseData?.sections,
+      schedule
+    );
+    if (isFromSidebar && isTakenCourse(course.course_id, takenIds)) {
+      showToast(
+        `${course.course_id} is already completed (or in progress) — it won’t be added again.`,
+        null
+      );
+      return;
+    }
+
+    const movingWithinEnrollment =
+      source &&
+      isEnrollmentTerm(source.yearIndex, source.term) &&
+      isEnrollmentTerm(yearIndex, term);
+    if (!movingWithinEnrollment) {
+      const block = getEnrollmentBlock(course, yearIndex, term);
+      if (block) {
+        showToast(block.message, "Based on the live Class Planner schedule.");
+        return;
+      }
+    }
+
     const next = placeCourseAt(
       schedule,
       yearIndex,
       term,
       courseIndex,
       course,
-      source
+      source,
+      takenIds
     );
     if (next === schedule) return;
 
     setSchedule(next);
     setPreviewState(null);
 
-    // Non-blocking heads-up when the placement disagrees with offering history.
-    // Clear any prior toast when the course lands in a quarter where it's offered.
-    const warning = getCourseWarning(course, term);
-    if (warning) showToast(warning.message);
-    else dismissToast();
+    // Non-blocking heads-up: missing prereqs first, then offering history.
+    const prereq = getPrereqWarning(course, term, yearIndex, next);
+    const offering = getCourseWarning(course, term);
+    if (prereq) {
+      showToast(
+        prereq.message,
+        "Prerequisites must sit in an earlier quarter."
+      );
+    } else if (offering) {
+      showToast(offering.message);
+    } else {
+      dismissToast();
+    }
   };
 
   const handleDragEnd = () => {
@@ -332,7 +480,12 @@ const CoursePlannerContainer = ({
     ) {
       // Amber = droppable but offering history disagrees; navy = normal target
       if (dropWarning) {
-        className += "ring-2 ring-amber-400 bg-amber-50 ";
+        className +=
+          dropWarning.type === "not-live" ||
+          dropWarning.type === "full" ||
+          dropWarning.type === "waitlist"
+            ? "ring-2 ring-red-400 bg-red-50 "
+            : "ring-2 ring-amber-400 bg-amber-50 ";
       } else {
         className += "ring-2 ring-navy-400 bg-navy-50 ";
       }
@@ -355,36 +508,16 @@ const CoursePlannerContainer = ({
   const handleExportToSheets = async () => {
     try {
       setLoading(true);
-      
-      const response = await fetch(`${API_URL}/api/export/google-sheets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          schedule,
-          yearLabels,
-        }),
+      const csv = scheduleToCsv(schedule, yearLabels);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadCsv(`Academic Planner - ${stamp}.csv`, csv);
+      setAlertDialog({
+        title: "Export complete",
+        message:
+          "Your plan downloaded as a CSV. Open it in Google Sheets (File → Import) or Excel.",
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Open the Google Sheets URL in a new tab
-        window.open(data.url, '_blank');
-        setAlertDialog({
-          title: "Export complete",
-          message: "Your schedule was exported. Google Sheets is opening in a new tab.",
-        });
-      } else {
-        console.error('Export failed:', data.error);
-        setAlertDialog({
-          title: "Export failed",
-          message: data.error || "Something went wrong while exporting.",
-        });
-      }
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       setAlertDialog({
         title: "Export failed",
         message: "Couldn't export your schedule. Please try again.",
@@ -419,6 +552,7 @@ const CoursePlannerContainer = ({
         dragTarget={dragTarget}
         dropWarning={dropWarning}
         getCourseWarning={getCourseWarning}
+        getPrereqWarning={getPrereqWarning}
         getSlotClassName={getSlotClassName}
         onExportToSheets={handleExportToSheets}
         activeSavedPlan={activeSavedPlan}
@@ -441,9 +575,12 @@ const CoursePlannerContainer = ({
           <TriangleAlert className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <div className="text-[13px] text-slate-700 leading-snug">
             {toast.message}
-            <span className="block mt-0.5 text-[11px] text-slate-400">
-              Based on past schedules — not a guarantee.
-            </span>
+            {toast.hint !== null && (
+              <span className="block mt-0.5 text-[11px] text-slate-400">
+                {toast.hint ??
+                  "Based on past schedules — not a guarantee."}
+              </span>
+            )}
           </div>
           <button
             onClick={dismissToast}

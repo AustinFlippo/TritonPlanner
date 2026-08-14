@@ -14,6 +14,8 @@ import {
   updateCourseInQuarter,
   enrollmentFromPackage,
 } from "../utils/scheduleOps";
+import { extractCompletedCourses } from "../utils/recommendations";
+import { isTakenCourse } from "../utils/courseIds";
 import WeekSchedule from "./quarter/WeekSchedule";
 import SavePlanControl from "./planner/SavePlanControl";
 import { fetchPublishedTerm } from "../utils/termSections";
@@ -21,8 +23,10 @@ import {
   fetchLiveSeatCounts,
   fetchServerTerm,
   overlayLiveSeats,
+  enrollmentPlacementBlock,
 } from "../utils/nextQuarterOfferings";
 import { parseCredits, hasUnknownCredits } from "../utils/courseCredits";
+import { useNextQuarterOfferings } from "../context/NextQuarterOfferingsContext";
 import {
   isBridgeInstalled,
   requestLiveSections,
@@ -75,6 +79,7 @@ const QuarterlyView = ({
   setSchedule,
   yearLabels = [],
   enrollmentSlot = null,
+  parsedCourseData = null,
   activeSavedPlan = null,
   onSavedPlanChange,
   onNavigate,
@@ -93,6 +98,7 @@ const QuarterlyView = ({
   }, [enrollmentSlot]);
 
   const title = quarterTitle(yearLabels, selected.yearIndex, selected.term);
+  const { isOffered, tssOfferings, seatChipFor } = useNextQuarterOfferings();
 
   // course_id → { loading, catalog, graph }
   const [details, setDetails] = useState({});
@@ -487,6 +493,25 @@ const QuarterlyView = ({
     // move a clean no-op)
     if (quarterHasCourse(schedule, yearIndex, term, course.course_id)) return;
 
+    const takenIds = extractCompletedCourses(
+      parsedCourseData?.sections,
+      schedule
+    );
+    if (fromSidebar && isTakenCourse(course.course_id, takenIds)) return;
+
+    const fromEnrollmentQuarter =
+      !fromSidebar &&
+      parseInt(e.dataTransfer.getData("sourceYearIndex"), 10) === yearIndex &&
+      e.dataTransfer.getData("sourceTerm") === term;
+    if (!fromEnrollmentQuarter) {
+      const block = enrollmentPlacementBlock(course, {
+        offeringsReady: tssOfferings.status === "ready",
+        isOffered,
+        seatChip: seatChipFor(course.course_id),
+      });
+      if (block) return;
+    }
+
     let next = schedule;
     if (!fromSidebar) {
       const sy = parseInt(e.dataTransfer.getData("sourceYearIndex"), 10);
@@ -499,7 +524,13 @@ const QuarterlyView = ({
     // Pass credits through untouched: `Number(x) || 0` turned an honest
     // "unknown" into a confident 0, which then hid the "? u" badge and shrank
     // every downstream unit total. normalizePlacedCourse handles the coercion.
-    next = insertCourse(next, yearIndex, term, { ...course });
+    next = insertCourse(
+      next,
+      yearIndex,
+      term,
+      { ...course },
+      fromSidebar ? takenIds : null
+    );
     setSchedule(next);
   };
 

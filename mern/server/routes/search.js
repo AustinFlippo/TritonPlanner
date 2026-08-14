@@ -5,6 +5,7 @@ import {
   courseGraph,
   recommendCourses,
   offeringsFor,
+  graphsFor,
 } from "../controllers/searchController.js";
 
 const router = express.Router();
@@ -91,6 +92,19 @@ router.post("/offerings", (req, res) => {
   } catch (err) {
     console.error("❌ Offerings failed:", err);
     res.status(500).json({ error: "Offerings failed" });
+  }
+});
+
+// Batch prereq-graph lookup for the planner grid's missing-prereq marks.
+// Body: { codes: string[] } -> { [code]: { known, requires, concurrent_allowed, confidence } }
+router.post("/graphs", (req, res) => {
+  try {
+    const { codes = [] } = req.body;
+    if (!Array.isArray(codes)) return res.status(400).json({ error: "codes must be an array" });
+    res.json({ graphs: graphsFor(codes.slice(0, 200)) });
+  } catch (err) {
+    console.error("❌ Graphs failed:", err);
+    res.status(500).json({ error: "Graphs failed" });
   }
 });
 
