@@ -22,6 +22,7 @@ import {
 } from "../../utils/prereqCheck";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
 import { enrollmentPlacementBlock } from "../../utils/nextQuarterOfferings";
+import { downloadCsv, scheduleToCsv } from "../../utils/scheduleExport";
 
 // Grid terms -> catalog quarter codes, for offering warnings
 const QUARTER_OF_TERM = { fall: "FA", winter: "WI", spring: "SP" };
@@ -507,39 +508,16 @@ const CoursePlannerContainer = ({
   const handleExportToSheets = async () => {
     try {
       setLoading(true);
-      
-      const response = await fetch(`${API_URL}/api/export/google-sheets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          schedule,
-          yearLabels,
-        }),
+      const csv = scheduleToCsv(schedule, yearLabels);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadCsv(`Academic Planner - ${stamp}.csv`, csv);
+      setAlertDialog({
+        title: "Export complete",
+        message:
+          "Your plan downloaded as a CSV. Open it in Google Sheets (File → Import) or Excel.",
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Open the Google Sheets URL in a new tab
-        window.open(data.url, '_blank');
-        setAlertDialog({
-          title: "Export complete",
-          message: "Your schedule was exported. Google Sheets is opening in a new tab.",
-        });
-      } else {
-        console.error('Export failed:', data.error, data.details);
-        setAlertDialog({
-          title: "Export failed",
-          message:
-            data.details ||
-            data.error ||
-            "Something went wrong while exporting.",
-        });
-      }
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       setAlertDialog({
         title: "Export failed",
         message: "Couldn't export your schedule. Please try again.",

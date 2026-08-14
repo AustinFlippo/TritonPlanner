@@ -22,7 +22,7 @@ const KEYFILE_PATH = path.isAbsolute(GOOGLE_SERVICE_ACCOUNT_PATH)
   ? GOOGLE_SERVICE_ACCOUNT_PATH
   : path.resolve(__dirname, '../../..', GOOGLE_SERVICE_ACCOUNT_PATH);
 
-function getSheetsAuth() {
+function getServiceAccountAuth() {
   if (!fs.existsSync(KEYFILE_PATH)) {
     const err = new Error(
       `Google service-account key not found at ${KEYFILE_PATH}. ` +
@@ -42,37 +42,111 @@ function getSheetsAuth() {
   });
 }
 
+function googleErrorInfo(error) {
+  const data = error?.response?.data?.error || error?.cause || {};
+  return {
+    message: data.message || error.message,
+    reason: data.errors?.[0]?.reason || data.status || '',
+    status: error.status || data.code || 500,
+  };
+}
+
+function describeExportError(error) {
+  if (error.code === 'GOOGLE_USER_AUTH_REQUIRED' || error.code === 'MISSING_GOOGLE_CREDENTIALS') {
+    return error.message;
+  }
+  const { message, reason, status } = googleErrorInfo(error);
+  if (status === 401 || reason === 'authError') {
+    return 'Google sign-in expired. Sign out and sign back in, then export again.';
+  }
+  if (
+    reason === 'storageQuotaExceeded' ||
+    /storage quota/i.test(message) ||
+    (status === 403 && /does not have permission/i.test(message))
+  ) {
+    return (
+      'Google no longer lets service accounts own Drive files. Sign in with Google ' +
+      'so the sheet is created in your Drive (sign out and back in if you already ' +
+      'were), or set GOOGLE_SHARED_DRIVE_ID to a Shared Drive shared with the bot.'
+    );
+  }
+  if (reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' || /insufficient.*scope/i.test(message)) {
+    return 'Sheets access is missing. Sign out and sign back in so Google can grant it.';
+  }
+  return message;
+}
+
+async function getAuthClient(googleAccessToken) {
+  if (typeof googleAccessToken === 'string' && googleAccessToken.trim()) {
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: googleAccessToken.trim() });
+    return { authClient: oauth2Client, via: 'user' };
+  }
+
+  const sharedDriveId = process.env.GOOGLE_SHARED_DRIVE_ID;
+  if (sharedDriveId) {
+    return {
+      authClient: await getServiceAccountAuth().getClient(),
+      via: 'service_account',
+      sharedDriveId,
+    };
+  }
+
+  const err = new Error(
+    'Sign in with Google so the sheet can be created in your Drive. ' +
+      'If you are already signed in, sign out and back in to grant Sheets access.'
+  );
+  err.code = 'GOOGLE_USER_AUTH_REQUIRED';
+  err.status = 401;
+  throw err;
+}
+
+async function createSpreadsheet(authClient, title, sharedDriveId) {
+  if (sharedDriveId) {
+    const drive = google.drive({ version: 'v3', auth: authClient });
+    const created = await drive.files.create({
+      requestBody: {
+        name: title,
+        mimeType: 'application/vnd.google-apps.spreadsheet',
+        parents: [sharedDriveId],
+      },
+      supportsAllDrives: true,
+      fields: 'id',
+    });
+    return { spreadsheetId: created.data.id, sheetId: 0 };
+  }
+
+  const createResponse = await sheets.spreadsheets.create({
+    auth: authClient,
+    resource: {
+      properties: { title },
+      sheets: [{ properties: { title: 'Course Schedule' } }],
+    },
+  });
+  return {
+    spreadsheetId: createResponse.data.spreadsheetId,
+    sheetId: createResponse.data.sheets[0].properties.sheetId,
+  };
+}
+
 const sheets = google.sheets({ version: 'v4' });
 
 // POST /api/export/google-sheets
 router.post('/google-sheets', async (req, res) => {
   try {
-    const { schedule, yearLabels } = req.body;
+    const { schedule, yearLabels, googleAccessToken } = req.body;
 
     if (!schedule || !yearLabels) {
       return res.status(400).json({ error: 'Missing schedule or yearLabels data' });
     }
 
-    // Get authenticated client
-    const authClient = await getSheetsAuth().getClient();
-
-    // Create a new spreadsheet
-    const createResponse = await sheets.spreadsheets.create({
-      auth: authClient,
-      resource: {
-        properties: {
-          title: `Academic Planner - ${new Date().toLocaleDateString()}`,
-        },
-        sheets: [{
-          properties: {
-            title: 'Course Schedule',
-          },
-        }],
-      },
-    });
-
-    const spreadsheetId = createResponse.data.spreadsheetId;
-    const sheetId = createResponse.data.sheets[0].properties.sheetId;
+    const { authClient, sharedDriveId } = await getAuthClient(googleAccessToken);
+    const title = `Academic Planner - ${new Date().toLocaleDateString()}`;
+    const { spreadsheetId, sheetId } = await createSpreadsheet(
+      authClient,
+      title,
+      sharedDriveId
+    );
 
 
 
@@ -205,15 +279,21 @@ router.post('/google-sheets', async (req, res) => {
       },
     });
 
-    // Note: To make the spreadsheet publicly viewable, enable Google Drive API
-    const drive = google.drive({ version: 'v3', auth: authClient });
-    await drive.permissions.create({
-      fileId: spreadsheetId,
-      resource: {
-        role: 'reader',
-        type: 'anyone',
-      },
-    });
+    // Link-sharing is best-effort. The owner (signed-in student, or the
+    // Shared Drive) can always open the URL even if this fails.
+    try {
+      const drive = google.drive({ version: 'v3', auth: authClient });
+      await drive.permissions.create({
+        fileId: spreadsheetId,
+        supportsAllDrives: Boolean(sharedDriveId),
+        requestBody: {
+          role: 'reader',
+          type: 'anyone',
+        },
+      });
+    } catch (shareErr) {
+      console.warn('Sheets link-sharing skipped:', googleErrorInfo(shareErr).message);
+    }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
 
@@ -226,10 +306,10 @@ router.post('/google-sheets', async (req, res) => {
 
   } catch (error) {
     console.error('Google Sheets export error:', error);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ 
+    const status = error.status || googleErrorInfo(error).status || 500;
+    res.status(status >= 400 && status < 600 ? status : 500).json({
       error: 'Failed to export to Google Sheets',
-      details: error.message 
+      details: describeExportError(error),
     });
   }
 });

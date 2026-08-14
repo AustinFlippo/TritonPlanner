@@ -93,16 +93,15 @@ CORS is a browser control, not an auth boundary.
 **Do not set `EXPRESS_PORT` on Render.** It takes precedence over `PORT`, so
 setting it makes Render's health check fail.
 
-**Google Sheets export.** The key file is gitignored, so production will 500
-on `/api/export/google-sheets` until you mount it. In the Express service on
-Render:
+**Plan export** is a client-side CSV download. Do not add Sheets/Drive OAuth
+scopes to Google sign-in: they are sensitive, and an unverified OAuth client
+in Testing mode will 403 everyone who is not a listed test user.
 
-1. Environment → Secret Files → add the service-account JSON (any filename).
-2. Set `GOOGLE_SERVICE_ACCOUNT_PATH` to the absolute path Render shows
-   (typically `/etc/secrets/<filename>.json`).
-
-Relative paths resolve from the repo root (`credentials/...`). Do not point
-this at `mern/credentials/...`. Skip both if you are not using export.
+The Express `/api/export/google-sheets` route is optional. New service accounts
+cannot own Drive files (Google, April 2025). Server-side Sheets only works with
+a Workspace Shared Drive: mount the JSON as a Secret File, set
+`GOOGLE_SERVICE_ACCOUNT_PATH`, share the drive with the bot as Content Manager,
+and set `GOOGLE_SHARED_DRIVE_ID`.
 
 Verify:
 - `GET /next-quarter` → 200 with `courseCount` around 2,100
