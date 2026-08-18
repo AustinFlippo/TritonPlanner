@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UploadCloud, Loader2, Maximize2, Minimize2, ChevronDown, PanelLeftClose } from 'lucide-react';
 import AuditAccordionSection from './AuditAccordionSection';
+import { WatchDemoLink } from '../HowItWorks';
 import { calculateAuditProgress } from '../../utils/auditProgress';
 import { requirementMode } from '../../utils/auditRequirements';
 import { SHOW_GRADES } from '../../utils/courseGrades';
@@ -631,6 +632,15 @@ const SidebarAuditTracker = ({
               className="hidden"
             />
           </label>
+
+          {auditSections.length === 0 && !loading && (
+            <div className="mt-3 px-0.5 space-y-1.5">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                In TritonLink, open <span className="font-medium text-slate-600">Degree Audit</span>, save the page as HTML, then drop it here.
+              </p>
+              <WatchDemoLink />
+            </div>
+          )}
 
           {/* Loading/Error State */}
           {loading && (

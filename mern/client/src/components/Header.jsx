@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { CircleUserRound, Check, CloudOff, Loader2 } from "lucide-react";
+import { CircleUserRound, Check, CirclePlay, CloudOff, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { isAdmin } from "../utils/termSections";
 import TritonMark from "./TritonMark";
 import ConfirmDialog from "./ConfirmDialog";
+import { useHowItWorks } from "./HowItWorks";
 
 const NAV_ITEMS = [
   { key: "planner", label: "Planner" },
@@ -66,6 +67,7 @@ const SyncBadge = ({ status }) => {
 
 const Header = ({ currentPage, onNavigate, syncStatus }) => {
   const { user, signInWithGoogle, logout } = useAuth();
+  const { setOpen: openHowItWorks } = useHowItWorks();
   // Membership of `app_admins` is what actually gates publishing — row-level
   // security enforces it server-side. Hiding the tab is only so the other 99%
   // of students never see a page that isn't theirs.
@@ -124,8 +126,16 @@ const Header = ({ currentPage, onNavigate, syncStatus }) => {
           })}
         </nav>
 
-        {/* Right side: save status + account */}
+        {/* Right side: demo + save status + account */}
         <div className="ml-auto flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => openHowItWorks(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full text-navy-200 hover:text-white hover:bg-white/10 transition-colors whitespace-nowrap flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+          >
+            <CirclePlay size={15} />
+            Watch demo
+          </button>
           <SyncBadge status={syncStatus} />
 
           {user ? (

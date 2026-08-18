@@ -1,7 +1,8 @@
-import { FileSpreadsheet, Loader2 } from "lucide-react";
+import { CirclePlay, FileSpreadsheet, Loader2, UploadCloud } from "lucide-react";
 import YearBlock from "./YearBlock";
 import SavePlanControl from "./SavePlanControl";
 import OmittedCreditsNote from "./OmittedCreditsNote";
+import { WatchDemoButton } from "../HowItWorks";
 
 const CoursePlanner = ({
   schedule,
@@ -32,9 +33,37 @@ const CoursePlanner = ({
   onOpenCourse,
   omittedCourses = [],
 }) => {
+  const scheduleIsEmpty = schedule.every((year) =>
+    ["fall", "winter", "spring"].every((term) =>
+      (year[term] || []).every((course) => !course)
+    )
+  );
 
   return (
     <div className="max-w-5xl mx-auto">
+      {scheduleIsEmpty && (
+        <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-navy-50 flex-shrink-0">
+              <UploadCloud className="w-5 h-5 text-navy-600" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-slate-800">
+                Start with your degree audit
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                Upload the HTML file on the left to place completed courses and
+                track what's left. Prefer a walkthrough first?
+              </p>
+            </div>
+          </div>
+          <WatchDemoButton className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium flex-shrink-0 bg-navy-700 text-white hover:bg-navy-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2">
+            <CirclePlay size={15} />
+            Watch demo
+          </WatchDemoButton>
+        </div>
+      )}
+
       <SavePlanControl
         schedule={schedule}
         activeSavedPlan={activeSavedPlan}
