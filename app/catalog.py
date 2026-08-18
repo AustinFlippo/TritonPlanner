@@ -85,7 +85,10 @@ def _with_variants(aliases: list) -> list:
 
 def aliases_for(course_id: str) -> list:
     """All ids a cross-listed course answers to. Port of
-    mern/server/scripts/lib/course-ids.mjs — keep the two in sync."""
+    mern/server/scripts/lib/course-ids.mjs; conformance is enforced by
+    shared/course-alias-cases.json (test_course_alias_contract.py here,
+    course-ids.test.mjs / courseIds.test.mjs on the JS sides) — change one
+    port, change all three, and add a case."""
     aliases = [course_id]
     segments = [s.strip() for s in course_id.split("/")]
     if len(segments) < 2:
@@ -430,11 +433,16 @@ def _get_search_index() -> list:
 
 
 def search_courses(query: str, levels=None, depts=None, quarters=None,
-                   limit: int = 10):
+                   limit: int = 10, live_only: bool = False):
     """Ranked catalog search, mirroring the Express endpoint's tiers:
     exact id > id prefix > name starts-with > name contains > description
     contains, plus a lowest tier where every query token appears somewhere.
-    Empty query with filters = browse mode. Returns (courses, total_matches)."""
+    Empty query with filters = browse mode. Returns (courses, total_matches).
+
+    live_only: drop courses that the Class Planner snapshot says are NOT
+    offered next quarter. When no snapshot is loaded, the filter is a no-op
+    (is_offered_in_upcoming_term returns None) so we never empty the catalog
+    just because registration hasn't opened."""
     q = (query or "").strip().lower()
     q_norm = _normalize(q)
     tokens = [t for t in re.split(r"\W+", q) if t]
@@ -449,6 +457,8 @@ def search_courses(query: str, levels=None, depts=None, quarters=None,
         if depts and not (e["subjects"] & depts):
             continue
         if quarters and not (set(e["course"].get("offerings") or []) & quarters):
+            continue
+        if live_only and is_offered_in_upcoming_term(e["course"]["course_id"]) is False:
             continue
         if not q:
             tier = 6  # browse mode: filters only, catalog order

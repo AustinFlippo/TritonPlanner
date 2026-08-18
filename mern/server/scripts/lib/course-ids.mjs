@@ -53,8 +53,10 @@ const withVariants = (aliases) => {
 // "ANSC" (bare subject — borrows the NEXT segment's number, as in
 // "AAS/ANSC 185"), "267" (bare number — borrows the PREVIOUS segment's
 // subject, as in "HIUS 167/267/ETHN 180").
-// Ported to app/catalog.py (aliases_for) and mern/client/src/utils/courseIds.js
-// — keep the three in sync.
+// Ported to app/catalog.py (aliases_for) and mern/client/src/utils/courseIds.js.
+// Conformance across the three ports is enforced by
+// shared/course-alias-cases.json (see course-ids.test.mjs) — change one port,
+// change all three, and add a case there.
 export function aliasesFor(courseId) {
   const aliases = [courseId];
   const segments = courseId.split("/").map((s) => s.trim());

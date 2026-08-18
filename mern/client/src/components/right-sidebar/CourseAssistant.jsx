@@ -14,6 +14,7 @@ import {
   TriangleAlert,
   Maximize2,
   Minimize2,
+  MessageSquarePlus,
 } from "lucide-react";
 import ChatCourseMention from "./ChatCourseMention";
 import {
@@ -244,6 +245,7 @@ const CourseAssistant = ({
   isLoading,
   sendMessage,
   stopMessage,
+  onResetChat,
   chatEndRef,
   onKeyPress,
   onApplyPlan,
@@ -316,22 +318,35 @@ const CourseAssistant = ({
       {/* Panel header */}
       <div className="h-11 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0">
         <h3 className="panel-heading">Course Assistant</h3>
-        <button
-          type="button"
-          className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
-          onClick={onToggleExpand}
-          title={
-            expandState === "expanded"
-              ? "Restore side panel (Esc)"
-              : "Expand assistant"
-          }
-        >
-          {expandState === "expanded" ? (
-            <Minimize2 className="w-3.5 h-3.5" />
-          ) : (
-            <Maximize2 className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-0.5">
+          {(chatMessages.length > 0 || isLoading) && onResetChat && (
+            <button
+              type="button"
+              className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+              onClick={onResetChat}
+              title="New chat — start a fresh conversation for this plan"
+              aria-label="New chat"
+            >
+              <MessageSquarePlus className="w-3.5 h-3.5" />
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+            onClick={onToggleExpand}
+            title={
+              expandState === "expanded"
+                ? "Restore side panel (Esc)"
+                : "Expand assistant"
+            }
+          >
+            {expandState === "expanded" ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Scrollable chat messages */}

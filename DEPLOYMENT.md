@@ -22,13 +22,23 @@ the URL of the one before it.
    `app_admins`).
 2. Enable **Google** under Authentication → Providers.
 3. Authentication → URL Configuration:
-   - **Site URL** → your static site's URL
-   - **Redirect URLs** → add `https://<your-site>.onrender.com/**`
+   - **Site URL** → the public site (`https://www.tritonplanner.com`). This is
+     the fallback when `redirectTo` is not on the allowlist — never set it to
+     localhost, or production sign-in will dump users onto a dev machine.
+   - **Redirect URLs** must include **both** local and production (replacing
+     one with the other is what makes localhost sign-in land on the public
+     site). Add:
 
-   The repo's `supabase/config.toml` only lists `http://localhost:5173`. If you
-   skip this, Google sign-in fails in production with a redirect error and
-   nothing in your own logs explains why. This is the single most commonly
-   missed step.
+     `http://localhost:*`, `http://localhost:*/**`,
+     `http://127.0.0.1:*`, `http://127.0.0.1:*/**`
+     (Vite may serve 127.0.0.1 and will change port if 5173 is taken),
+     `https://www.tritonplanner.com`, `https://www.tritonplanner.com/**`,
+     `https://tritonplanner.com`, `https://tritonplanner.com/**`
+
+   The same list lives in `supabase/config.toml`. If you skip production,
+   Google sign-in fails on the live site with a redirect error and nothing in
+   your own logs explains why. If you skip localhost, local sign-in is
+   rewritten to Site URL.
 4. Copy the **Project URL** and **anon public key** from Settings → API.
 5. To make yourself an admin (needed for the Admin → Section data controls),
    insert your auth user id into `app_admins`.

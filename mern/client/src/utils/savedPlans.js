@@ -187,11 +187,20 @@ export const updateSavedPlan = async (user, id, patch) => {
   return fromLocal(updated);
 };
 
-export const deleteSavedPlan = async (user, id) => {
+export const deleteSavedPlans = async (user, ids) => {
+  const unique = [...new Set((ids || []).filter(Boolean))];
+  if (unique.length === 0) return;
+
   if (isRemote(user)) {
-    const { error } = await supabase.from("saved_plans").delete().eq("id", id);
+    const { error } = await supabase
+      .from("saved_plans")
+      .delete()
+      .in("id", unique);
     if (error) throw new Error(error.message);
     return;
   }
-  writeLocal(readLocal().filter((p) => p.id !== id));
+  const gone = new Set(unique);
+  writeLocal(readLocal().filter((p) => !gone.has(p.id)));
 };
+
+export const deleteSavedPlan = async (user, id) => deleteSavedPlans(user, [id]);

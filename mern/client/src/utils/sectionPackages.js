@@ -297,6 +297,62 @@ export const packageMatchesId = (pkg, packageId) => {
 export const blocksOverlap = (a, b) =>
   a.day === b.day && a.startMin < b.endMin && b.startMin < a.endMin;
 
+/**
+ * Side-by-side columns for overlapping meetings so the one underneath stays
+ * clickable. Non-overlapping blocks keep full width (`colCount` 1).
+ *
+ * Columns are assigned greedily by start time; a connected cluster of overlaps
+ * shares one `colCount` so a chain A∩B, B∩C still lines up even when A and C
+ * do not themselves overlap.
+ */
+export function layoutOverlappingBlocks(blocks) {
+  const sorted = [...blocks].sort(
+    (a, b) => a.startMin - b.startMin || b.endMin - a.endMin
+  );
+  const n = sorted.length;
+  if (n === 0) return [];
+
+  const col = Array(n).fill(0);
+  const colEnds = [];
+  for (let i = 0; i < n; i++) {
+    let placed = colEnds.findIndex((end) => end <= sorted[i].startMin);
+    if (placed === -1) {
+      placed = colEnds.length;
+      colEnds.push(sorted[i].endMin);
+    } else {
+      colEnds[placed] = sorted[i].endMin;
+    }
+    col[i] = placed;
+  }
+
+  const parent = Array.from({ length: n }, (_, i) => i);
+  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  const union = (i, j) => {
+    const a = find(i);
+    const b = find(j);
+    if (a !== b) parent[a] = b;
+  };
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (sorted[i].endMin > sorted[j].startMin && sorted[j].endMin > sorted[i].startMin) {
+        union(i, j);
+      }
+    }
+  }
+
+  const clusterCols = new Map();
+  for (let i = 0; i < n; i++) {
+    const root = find(i);
+    clusterCols.set(root, Math.max(clusterCols.get(root) || 0, col[i] + 1));
+  }
+
+  return sorted.map((block, i) => ({
+    ...block,
+    col: col[i],
+    colCount: clusterCols.get(find(i)) || 1,
+  }));
+}
+
 /** Do two packages collide anywhere in the week? */
 export const packagesClash = (a, b) =>
   a.blocks.some((x) => b.blocks.some((y) => blocksOverlap(x, y)));

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase, supabaseConfigured } from "../utils/supabase";
+import { oauthRedirectTo } from "../utils/authRedirect";
 import {
   SIGN_IN_MIGRATION_KEY,
   clearDeviceLocalPlanState,
@@ -51,13 +52,15 @@ export const AuthProvider = ({ children }) => {
       );
     }
 
-    // OAuth reloads the app. Remember that this sign-in started from the
-    // current browser session so MainLayout can keep its local plan instead
-    // of replacing it with an older plan already stored on the account.
+    // OAuth reloads the app. Send Google back to this origin (localhost vs
+    // production) so a local sign-in does not land on the public site.
+    // Remember that this sign-in started from the current browser session so
+    // MainLayout can keep its local plan instead of replacing it with an
+    // older plan already stored on the account.
     localStorage.setItem(SIGN_IN_MIGRATION_KEY, "pending");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: oauthRedirectTo(window.location) },
     });
     if (error) {
       localStorage.removeItem(SIGN_IN_MIGRATION_KEY);

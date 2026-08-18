@@ -1587,6 +1587,24 @@ def test_search_filters():
     assert [c["course_id"] for c in courses] == ["MUS 1A"]
 
 
+def test_search_live_only_drops_catalog_only_courses(monkeypatch):
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"])
+    courses, _ = catalog.search_courses("machine learning", live_only=True)
+    assert [c["course_id"] for c in courses] == ["CSE 158"]
+    courses, _ = catalog.search_courses("machine learning", live_only=False)
+    assert courses[0]["course_id"] == "DSC 240"
+
+
+def test_run_search_live_only_omits_catalog_only(monkeypatch):
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"])
+    out = planner_agent._run_search(
+        planner_agent.SearchCourses(query="machine learning", live_only=True),
+        today=TODAY)
+    assert "CSE 158" in out
+    assert "DSC 240" not in out
+    assert "live FA24 offerings only" in out
+
+
 def test_search_no_match_and_limit():
     courses, total = catalog.search_courses("underwater basket weaving")
     assert courses == [] and total == 0
@@ -2025,6 +2043,142 @@ async def test_targeted_add_allows_remaining_coverage_gaps():
     out = await plan_chat("add CSE 100", AUDIT_WITH_NEEDS, grid, llm=llm, today=TODAY)
     assert "CSE 100" in planner_agent._grid_course_ids(out["proposed_schedule"])
     assert any("still short" in w for w in out["warnings"])
+
+
+def test_next_quarter_only_request_detection():
+    assert planner_agent._is_next_quarter_only_request("plan my next quarter")
+    assert planner_agent._is_next_quarter_only_request(
+        "what should I take this quarter")
+    assert planner_agent._is_next_quarter_only_request("fill this upcoming term")
+    assert not planner_agent._is_next_quarter_only_request("plan")
+    assert not planner_agent._is_next_quarter_only_request("add CSE 21")
+    assert not planner_agent._is_next_quarter_only_request(
+        "plan my 4-year schedule for next quarter")
+    assert planner_agent._is_next_quarter_only_request("plan FA24", today=TODAY)
+    assert planner_agent._is_next_quarter_only_request(
+        "fill my schedule", ui_context={"view": "quarter"})
+    assert not planner_agent._is_next_quarter_only_request(
+        "do I have conflicts?", ui_context={"view": "quarter"})
+
+
+def test_scope_follows_latest_user_turn():
+    # Regression: whole-history blob matching once locked a conversation to
+    # next-quarter scope forever. The freshest scope signal must win.
+    nq_history = [
+        {"role": "user", "content": "what should I take this quarter"},
+        {"role": "assistant", "content": "Here are some options."},
+    ]
+    # "rest of my academic plan" — intervening word defeated the old regex,
+    # and Quarter View + the verb "plan" then forced next-quarter scope.
+    assert not planner_agent._is_next_quarter_only_request(
+        "Okay, if you don't change what I currently have for this upcoming "
+        "fall, but given that we take those classes, create the rest of my "
+        "academic plan.",
+        history=nq_history, ui_context={"view": "quarter"})
+    # A bare affirmation keeps the scope of the request it answers instead
+    # of snapping back to the older next-quarter turn.
+    full_history = nq_history + [
+        {"role": "user", "content": "create the rest of my academic plan"},
+        {"role": "assistant", "content": "Switch to multi-quarter mode."},
+    ]
+    assert not planner_agent._is_next_quarter_only_request(
+        "Okay, yeah, sure. Switch.", history=full_history)
+    # And the reverse direction: back to the enrollment quarter after a
+    # full-degree pass.
+    assert planner_agent._is_next_quarter_only_request(
+        "now just fix this quarter",
+        history=[{"role": "user", "content": "plan my whole degree"}])
+
+
+def test_full_plan_proposal_skips_when_next_quarter_only():
+    proposal = ProposeSchedule(
+        placements=[place(0, "fall", "CSE 21", "DSC 80", "MUS 1A", "CSE 100")],
+        explanation="")
+    assert planner_agent._is_full_plan_proposal([], proposal) is True
+    assert planner_agent._is_full_plan_proposal(
+        [], proposal, next_quarter_only=True) is False
+
+
+@pytest.mark.asyncio
+async def test_next_quarter_plan_skips_coverage_and_live_only(monkeypatch):
+    # Empty grid + 3 enrollment-quarter courses would be a "full plan" without
+    # next-quarter scope — coverage must stay silent, and CSE 158 (not on the
+    # live FA24 feed) must not survive CheckPlan as a valid pick.
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 21", "DSC 80", "MUS 1A"])
+    llm = FakeToolLLM([
+        tool_msg("CheckPlan",
+                 placements_args((0, "fall", ["CSE 21", "CSE 158"])),
+                 call_id="c0"),
+        tool_msg("ProposeSchedule", {
+            "placements": [{
+                "year_index": 0, "term": "fall",
+                "course_ids": ["CSE 21", "DSC 80", "MUS 1A"],
+            }],
+            "explanation": "three live FA24 courses",
+        }, call_id="c1"),
+    ])
+    out = await plan_chat(
+        "plan my next quarter", AUDIT_WITH_NEEDS, [], llm=llm, today=TODAY)
+    system = llm.seen[0][0].content
+    assert "NEXT-QUARTER ONLY" in system
+    check_reply = llm.seen[1][-1].content
+    assert "still short" not in check_reply
+    assert "not on the live FA24" in check_reply
+    ids = planner_agent._grid_course_ids(out["proposed_schedule"])
+    assert "CSE 21" in ids
+    assert "MUS 1A" in ids
+    assert "CSE 158" not in ids
+    assert not any("still short" in w for w in out.get("warnings") or [])
+
+
+@pytest.mark.asyncio
+async def test_next_quarter_turn_search_is_not_clamped(monkeypatch):
+    # Intent must not gate facts: a catalog question asked mid next-quarter
+    # planning ("is DSC 240 a thing?") searches the whole catalog. The old
+    # force_live_only clamp hid catalog-only courses and produced "course
+    # not found" answers. Placement safety is unchanged — check_placements
+    # still errors on non-live courses placed into the enrollment quarter.
+    _install_upcoming(monkeypatch, "FA24", "fall", ["CSE 158"])
+    llm = FakeToolLLM([
+        tool_msg("SearchCourses", {"query": "machine learning"}),
+        AIMessage(content="Both CSE 158 (live FA24) and DSC 240 exist."),
+    ])
+    await plan_chat(
+        "what should I take next quarter for ML", [], [], llm=llm, today=TODAY)
+    search_reply = llm.seen[1][-1].content
+    assert "CSE 158" in search_reply
+    assert "DSC 240" in search_reply
+
+
+@pytest.mark.asyncio
+async def test_declared_scope_overrides_phrasing_hint():
+    # "plan my next quarter" hints next_quarter, but the model's declared
+    # multi_quarter scope wins: coverage shortfalls come back on CheckPlan.
+    check = placements_args((0, "fall", ["CSE 21"]))
+    check["scope"] = "multi_quarter"
+    llm = FakeToolLLM([
+        tool_msg("CheckPlan", check, call_id="c0"),
+        AIMessage(content="Here is where the plan still falls short."),
+    ])
+    await plan_chat(
+        "plan my next quarter", AUDIT_WITH_NEEDS, [], llm=llm, today=TODAY)
+    check_reply = llm.seen[1][-1].content
+    assert "still short" in check_reply
+
+
+@pytest.mark.asyncio
+async def test_declared_next_quarter_scope_silences_coverage():
+    # Mirror of test_targeted_add_allows_remaining_coverage_gaps: the same
+    # add, but the model declares next_quarter scope — leftover degree
+    # requirements are expected, so no "still short" warnings surface.
+    grid = planned_grid((0, "fall", "CSE 21"))
+    propose = placements_args((0, "winter", ["CSE 100"]))
+    propose["explanation"] = "add cse 100"
+    propose["scope"] = "next_quarter"
+    llm = FakeToolLLM([tool_msg("ProposeSchedule", propose)])
+    out = await plan_chat("add CSE 100", AUDIT_WITH_NEEDS, grid, llm=llm, today=TODAY)
+    assert "CSE 100" in planner_agent._grid_course_ids(out["proposed_schedule"])
+    assert not any("still short" in w for w in out.get("warnings") or [])
 
 
 @pytest.mark.asyncio

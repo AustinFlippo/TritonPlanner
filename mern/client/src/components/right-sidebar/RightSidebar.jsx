@@ -93,14 +93,18 @@ const RightSidebar = ({
 
   // A saved plan is a separate conversation. Keeping these maps in the
   // mounted sidebar lets switching plans restore that plan's chat while a
-  // newly-created plan starts with no inherited LLM context.
+  // newly-created plan starts with no inherited LLM context. Transcripts
+  // are session-only (no localStorage) — New chat drops just this plan's
+  // thread so a tangled one can start over without wiping the others.
   const chatContextKey = `${user?.id || "guest"}:${planContextId}`;
   const [draftsByContext, setDraftsByContext] = useState({});
   const [messagesByContext, setMessagesByContext] = useState({});
   const [loadingByContext, setLoadingByContext] = useState({});
+  const [chatEpochByContext, setChatEpochByContext] = useState({});
   const currentMessage = draftsByContext[chatContextKey] || "";
   const chatMessages = messagesByContext[chatContextKey] || EMPTY_MESSAGES;
   const isLoading = Boolean(loadingByContext[chatContextKey]);
+  const chatEpoch = chatEpochByContext[chatContextKey] || 0;
 
   const setCurrentMessage = (value) => {
     setDraftsByContext((current) => ({
@@ -130,6 +134,8 @@ const RightSidebar = ({
   const sendingContextsRef = useRef(new Set());
   // AbortControllers keyed by chat context so Stop cancels only that plan's turn.
   const abortControllersRef = useRef({});
+  // Bumped on New chat so an aborted turn cannot append onto the fresh thread.
+  const chatEpochRef = useRef({});
 
   const toggleExpandedPanel = (panel) => {
     if (!onExpandedPanelChange) return;
@@ -718,6 +724,27 @@ const RightSidebar = ({
     }
   };
 
+  const dropContextKey = (setter, key) => {
+    setter((current) => {
+      if (!(key in current)) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const resetChat = () => {
+    const key = chatContextKey;
+    chatEpochRef.current[key] = (chatEpochRef.current[key] || 0) + 1;
+    const epoch = chatEpochRef.current[key];
+    stopMessage(key);
+    sendingContextsRef.current.delete(key);
+    dropContextKey(setMessagesByContext, key);
+    dropContextKey(setDraftsByContext, key);
+    dropContextKey(setLoadingByContext, key);
+    setChatEpochByContext((current) => ({ ...current, [key]: epoch }));
+  };
+
   const sendMessage = async () => {
     const requestContextKey = chatContextKey;
     if (
@@ -735,6 +762,9 @@ const RightSidebar = ({
     }));
     const abortController = new AbortController();
     const { signal } = abortController;
+    const requestEpoch = chatEpochRef.current[requestContextKey] || 0;
+    const isCurrentTurn = () =>
+      (chatEpochRef.current[requestContextKey] || 0) === requestEpoch;
     abortControllersRef.current[requestContextKey] = abortController;
     sendingContextsRef.current.add(requestContextKey);
     updateChatMessages(requestContextKey, (prev) => [...prev, userMessage]);
@@ -1016,6 +1046,7 @@ const RightSidebar = ({
       }
 
       throwIfAborted();
+      if (!isCurrentTurn()) return;
       updateChatMessages(requestContextKey, (prev) => [
         ...prev,
         {
@@ -1030,8 +1061,9 @@ const RightSidebar = ({
       ]);
     } catch (err) {
       // Stop / abort: leave the user message, drop the thinking indicator,
-      // and do not append a fake error reply.
-      if (err?.name !== "AbortError") {
+      // and do not append a fake error reply. New chat has already wiped
+      // the thread — skip the error bubble too.
+      if (err?.name !== "AbortError" && isCurrentTurn()) {
         const localHint = import.meta.env.PROD
           ? "The planning server may still be starting — wait a few seconds and try again."
           : "Is the Express server running on port 5050?";
@@ -1044,6 +1076,7 @@ const RightSidebar = ({
         ]);
       }
     } finally {
+      if (!isCurrentTurn()) return;
       if (abortControllersRef.current[requestContextKey] === abortController) {
         delete abortControllersRef.current[requestContextKey];
       }
@@ -1218,13 +1251,14 @@ const RightSidebar = ({
             so it animates along with it. Collapsed = its h-11 header. */}
         <div className="flex flex-col flex-grow min-h-0 overflow-hidden">
           <CourseAssistant
-            key={chatContextKey}
+            key={`${chatContextKey}:${chatEpoch}`}
             chatMessages={chatMessages}
             currentMessage={currentMessage}
             setCurrentMessage={setCurrentMessage}
             isLoading={isLoading}
             sendMessage={sendMessage}
             stopMessage={stopMessage}
+            onResetChat={resetChat}
             chatEndRef={chatEndRef}
             onKeyPress={handleKeyPress}
             onApplyPlan={onApplyPlan}

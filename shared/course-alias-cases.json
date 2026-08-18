@@ -1,0 +1,100 @@
+{
+  "_comment": [
+    "Conformance cases for cross-listed course-id alias expansion.",
+    "Loaded by THREE test suites against three ports of one spec:",
+    "  - mern/server/scripts/lib/course-ids.test.mjs   (aliasesFor, the original)",
+    "  - mern/client/src/utils/courseIds.test.mjs      (aliasesFor, client port)",
+    "  - app/tests/test_course_alias_contract.py       (aliases_for, Python port)",
+    "If any port drifts, its suite goes red. Change one side, change all three,",
+    "and add a case here.",
+    "",
+    "Expected lists are ORDER-SENSITIVE: the code as written must resolve",
+    "first. Inputs are real catalog ids (see crossListingAliases.js) except the",
+    "unparseable-segment case."
+  ],
+  "cases": [
+    {
+      "name": "plain id expands to itself",
+      "input": "CSE 100",
+      "aliases": ["CSE 100"]
+    },
+    {
+      "name": "trailing letter is part of the number, not a variant",
+      "why": "stripping the A would name a different course",
+      "input": "DSC 140A",
+      "aliases": ["DSC 140A"]
+    },
+    {
+      "name": "R section variant answers to its base",
+      "input": "MUS 20R",
+      "aliases": ["MUS 20R", "MUS 20"]
+    },
+    {
+      "name": "GS (global seminar) variant answers to its base",
+      "input": "MUS 8GS",
+      "aliases": ["MUS 8GS", "MUS 8"]
+    },
+    {
+      "name": "dash-joined sequence yields each quarter",
+      "input": "HILD 2A-B-C",
+      "aliases": ["HILD 2A-B-C", "HILD 2A", "HILD 2B", "HILD 2C"]
+    },
+    {
+      "name": "six-quarter sequence",
+      "input": "MUS 201A-B-C-D-E-F",
+      "aliases": ["MUS 201A-B-C-D-E-F", "MUS 201A", "MUS 201B", "MUS 201C", "MUS 201D", "MUS 201E", "MUS 201F"]
+    },
+    {
+      "name": "cross-listing with two full segments",
+      "input": "EDS 31/CHEM 96",
+      "aliases": ["EDS 31/CHEM 96", "EDS 31", "CHEM 96"]
+    },
+    {
+      "name": "bare subject borrows the number to its right",
+      "input": "AAS/ANSC 185",
+      "aliases": ["AAS/ANSC 185", "AAS 185", "ANSC 185"]
+    },
+    {
+      "name": "bare number borrows the subject to its left",
+      "input": "CHIN 160/260",
+      "aliases": ["CHIN 160/260", "CHIN 160", "CHIN 260"]
+    },
+    {
+      "name": "mixed three-segment cross-listing",
+      "input": "HIUS 167/267/ETHN 180",
+      "aliases": ["HIUS 167/267/ETHN 180", "HIUS 167", "HIUS 267", "ETHN 180"]
+    },
+    {
+      "name": "section variant inside a cross-listing",
+      "why": "the audit says DSC 80, the catalog entry is DSC 80/80R",
+      "input": "DSC 80/80R",
+      "aliases": ["DSC 80/80R", "DSC 80", "DSC 80R"]
+    },
+    {
+      "name": "multi-word subject (COM GEN) survives segment parsing",
+      "input": "HITO 193/POLI 194/COM GEN 194/USP 194",
+      "aliases": ["HITO 193/POLI 194/COM GEN 194/USP 194", "HITO 193", "POLI 194", "COM GEN 194", "USP 194"]
+    },
+    {
+      "name": "GS variant as a bare-number segment",
+      "input": "HIEU 157/157GS",
+      "aliases": ["HIEU 157/157GS", "HIEU 157", "HIEU 157GS"]
+    },
+    {
+      "name": "unparseable segment disables expansion entirely",
+      "why": "half-expanded guesses are worse than no expansion",
+      "input": "MCWP 40/40 R",
+      "aliases": ["MCWP 40/40 R"]
+    },
+    {
+      "name": "variant-suffix numbers as bare segments (POLI 5 family)",
+      "input": "POLI 5/5R/5D/5DR",
+      "aliases": ["POLI 5/5R/5D/5DR", "POLI 5", "POLI 5R", "POLI 5D", "POLI 5DR"]
+    },
+    {
+      "name": "many bare numbers all borrow one subject",
+      "input": "GSS 21/22/23/25/26/27",
+      "aliases": ["GSS 21/22/23/25/26/27", "GSS 21", "GSS 22", "GSS 23", "GSS 25", "GSS 26", "GSS 27"]
+    }
+  ]
+}

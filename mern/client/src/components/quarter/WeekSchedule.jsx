@@ -16,6 +16,7 @@ import { TriangleAlert, RefreshCw, Clock, X, Plus } from "lucide-react";
 import {
   blocksOf,
   blocksOverlap,
+  layoutOverlappingBlocks,
   normalizeSectionStatus,
   packageMatchesId,
   packagesClash,
@@ -150,7 +151,7 @@ const WeekSchedule = ({
     [optionsByCourse]
   );
 
-  const { blocks, conflicts } = useMemo(() => {
+  const { blocks, conflicts, conflictCourses } = useMemo(() => {
     const blocks = [];
     // Every section of the chosen package, and every weekly meeting of every
     // section. A package is the whole bundle (lecture + discussion + lab), and
@@ -167,6 +168,7 @@ const WeekSchedule = ({
       }
     }
     const conflicts = [];
+    const conflictById = new Map();
     for (let i = 0; i < blocks.length; i++) {
       for (let j = i + 1; j < blocks.length; j++) {
         if (
@@ -174,12 +176,14 @@ const WeekSchedule = ({
           blocksOverlap(blocks[i], blocks[j])
         ) {
           blocks[i].conflict = blocks[j].conflict = true;
+          conflictById.set(blocks[i].course.course_id, blocks[i].course);
+          conflictById.set(blocks[j].course.course_id, blocks[j].course);
           const pair = `${blocks[i].course.course_id} × ${blocks[j].course.course_id} (${DAY_LABELS[blocks[i].day]})`;
           if (!conflicts.includes(pair)) conflicts.push(pair);
         }
       }
     }
-    return { blocks, conflicts };
+    return { blocks, conflicts, conflictCourses: [...conflictById.values()] };
   }, [optionsByCourse, selectedFor]);
 
   // Bands rather than a raw age: "3 hr ago" means nothing without knowing
@@ -373,15 +377,39 @@ const WeekSchedule = ({
       {conflicts.length > 0 && (
         <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
           <TriangleAlert className="w-4 h-4 mt-px flex-shrink-0" />
-          <span>
-            <strong>Time conflict{conflicts.length > 1 ? "s" : ""}:</strong>{" "}
-            {conflicts.join(" · ")} — pick a different section below or move a
-            course in the Planner.
-          </span>
+          <div className="min-w-0 space-y-1.5">
+            <p>
+              <strong>Time conflict{conflicts.length > 1 ? "s" : ""}:</strong>{" "}
+              {conflicts.join(" · ")} — pick a different section below, or
+              remove a course here.
+            </p>
+            {onRemove && conflictCourses.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5">
+                {conflictCourses.map((course) => (
+                  <li
+                    key={course.course_id}
+                    className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md bg-white/70 border border-red-200"
+                  >
+                    <span className="font-semibold text-red-900">{course.course_id}</span>
+                    <button
+                      type="button"
+                      onClick={() => onRemove(course)}
+                      className="p-0.5 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                      title={`Remove ${course.course_id}`}
+                      aria-label={`Remove ${course.course_id}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
 
-      {/* The week grid — drop courses here; remove via × on a block */}
+      {/* The week grid — drop courses here; overlapping meetings sit
+          side by side so each keeps its own ×. */}
       <div
         className={`bg-white border rounded-xl shadow-card overflow-x-auto transition-colors ${
           dropActive
@@ -430,15 +458,15 @@ const WeekSchedule = ({
                       style={{ top: (t - DAY_START) * PX_PER_MIN }}
                     />
                   ))}
-                  {blocks
-                    .filter((b) => b.day === day)
-                    .map((b, i) => {
+                  {layoutOverlappingBlocks(blocks.filter((b) => b.day === day)).map((b, i) => {
                       const style = styleFor(b.meeting.status);
                       const top = (Math.max(b.startMin, DAY_START) - DAY_START) * PX_PER_MIN;
                       const height = Math.max(
                         18,
                         (Math.min(b.endMin, DAY_END) - Math.max(b.startMin, DAY_START)) * PX_PER_MIN
                       );
+                      const colCount = b.colCount || 1;
+                      const col = b.col || 0;
                       return (
                         <div
                           key={`${b.course.course_id}-${b.meeting.sectionId}-${i}`}
@@ -452,10 +480,15 @@ const WeekSchedule = ({
                               onOpenCourse(b.course);
                             }
                           }}
-                          className={`group/block absolute inset-x-1 rounded-md border px-1.5 py-1 overflow-hidden ${style.block} ${
-                            b.conflict ? "ring-2 ring-red-400" : ""
+                          className={`group/block absolute rounded-md border px-1.5 py-1 overflow-hidden hover:z-10 ${style.block} ${
+                            b.conflict ? "ring-2 ring-red-400 z-[1]" : ""
                           } ${onOpenCourse ? "cursor-pointer hover:brightness-[0.98]" : ""}`}
-                          style={{ top, height }}
+                          style={{
+                            top,
+                            height,
+                            left: `calc(${(col / colCount) * 100}% + 4px)`,
+                            right: `calc(${((colCount - col - 1) / colCount) * 100}% + 4px)`,
+                          }}
                           title={`${b.course.course_id} ${b.meeting.component || ""} ${b.meeting.sectionId || ""}\n${b.start ?? b.meeting.start}–${b.end ?? b.meeting.end}${b.meeting.instructor ? `\n${b.meeting.instructor}` : ""}${b.location || b.meeting.location ? `\n${b.location || b.meeting.location}` : ""}\n${seatText(b.meeting)}${onOpenCourse ? "\nClick for details" : ""}`}
                         >
                           <div className="flex items-start justify-between gap-0.5">
@@ -470,7 +503,11 @@ const WeekSchedule = ({
                                   e.stopPropagation();
                                   onRemove(b.course);
                                 }}
-                                className="flex-shrink-0 p-0.5 -mr-0.5 -mt-0.5 rounded text-slate-400 opacity-0 group-hover/block:opacity-100 hover:text-red-500 hover:bg-red-50/80 transition-all focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400"
+                                className={`flex-shrink-0 p-0.5 -mr-0.5 -mt-0.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50/80 transition-all focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400 ${
+                                  b.conflict
+                                    ? "opacity-100"
+                                    : "opacity-0 group-hover/block:opacity-100"
+                                }`}
                                 title={`Remove ${b.course.course_id} from this quarter`}
                                 aria-label={`Remove ${b.course.course_id}`}
                               >
@@ -532,10 +569,23 @@ const WeekSchedule = ({
                 .filter(Boolean);
               return (
                 <div key={course.course_id}>
-                  <p className="text-xs text-slate-500 mb-1">
-                    <span className="font-semibold text-slate-700">{course.course_id}</span>{" "}
-                    · {packages.length} option{packages.length === 1 ? "" : "s"}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-xs text-slate-500 min-w-0">
+                      <span className="font-semibold text-slate-700">{course.course_id}</span>{" "}
+                      · {packages.length} option{packages.length === 1 ? "" : "s"}
+                    </p>
+                    {onRemove && (
+                      <button
+                        type="button"
+                        onClick={() => onRemove(course)}
+                        className="flex-shrink-0 p-0.5 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                        title={`Remove ${course.course_id} from this quarter`}
+                        aria-label={`Remove ${course.course_id}`}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-1.5">
                     {packages.map((pkg) => {
                       const active = pkg.id === current?.id;

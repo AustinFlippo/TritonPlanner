@@ -555,6 +555,22 @@ const SidebarAuditTracker = ({
     auditData?.metadata
   );
 
+  // A restored audit parsed before the structured-groups parser has course
+  // lists but no OR-group data (or no subrequirements at all), so it renders
+  // through the flat legacy fallback — a wall of comma-separated codes with no
+  // checklists or subsection labels. The HTML isn't stored, so it can't be
+  // re-parsed silently; tell the student a re-upload upgrades the view rather
+  // than letting the downgrade read as a bug. Fresh parses always set groups
+  // alongside availableCodes, so this never fires for a current-parser audit.
+  const staleAuditStructure = auditSections.some(
+    (section) =>
+      section.subrequirements === undefined ||
+      (section.subrequirements || []).some(
+        (sub) =>
+          (sub.availableCodes || []).length > 0 && !(sub.groups || []).length
+      )
+  );
+
   const requirementsExpanded = expandState === "expanded";
 
   return (
@@ -632,6 +648,14 @@ const SidebarAuditTracker = ({
               className="hidden"
             />
           </label>
+
+          {staleAuditStructure && !loading && (
+            <p className="mt-2 text-[11px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+              This audit was saved by an older version of the planner, so
+              requirements show as flat course lists. Re-upload your audit HTML
+              to get the full breakdown with checklists and course choices.
+            </p>
+          )}
 
           {auditSections.length === 0 && !loading && (
             <div className="mt-3 px-0.5 space-y-1.5">
@@ -872,7 +896,7 @@ const SidebarAuditTracker = ({
                   if (
                     !SHOW_GRADES &&
                     /\bgpa\b/i.test(displayTitle || "") &&
-                    !/\b(requirement|course|need)\b/i.test(displayTitle || "")
+                    !/\b(requirement|course|need)s?\b/i.test(displayTitle || "")
                   ) {
                     return null;
                   }

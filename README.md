@@ -63,7 +63,7 @@ Open http://localhost:5173.
 
 - **Root** [`.env.template`](.env.template) — OpenAI / Pinecone / LLM models for FastAPI (copy into `app/.env`).
 - **Client** [`mern/client/.env.example`](mern/client/.env.example) — Supabase URL + anon key.
-- **Schema** — run [`supabase/setup.sql`](supabase/setup.sql), then [`supabase/term_sections.sql`](supabase/term_sections.sql). Enable Google under Auth → Providers; add `http://localhost:5173` to redirect URLs for local sign-in.
+- **Schema** — run [`supabase/setup.sql`](supabase/setup.sql), then [`supabase/term_sections.sql`](supabase/term_sections.sql). Enable Google under Auth → Providers; keep **both** `http://localhost:5173` and the public site on the redirect allowlist (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
 
 MongoDB / `config.env` are legacy and unused.
 

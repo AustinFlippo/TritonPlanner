@@ -1,6 +1,8 @@
 // Cross-listing alias expansion for course ids. Port of
-// mern/server/scripts/lib/course-ids.mjs (also mirrored in app/catalog.py) —
-// keep the three in sync. crossListingAliases.js is the reverse index
+// mern/server/scripts/lib/course-ids.mjs (also mirrored in app/catalog.py).
+// Conformance across the three ports is enforced by
+// shared/course-alias-cases.json (see courseIds.test.mjs) — change one port,
+// change all three, and add a case there. crossListingAliases.js is the reverse index
 // (alias → canonical id) for rows that contain "/"; rebuild it from v5.json
 // when catalog cross-listings change.
 //

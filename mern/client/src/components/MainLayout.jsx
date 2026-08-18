@@ -463,9 +463,10 @@ const MainLayout = () => {
     setCurrentPage("planner");
   }, []);
 
-  const handleSavedPlanDelete = (id) => {
+  const handleSavedPlanDelete = (ids) => {
+    const gone = new Set(Array.isArray(ids) ? ids : [ids]);
     setActiveSavedPlan((current) => {
-      if (current?.id === id) {
+      if (current?.id && gone.has(current.id)) {
         lastSyncedActivePlanFpRef.current = null;
         return null;
       }

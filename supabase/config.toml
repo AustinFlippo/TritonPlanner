@@ -5,8 +5,25 @@
 project_id = "TritonPlanner"
 
 [auth]
-site_url = "http://localhost:5173"
-additional_redirect_urls = ["http://localhost:5173/**"]
+# Site URL is the fallback when redirectTo is missing from the allowlist below.
+# Keep it on production so a stray redirect never dumps a real user onto
+# someone's laptop. Local AND production must both appear in the list, or
+# Google sign-in from localhost is rewritten to the public site.
+#
+# Local entries use `*` for the port: Vite moves off 5173 when that port is
+# taken (this repo has been served on 5174), and `127.0.0.1` is a different
+# origin from `localhost`. `:` is not a glob separator, so `*` matches the port.
+site_url = "https://www.tritonplanner.com"
+additional_redirect_urls = [
+  "http://localhost:*",
+  "http://localhost:*/**",
+  "http://127.0.0.1:*",
+  "http://127.0.0.1:*/**",
+  "https://tritonplanner.com",
+  "https://tritonplanner.com/**",
+  "https://www.tritonplanner.com",
+  "https://www.tritonplanner.com/**",
+]
 
 [auth.external.google]
 enabled = true
