@@ -3,7 +3,6 @@ import CourseSearch from "./CourseSearch";
 import CourseAssistant from "./CourseAssistant";
 import CourseDetails from "./CourseDetails";
 import { debounce } from "lodash";
-import { useAuth } from "../../context/AuthContext";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
 import {
   extractUnmetRequirements,
@@ -43,6 +42,8 @@ const RightSidebar = ({
   schedule,
   baseYear = null,
   planContextId = "working-plan",
+  chatThreads = null,
+  onChatThreadsChange = null,
   onApplyPlan,
   onApplySectionProposal,
   width,
@@ -54,8 +55,15 @@ const RightSidebar = ({
   courseOpenRequest = null,
   // Which main tab the student is looking at — planner | quarter | storage | admin
   currentPage = "planner",
+  // Phone layout: the rail owns the whole screen and splits into two tabs
+  // instead of a draggable search/chat stack.
+  compact = false,
+  // A requirement tapped in the Progress panel (phones only — desktop drags
+  // it straight into Course Search).
+  requirementRequest = null,
+  // Arms a course for tap-to-place on the grid. Touch has no HTML5 drag.
+  onQueuePlacement = null,
 }) => {
-  const { user } = useAuth();
   const {
     enrollmentQuarter,
     tssOfferings,
@@ -68,6 +76,8 @@ const RightSidebar = ({
     () => enrollmentPlanSlot(planWindow(baseYear)),
     [baseYear]
   );
+  // "search" | "chat" — which half of the rail the phone is showing.
+  const [mobileTab, setMobileTab] = useState("chat");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchTotal, setSearchTotal] = useState(0);
@@ -91,14 +101,19 @@ const RightSidebar = ({
   const requirementRequestRef = useRef(0);
   const requirementAllCoursesRef = useRef([]);
 
-  // A saved plan is a separate conversation. Keeping these maps in the
-  // mounted sidebar lets switching plans restore that plan's chat while a
-  // newly-created plan starts with no inherited LLM context. Transcripts
-  // are session-only (no localStorage) — New chat drops just this plan's
+  // A saved plan is a separate conversation, keyed by planContextId
+  // ("saved-<id>" / "working-plan"). Transcripts live in MainLayout
+  // (chatThreads), which persists them with the plan — device blob +
+  // Supabase — so a chat survives refresh and sign-out/sign-in, and each
+  // plan keeps its own thread. MainLayout also owns their lifecycle: wiped
+  // on account switch, pruned when a plan is deleted. Drafts, loading and
+  // epoch state stay session-local here. New chat drops just this plan's
   // thread so a tangled one can start over without wiping the others.
-  const chatContextKey = `${user?.id || "guest"}:${planContextId}`;
+  const chatContextKey = planContextId;
   const [draftsByContext, setDraftsByContext] = useState({});
-  const [messagesByContext, setMessagesByContext] = useState({});
+  const [localMessagesByContext, setLocalMessagesByContext] = useState({});
+  const messagesByContext = chatThreads ?? localMessagesByContext;
+  const setMessagesByContext = onChatThreadsChange ?? setLocalMessagesByContext;
   const [loadingByContext, setLoadingByContext] = useState({});
   const [chatEpochByContext, setChatEpochByContext] = useState({});
   const currentMessage = draftsByContext[chatContextKey] || "";
@@ -698,6 +713,20 @@ const RightSidebar = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- token is the click signal
   }, [courseOpenRequest?.token]);
 
+  // Opening a course means the details pane, which lives in the search tab.
+  useEffect(() => {
+    if (courseOpenRequest?.token) setMobileTab("search");
+  }, [courseOpenRequest?.token]);
+
+  // A requirement tapped in the Progress panel runs the same lookup a
+  // desktop drag-and-drop would, and brings the results forward.
+  useEffect(() => {
+    if (!requirementRequest?.token || !requirementRequest?.requirement) return;
+    setMobileTab("search");
+    handleRequirementDrop(requirementRequest.requirement);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- token is the tap signal
+  }, [requirementRequest?.token]);
+
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -1105,6 +1134,138 @@ const RightSidebar = ({
   const animateSplit =
     !isResizing && !layoutExpanded && expandedPanel === null;
 
+  // The search column's two faces: a course's details when one is open,
+  // otherwise the search / browse / recommendations view.
+  const searchPane = selectedCourse ? (
+    <CourseDetails
+      course={selectedCourse}
+      onBack={() => setSelectedCourse(null)}
+      onSelectCourseId={openCourseById}
+      apiUrl={API_URL}
+      expandState={expandedPanel === "search" ? "expanded" : null}
+      onToggleExpand={compact ? undefined : () => toggleExpandedPanel("search")}
+      onMinimize={dockedMinimize}
+      compact={compact}
+      onAddToPlan={
+        compact && onQueuePlacement
+          ? () => onQueuePlacement(selectedCourse)
+          : undefined
+      }
+    />
+  ) : (
+    <CourseSearch
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      searchResults={searchResults}
+      searchTotal={searchTotal}
+      searchError={searchError}
+      filters={filters}
+      setFilters={setFilters}
+      departments={departmentsForUi}
+      handleDragStart={handleDragStart}
+      handleDragEnd={handleDragEnd}
+      isCourseLoading={
+        isCourseLoading || (nextQuarterOnly && tssOfferings.status === "loading")
+      }
+      debouncedSearch={debouncedSearch}
+      onCourseClick={(course) =>
+        setSelectedCourse(normalizeSelectedCourse(course))
+      }
+      recommendations={recommendations}
+      hasAudit={parsedCourseData?.sections?.length > 0}
+      requirementSearch={requirementSearch}
+      onRequirementDrop={handleRequirementDrop}
+      onClearRequirementSearch={clearRequirementSearch}
+      expandState={expandedPanel === "search" ? "expanded" : null}
+      onToggleExpand={compact ? undefined : () => toggleExpandedPanel("search")}
+      onMinimize={dockedMinimize}
+      nextQuarterOnly={nextQuarterOnly}
+      onToggleNextQuarter={handleToggleNextQuarter}
+      enrollmentQuarter={enrollmentQuarter}
+      tssOfferings={tssOfferings}
+      compact={compact}
+      onAddToPlan={compact ? onQueuePlacement : undefined}
+    />
+  );
+
+  const chatPane = (
+    <CourseAssistant
+      key={`${chatContextKey}:${chatEpoch}`}
+      chatMessages={chatMessages}
+      currentMessage={currentMessage}
+      setCurrentMessage={setCurrentMessage}
+      isLoading={isLoading}
+      sendMessage={sendMessage}
+      stopMessage={stopMessage}
+      onResetChat={resetChat}
+      chatEndRef={chatEndRef}
+      onKeyPress={handleKeyPress}
+      onApplyPlan={onApplyPlan}
+      onApplySectionProposal={onApplySectionProposal}
+      expandState={expandedPanel === "chat" ? "expanded" : null}
+      onToggleExpand={compact ? undefined : () => toggleExpandedPanel("chat")}
+      courseLookup={lookupChatCourse}
+      onCourseDragStart={handleDragStart}
+      onCourseDragEnd={handleDragEnd}
+      onOpenCourse={openChatCourse}
+    />
+  );
+
+  // Phone: the rail is the whole screen, so the draggable search-over-chat
+  // split becomes two tabs. Both stay mounted — switching tabs must not throw
+  // away search results or a half-written question.
+  if (compact) {
+    return (
+      <div className="bg-white h-full w-full flex flex-col min-h-0">
+        <div
+          role="tablist"
+          aria-label="Assistant panels"
+          className="flex-shrink-0 flex border-b border-slate-200"
+        >
+          {[
+            { key: "chat", label: "Assistant" },
+            { key: "search", label: "Course search" },
+          ].map(({ key, label }) => {
+            const active = mobileTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setMobileTab(key)}
+                className={`flex-1 h-11 text-[13px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy-400 ${
+                  active
+                    ? "text-navy-700 border-b-2 border-navy-600"
+                    : "text-slate-500 active:bg-slate-50"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          className={
+            mobileTab === "search" ? "flex-1 min-h-0 overflow-hidden" : "hidden"
+          }
+        >
+          {searchPane}
+        </div>
+        <div
+          className={
+            mobileTab === "chat"
+              ? "flex-1 min-h-0 flex flex-col overflow-hidden"
+              : "hidden"
+          }
+        >
+          {chatPane}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={sidebarRef}
@@ -1153,50 +1314,7 @@ const RightSidebar = ({
           className="flex-shrink-0 overflow-hidden"
         >
           <div className="h-full overflow-hidden">
-            {selectedCourse ? (
-              <CourseDetails
-                course={selectedCourse}
-                onBack={() => setSelectedCourse(null)}
-                onSelectCourseId={openCourseById}
-                apiUrl={API_URL}
-                expandState={expandedPanel === "search" ? "expanded" : null}
-                onToggleExpand={() => toggleExpandedPanel("search")}
-                onMinimize={dockedMinimize}
-              />
-            ) : (
-              <CourseSearch
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                searchResults={searchResults}
-                searchTotal={searchTotal}
-                searchError={searchError}
-                filters={filters}
-                setFilters={setFilters}
-                departments={departmentsForUi}
-                handleDragStart={handleDragStart}
-                handleDragEnd={handleDragEnd}
-                isCourseLoading={
-                  isCourseLoading ||
-                  (nextQuarterOnly && tssOfferings.status === "loading")
-                }
-                debouncedSearch={debouncedSearch}
-                onCourseClick={(course) =>
-                  setSelectedCourse(normalizeSelectedCourse(course))
-                }
-                recommendations={recommendations}
-                hasAudit={parsedCourseData?.sections?.length > 0}
-                requirementSearch={requirementSearch}
-                onRequirementDrop={handleRequirementDrop}
-                onClearRequirementSearch={clearRequirementSearch}
-                expandState={expandedPanel === "search" ? "expanded" : null}
-                onToggleExpand={() => toggleExpandedPanel("search")}
-                onMinimize={dockedMinimize}
-                nextQuarterOnly={nextQuarterOnly}
-                onToggleNextQuarter={handleToggleNextQuarter}
-                enrollmentQuarter={enrollmentQuarter}
-                tssOfferings={tssOfferings}
-              />
-            )}
+            {searchPane}
           </div>
         </div>
 
@@ -1250,26 +1368,7 @@ const RightSidebar = ({
         {/* Course assistant chat area — fills whatever the search area leaves,
             so it animates along with it. Collapsed = its h-11 header. */}
         <div className="flex flex-col flex-grow min-h-0 overflow-hidden">
-          <CourseAssistant
-            key={`${chatContextKey}:${chatEpoch}`}
-            chatMessages={chatMessages}
-            currentMessage={currentMessage}
-            setCurrentMessage={setCurrentMessage}
-            isLoading={isLoading}
-            sendMessage={sendMessage}
-            stopMessage={stopMessage}
-            onResetChat={resetChat}
-            chatEndRef={chatEndRef}
-            onKeyPress={handleKeyPress}
-            onApplyPlan={onApplyPlan}
-            onApplySectionProposal={onApplySectionProposal}
-            expandState={expandedPanel === "chat" ? "expanded" : null}
-            onToggleExpand={() => toggleExpandedPanel("chat")}
-            courseLookup={lookupChatCourse}
-            onCourseDragStart={handleDragStart}
-            onCourseDragEnd={handleDragEnd}
-            onOpenCourse={openChatCourse}
-          />
+          {chatPane}
         </div>
       </div>
     </div>

@@ -330,22 +330,24 @@ const CourseAssistant = ({
               <MessageSquarePlus className="w-3.5 h-3.5" />
             </button>
           )}
-          <button
-            type="button"
-            className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
-            onClick={onToggleExpand}
-            title={
-              expandState === "expanded"
-                ? "Restore side panel (Esc)"
-                : "Expand assistant"
-            }
-          >
-            {expandState === "expanded" ? (
-              <Minimize2 className="w-3.5 h-3.5" />
-            ) : (
-              <Maximize2 className="w-3.5 h-3.5" />
-            )}
-          </button>
+          {onToggleExpand && (
+            <button
+              type="button"
+              className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+              onClick={onToggleExpand}
+              title={
+                expandState === "expanded"
+                  ? "Restore side panel (Esc)"
+                  : "Expand assistant"
+              }
+            >
+              {expandState === "expanded" ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -373,7 +375,7 @@ const CourseAssistant = ({
             {chatMessages.map((msg, index) => (
               <div
                 key={index}
-                className={`px-3 py-2 text-sm max-w-[85%] ${
+                className={`px-3 py-2 text-sm max-w-[92%] lg:max-w-[85%] ${
                   msg.role === "user"
                     ? "ml-auto bg-navy-700 text-white rounded-xl rounded-br-sm"
                     : "bg-white text-slate-700 border border-slate-200 rounded-xl rounded-bl-sm shadow-card"
@@ -587,7 +589,7 @@ const CourseAssistant = ({
             placeholder={
               isLoading ? "Generating… Esc to stop" : "Ask about courses…"
             }
-            className="flex-grow px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-navy-400 focus:ring-2 focus:ring-navy-100 transition-colors"
+            className="flex-grow px-3 py-2 text-base lg:text-sm bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-navy-400 focus:ring-2 focus:ring-navy-100 transition-colors"
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
             onKeyDown={onKeyPress}

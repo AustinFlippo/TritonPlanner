@@ -1,7 +1,13 @@
 // Course card component for displaying individual courses in the planner
-import { X, TriangleAlert } from "lucide-react";
+import { Move, X, TriangleAlert, CheckCircle } from "lucide-react";
+import EnrollButton from "../EnrollButton";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
-import { parseCredits, hasUnknownCredits } from "../../utils/courseCredits";
+import {
+  parseCredits,
+  hasUnknownCredits,
+  isUnverifiedCourse,
+  unknownUnitsReason,
+} from "../../utils/courseCredits";
 import { SHOW_GRADES } from "../../utils/courseGrades";
 
 /** Instant hover label — native `title` is too slow and loses to the card tooltip. */
@@ -29,6 +35,12 @@ const CourseCard = ({
   isPreviewing = false,
   warning = null,
   prereqWarning = null,
+  compact = false,
+  // Phones move a card by arming it and tapping the destination quarter.
+  onMove,
+  // "I already registered for this on WebReg." Only supplied for cards in the
+  // enrollment quarter — the one quarter with seat data worth silencing.
+  onToggleEnrolled,
 }) => {
   const { offeredNextChip, enrollmentQuarter, seatChipFor } =
     useNextQuarterOfferings();
@@ -54,19 +66,36 @@ const CourseCard = ({
     }
   };
 
-  const styling = getStatusStyling(course.status || 'planned');
+  // Registered on WebReg but not yet on the audit (scheduleOps.setCourseEnrolled).
+  // The card keeps its planned status — this only changes what it says about
+  // seats: none of Full / Waitlist / "may not be offered" applies to a seat
+  // the student already holds.
+  const enrolled = course.enrolled === true && course.status !== 'completed' &&
+    course.status !== 'current';
+  const styling = enrolled
+    ? { accent: 'border-l-emerald-500', label: 'Enrolled', labelStyle: 'text-emerald-600' }
+    : getStatusStyling(course.status || 'planned');
   const nextChip = offeredNextChip(course.course_id);
-  const seatChip = seatChipFor(course.course_id);
-  // A course with no usable unit count — either flagged unverified by the
-  // planner agent, or carrying credits the catalog never supplied. Reading it
-  // straight through .toFixed() used to throw, so this also keeps a null from
-  // taking the whole planner grid down.
-  const unverified = course.unverified === true || hasUnknownCredits(course);
+  const seatChip = enrolled ? null : seatChipFor(course.course_id);
+  const offeringWarning = enrolled ? null : warning;
+  // Two different facts that used to be one flag. `unverified` means nothing
+  // but the degree audit vouches for the code — the catalog and the live
+  // schedule have both never heard of it. `unknownUnits` is only about the
+  // unit count: a live-schedule course (Class Planner has it, the General
+  // Catalog doesn't) is real and named, it just has no published units, and
+  // the same goes for the catalog rows whose credits failed to parse. Folding
+  // them together stamped UNVERIFIED on courses UCSD is teaching next quarter.
+  // Reading a null through .toFixed() used to throw, so this also keeps a
+  // null from taking the whole planner grid down.
+  const unverified = isUnverifiedCourse(course);
+  const unknownUnits = hasUnknownCredits(course);
   const credits = parseCredits(course.credits);
 
   return (
     <div
-      className={`group flex justify-between items-center gap-2 cursor-grab active:cursor-grabbing px-3 py-2 rounded-lg bg-white border border-slate-200 border-l-[3px] ${styling.accent} shadow-card hover:shadow-panel hover:border-slate-300 transition-all ${
+      className={`group flex justify-between items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 border-l-[3px] ${
+        styling.accent
+      } shadow-card hover:shadow-panel hover:border-slate-300 transition-all cursor-grab active:cursor-grabbing ${
         isPreviewing ? 'opacity-50' : ''
       }`}
       draggable
@@ -86,7 +115,10 @@ const CourseCard = ({
         </div>
         <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
           {styling.label && (
-            <span className={`font-medium ${styling.labelStyle}`}>
+            <span
+              className={`font-medium inline-flex items-center gap-0.5 ${styling.labelStyle}`}
+            >
+              {enrolled && <CheckCircle className="w-3 h-3" aria-hidden="true" />}
               {styling.label}
             </span>
           )}
@@ -110,6 +142,13 @@ const CourseCard = ({
               {seatChip.label}
             </span>
           )}
+          {onToggleEnrolled && (
+            <EnrollButton
+              courseId={course.course_id}
+              enrolled={enrolled}
+              onToggle={onToggleEnrolled}
+            />
+          )}
         </div>
       </div>
 
@@ -124,11 +163,11 @@ const CourseCard = ({
             </span>
           </HoverTip>
         )}
-        {warning && (
+        {offeringWarning && (
           <HoverTip
-            text={`${warning.message} Based on past schedules — not a guarantee.`}
+            text={`${offeringWarning.message} Based on past schedules — not a guarantee.`}
           >
-            <span aria-label={warning.message}>
+            <span aria-label={offeringWarning.message}>
               <TriangleAlert className="w-3.5 h-3.5 text-amber-500" />
             </span>
           </HoverTip>
@@ -138,13 +177,7 @@ const CourseCard = ({
             unknown. "? u" rather than "0.0 u": a confident zero would read
             as a real number and quietly shrink the unit totals. */}
         {unverified && (
-          <HoverTip
-            text={
-              `${course.course_id} is listed by your degree audit but is not in ` +
-              `the course catalog, so its unit count and prerequisites could ` +
-              `not be checked. Confirm the units with your advisor.`
-            }
-          >
+          <HoverTip text={unknownUnitsReason(course)}>
             <span
               className="px-1.5 py-px rounded text-[9px] font-semibold bg-amber-100 text-amber-700"
               aria-label={`${course.course_id} is unverified — not found in the course catalog`}
@@ -155,17 +188,35 @@ const CourseCard = ({
         )}
         <span
           className={`text-xs tabular-nums whitespace-nowrap ${
-            unverified ? 'text-amber-600' : 'text-slate-500'
+            unknownUnits ? 'text-amber-600' : 'text-slate-500'
           }`}
+          title={unknownUnits && !unverified ? unknownUnitsReason(course) : undefined}
         >
-          {unverified ? '?' : credits.toFixed(1)} u
+          {unknownUnits ? '?' : credits.toFixed(1)} u
         </span>
+        {compact && onMove && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMove();
+            }}
+            className="w-8 h-8 -my-1 flex items-center justify-center rounded text-slate-400 active:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+            title="Move to another quarter"
+            aria-label={`Move ${course.course_id} to another quarter`}
+          >
+            <Move className="w-3.5 h-3.5" />
+          </button>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onRemove?.();
           }}
-          className="p-0.5 rounded text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50 transition-all focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400"
+          className={`rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400 ${
+            compact
+              ? 'w-8 h-8 -my-1 -mr-1.5 flex items-center justify-center'
+              : 'p-0.5 opacity-0 group-hover:opacity-100'
+          }`}
           title="Remove course"
           aria-label={`Remove ${course.course_id}`}
         >

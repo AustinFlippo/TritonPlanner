@@ -23,6 +23,7 @@ from catalog import (
     is_offered_in_upcoming_term,
     iter_course_codes,
     level_of,
+    live_course_stub,
     seat_status_from_sections,
     upcoming_seat_status,
 )
@@ -303,24 +304,45 @@ def check_placements(schedule, placements: List[TermPlacement],
             unverified = False
             if not course:
                 tidy = " ".join(str(code or "").split()).upper()
-                if tidy not in audit_codes:
+                live = live_course_stub(tidy)
+                if live:
+                    # The General Catalog never published it, but UCSD is
+                    # teaching it next quarter under this name — that is not
+                    # "unverified". Place it; only the units and prereqs
+                    # (which Class Planner doesn't carry) stay unknown.
+                    course = live
+                    title = (f" (“{live['course_name']}”)"
+                             if live.get("course_name") else "")
+                    issues.append({
+                        "severity": "warning",
+                        "message": (
+                            f"{live['course_id']}: not in the General Catalog, "
+                            f"but on the live {live['live_term']} Class Planner "
+                            f"schedule{title} — placed. Class Planner publishes "
+                            "no unit count or prerequisites, so its units are "
+                            "counted as unknown; confirm them with your advisor."
+                        ),
+                    })
+                elif tidy not in audit_codes:
                     issues.append({
                         "severity": "error",
                         "message": f"{code}: not found in the course catalog — skipped.",
                     })
                     continue
-                # The audit names it, so it exists and counts even though the
-                # catalog has no entry. Place it, but claim nothing about it.
-                unverified = True
-                course = {"course_id": tidy, "course_name": "", "credits": None,
-                          "prerequisites": "", "offerings": []}
-                issues.append({
-                    "severity": "warning",
-                    "message": f"{tidy}: your degree audit lists it, but it isn't in "
-                               "the course catalog, so its unit count, prerequisites "
-                               "and offered quarters could not be checked. Placed as "
-                               "unverified — confirm the units with your advisor.",
-                })
+                else:
+                    # The audit names it, so it exists and counts even though
+                    # neither the catalog nor the live schedule has an entry.
+                    # Place it, but claim nothing about it.
+                    unverified = True
+                    course = {"course_id": tidy, "course_name": "", "credits": None,
+                              "prerequisites": "", "offerings": []}
+                    issues.append({
+                        "severity": "warning",
+                        "message": f"{tidy}: your degree audit lists it, but it isn't in "
+                                   "the course catalog, so its unit count, prerequisites "
+                                   "and offered quarters could not be checked. Placed as "
+                                   "unverified — confirm the units with your advisor.",
+                    })
             cid = _completed_key(course["course_id"]) or course["course_id"].upper()
             if cid in already_placed:
                 issues.append({
@@ -397,15 +419,22 @@ def check_placements(schedule, placements: List[TermPlacement],
 
             # Unverified courses keep credits=None rather than 0: the unit
             # total must be able to say "unknown", not quietly under-count.
-            placed_here.append({
+            placed = {
                 "course_id": course["course_id"],
                 "course_name": course.get("course_name", ""),
-                "credits": None if unverified else parse_credits(course.get("credits")),
+                # None (unknown) for unverified and live-only courses alike —
+                # parse_credits(None) would say 0.0, which is a claim.
+                "credits": (None if unverified or course.get("credits") is None
+                            else parse_credits(course.get("credits"))),
                 "status": "planned",
                 "prerequisites": course.get("prerequisites", ""),
                 "offerings": offerings,
                 "unverified": unverified,
-            })
+            }
+            if course.get("catalog_source"):
+                placed["catalog_source"] = course["catalog_source"]
+                placed["live_term"] = course.get("live_term")
+            placed_here.append(placed)
 
         # Nothing used to check unit load at all: the prompt asks for 12-16
         # units a quarter, merge_into_grid appends past the three visible

@@ -11,6 +11,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { courseGraph, graphsFor, offeringsFor, recommendCourses, searchCourses } from "./searchController.js";
+import { liveCourseSummaries } from "../lib/upcomingTerm.js";
 import { aliasesFor, sequenceMembers } from "../scripts/lib/course-ids.mjs";
 
 const graph = JSON.parse(fs.readFileSync("./controllers/prereq_graph.json", "utf-8"));
@@ -352,4 +353,67 @@ test("courseGraph follows a registrar alias to the catalog row", () => {
   assert.equal(asWritten.course_id, canonical?.course_id);
   assert.deepEqual(asWritten.requires, canonical.requires);
   assert.ok(Array.isArray(asWritten.concurrent_allowed));
+});
+
+
+// ---------------------------------------------------------------------------
+// A course on the live Class Planner schedule is not "unverified": UCSD is
+// teaching it next quarter, under that name, with those instructors. Only the
+// General Catalog is missing — and with it the unit count and prerequisites.
+// ---------------------------------------------------------------------------
+
+// Pick a real live-only course from the shipped snapshot rather than pinning
+// one: the set changes every quarter. Skip (loudly) if the snapshot is fully
+// cataloged, so the test can't pass vacuously.
+const liveOnly = liveCourseSummaries().find((row) => {
+  const hit = searchCourses(row.course_id).results.find((c) => c.course_id === row.course_id);
+  return hit && hit.catalog_source === "classplanner";
+});
+
+test("a live-schedule course the catalog lacks is findable and not unverified", { skip: !liveOnly && "no live-only course in the snapshot" }, () => {
+  const { results } = searchCourses(liveOnly.course_id);
+  const hit = results.find((c) => c.course_id === liveOnly.course_id);
+  assert.ok(hit, "findable without the audit vouching for it");
+  assert.ok(!hit.unverified, "Class Planner confirms it exists");
+  assert.equal(hit.course_name, liveOnly.course_name, "named by Class Planner");
+  assert.equal(hit.credits, null, "units are unpublished — never a confident 0");
+  assert.deepEqual(hit.offerings, [liveOnly.termCode.slice(0, 2)]);
+  assert.equal(hit.live_term, liveOnly.termCode);
+  assert.equal(hit.professors_source, liveOnly.termCode);
+  assert.deepEqual(
+    hit.professors.map((p) => p.name),
+    liveOnly.instructors,
+    "instructors come through, unrated",
+  );
+  // Vouching by the audit must not shadow it with an empty stub.
+  const vouched = searchCourses(liveOnly.course_id, {}, [liveOnly.course_id]).results;
+  assert.equal(vouched.filter((c) => c.course_id === liveOnly.course_id).length, 1);
+  assert.ok(!vouched.find((c) => c.course_id === liveOnly.course_id).unverified);
+  // One quarter of evidence is not an offerings history, so the planner's
+  // "may not be offered" warning stays quiet for it.
+  assert.deepEqual(offeringsFor([liveOnly.course_id])[liveOnly.course_id], {
+    known: false,
+    offerings: [],
+  });
+});
+
+test("live-schedule courses are searchable by name and by the live quarter", { skip: !liveOnly && "no live-only course in the snapshot" }, () => {
+  if (liveOnly.course_name) {
+    const byName = searchCourses(liveOnly.course_name).results;
+    assert.ok(byName.some((c) => c.course_id === liveOnly.course_id));
+  }
+  const q = liveOnly.termCode.slice(0, 2);
+  const inQuarter = searchCourses(liveOnly.course_id, { quarters: [q] }).results;
+  assert.ok(inQuarter.some((c) => c.course_id === liveOnly.course_id));
+  const other = q === "FA" ? "WI" : "FA";
+  const outOfQuarter = searchCourses(liveOnly.course_id, { quarters: [other] }).results;
+  assert.ok(!outOfQuarter.some((c) => c.course_id === liveOnly.course_id));
+});
+
+test("catalog entries always win over the live schedule", () => {
+  const { results } = searchCourses("CSE 100");
+  const hit = results.find((c) => c.course_id === "CSE 100");
+  assert.ok(hit);
+  assert.notEqual(hit.catalog_source, "classplanner");
+  assert.ok(hit.description, "real catalog data, not a live stub");
 });

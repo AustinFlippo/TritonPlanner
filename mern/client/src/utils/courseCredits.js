@@ -53,6 +53,34 @@ export const hasUnknownCredits = (course) =>
 export const isUnverifiedCourse = (course) => course?.unverified === true;
 
 /**
+ * True for a course the General Catalog has never published but the live
+ * Class Planner schedule is teaching (DSC 152 in SP26). The server builds
+ * these from the upcoming-term snapshot, so name, quarter and instructors
+ * are confirmed — it is NOT unverified. Class Planner publishes no unit count
+ * or prerequisites, so those two stay unknown; `live_term` names the quarter
+ * the evidence comes from ("FA26").
+ */
+export const isLiveOnlyCourse = (course) =>
+  course?.catalog_source === "classplanner";
+
+/**
+ * Why a course shows "? u" instead of a number — one sentence, by cause.
+ * Null when the units are known.
+ */
+export const unknownUnitsReason = (course) => {
+  if (!hasUnknownCredits(course)) return null;
+  const id = course?.course_id || "This course";
+  if (isUnverifiedCourse(course)) {
+    return `${id} is listed by your degree audit but is not in the course catalog, so its unit count and prerequisites could not be checked. Confirm the units with your advisor.`;
+  }
+  if (isLiveOnlyCourse(course)) {
+    const term = course.live_term ? `the ${course.live_term} schedule` : "the live schedule";
+    return `${id} is on ${term} but not in the General Catalog, which is the only place UCSD publishes unit counts. Confirm the units with your advisor.`;
+  }
+  return `${id} is in the catalog, but UC San Diego doesn't publish a machine-readable unit count for it.`;
+};
+
+/**
  * Coerce a course's credits to a number for the planner's arithmetic, WITHOUT
  * inventing one it doesn't have.
  *

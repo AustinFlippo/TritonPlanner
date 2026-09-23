@@ -60,6 +60,7 @@ from catalog import (
     get_prereq_entry,
     extract_course_codes,
     is_offered_in_upcoming_term,
+    live_course_stub,
     upcoming_seat_status,
     load_upcoming_term,  # noqa: F401 — tests monkeypatch this binding
     search_courses,
@@ -874,10 +875,25 @@ def _run_lookup(codes: List[str], today: Optional[date] = None,
     lines = []
     for code in codes[:40]:
         course = get_course(code)
-        lines.append(
-            _format_course_entry(course, live_upcoming=live_upcoming) if course
-            else f"{code}: NOT FOUND in the catalog — do not place it."
-        )
+        if course:
+            lines.append(_format_course_entry(course, live_upcoming=live_upcoming))
+            continue
+        # Not in the General Catalog, but UCSD is teaching it next quarter:
+        # a real offering the model may place in that quarter — with the
+        # units and prereqs Class Planner doesn't publish left unknown.
+        live = live_course_stub(code)
+        if live:
+            staff = ", ".join(p["name"] for p in live.get("professors") or [])
+            title = f" “{live['course_name']}”" if live.get("course_name") else ""
+            lines.append(
+                f"{live['course_id']}:{title} — not in the General Catalog, but on "
+                f"the live {live['live_term']} Class Planner schedule"
+                f"{' (' + staff + ')' if staff else ''}. A real {live['live_term']} "
+                "offering you may place in that quarter; units and prerequisites "
+                "are unpublished (units count as unknown, never 0)."
+            )
+            continue
+        lines.append(f"{code}: NOT FOUND in the catalog — do not place it.")
     return "\n".join(lines) or "(no codes given)"
 
 

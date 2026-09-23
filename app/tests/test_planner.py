@@ -1967,6 +1967,68 @@ def test_audit_vouched_course_is_placed_unverified_not_rejected():
     assert placed["credits"] is None
 
 
+def _install_live_only_course(monkeypatch, term_code, term, course_id, name,
+                              instructors=("Ada Lovelace",)):
+    """A live snapshot that lists `course_id` (which the fixture catalog does
+    not have) with Class Planner's own title and staff."""
+    snap = _install_upcoming(monkeypatch, term_code, term, [course_id])
+    snap["course_info_by_norm"] = {
+        catalog._normalize(alias): {
+            "course_id": course_id, "course_name": name,
+            "instructors": list(instructors),
+        }
+        for alias in catalog.aliases_for(course_id)
+    }
+    return snap
+
+
+def test_live_schedule_course_is_placed_as_real_not_unverified(monkeypatch):
+    # XYZ 152 is not in the catalog and not in the audit — but UCSD is
+    # teaching it next quarter. The live schedule is evidence enough: place
+    # it, name it, and leave only the units and prereqs unknown.
+    _install_live_only_course(monkeypatch, "FA25", "fall", "XYZ 152",
+                              "Special Topics in Xyz")
+    result = check_placements([], [place(0, "fall", "XYZ 152")], today=TODAY,
+                              audit_codes=set())
+    assert [i["severity"] for i in result["issues"]] == ["warning"]
+    msg = result["issues"][0]["message"]
+    assert "live FA25 Class Planner schedule" in msg
+    assert "Special Topics in Xyz" in msg
+    assert "unverified" not in msg.lower()
+    placed = result["valid"][0]["courses"][0]
+    assert placed["course_id"] == "XYZ 152"
+    assert placed["course_name"] == "Special Topics in Xyz"
+    assert placed["unverified"] is False
+    assert placed["catalog_source"] == "classplanner"
+    assert placed["live_term"] == "FA25"
+    # Unknown, not 0: the unit total must still be able to say "unknown".
+    assert placed["credits"] is None
+    _grid, summaries = merge_into_grid([], result["valid"])
+    assert summaries[0]["courses"] == ["XYZ 152 (?u)"]
+
+
+def test_live_schedule_course_beats_the_audit_stub(monkeypatch):
+    # Both vouch for it; the live schedule knows more, so it wins.
+    _install_live_only_course(monkeypatch, "FA25", "fall", "XYZ 152", "Xyz")
+    result = check_placements(
+        [], [place(0, "fall", "XYZ 152")], today=TODAY,
+        audit_codes=planner_agent._codes_named_by_audit(AUDIT_NAMING_UNCATALOGED))
+    placed = result["valid"][0]["courses"][0]
+    assert placed["unverified"] is False
+    assert placed["course_name"] == "Xyz"
+
+
+def test_lookup_reports_a_live_schedule_course_instead_of_not_found(monkeypatch):
+    _install_live_only_course(monkeypatch, "FA25", "fall", "XYZ 152", "Xyz",
+                              instructors=("Ada Lovelace", "Alan Turing"))
+    out = planner_agent._run_lookup(["XYZ 152", "XYZ 999"], today=TODAY)
+    lines = out.split("\n")
+    assert "NOT FOUND" not in lines[0]
+    assert "live FA25 Class Planner schedule" in lines[0]
+    assert "Ada Lovelace, Alan Turing" in lines[0]
+    assert "XYZ 999: NOT FOUND" in lines[1]
+
+
 def test_unvouched_unknown_course_is_still_rejected():
     result = check_placements([], [place(0, "fall", "XYZ 999")], today=TODAY,
                               audit_codes=planner_agent._codes_named_by_audit(

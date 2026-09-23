@@ -13,6 +13,7 @@
 // called out, not just visually implied.
 import { useMemo, useCallback } from "react";
 import { TriangleAlert, RefreshCw, Clock, X, Plus } from "lucide-react";
+import EnrollButton from "../EnrollButton";
 import {
   blocksOf,
   blocksOverlap,
@@ -44,6 +45,20 @@ const STATUS_STYLE = {
 };
 const styleFor = (status) =>
   STATUS_STYLE[normalizeSectionStatus(status)] || STATUS_STYLE.unknown;
+
+// A course the student marked as registered (scheduleOps.setCourseEnrolled).
+// Its seat count is somebody else's problem now, so the block is painted as
+// held rather than by whatever the live status says — a Full lecture you are
+// already in is not a red flag.
+const ENROLLED_STYLE = {
+  block: "bg-emerald-50 border-emerald-400",
+  chip: "text-emerald-700",
+  label: "Enrolled",
+};
+const isEnrolled = (course) =>
+  course?.enrolled === true &&
+  course.status !== "completed" &&
+  course.status !== "current";
 
 const seatText = (s) =>
   Number.isFinite(s?.seatsAvailable) ? `${s.seatsAvailable} seats` : styleFor(s?.status).label;
@@ -89,6 +104,7 @@ const WeekSchedule = ({
   term,
   liveFetch,
   onRemove,
+  onToggleEnrolled,
   onSelectPackage,
   onOpenCourse,
   dropActive,
@@ -96,6 +112,7 @@ const WeekSchedule = ({
   onDragLeave,
   onDrop,
   termLabel,
+  compact = false,
 }) => {
   const { optionsByCourse, unscheduled } = useMemo(() => {
     const optionsByCourse = new Map();
@@ -421,7 +438,9 @@ const WeekSchedule = ({
           <div className="px-4 py-12 text-center">
             <p className="flex items-center justify-center gap-1.5 text-sm text-slate-500">
               <Plus className="w-4 h-4" />
-              Drag a course from Course Search onto the calendar
+              {compact
+                ? "Add a course from Course Search to see it on the calendar"
+                : "Drag a course from Course Search onto the calendar"}
             </p>
           </div>
         ) : (
@@ -459,7 +478,9 @@ const WeekSchedule = ({
                     />
                   ))}
                   {layoutOverlappingBlocks(blocks.filter((b) => b.day === day)).map((b, i) => {
-                      const style = styleFor(b.meeting.status);
+                      const enrolled = isEnrolled(b.course);
+                      const style = enrolled ? ENROLLED_STYLE : styleFor(b.meeting.status);
+                      const seatLine = enrolled ? ENROLLED_STYLE.label : seatText(b.meeting);
                       const top = (Math.max(b.startMin, DAY_START) - DAY_START) * PX_PER_MIN;
                       const height = Math.max(
                         18,
@@ -480,7 +501,7 @@ const WeekSchedule = ({
                               onOpenCourse(b.course);
                             }
                           }}
-                          className={`group/block absolute rounded-md border px-1.5 py-1 overflow-hidden hover:z-10 ${style.block} ${
+                          className={`group/block absolute rounded-md border px-1.5 py-0.5 overflow-hidden hover:z-10 ${style.block} ${
                             b.conflict ? "ring-2 ring-red-400 z-[1]" : ""
                           } ${onOpenCourse ? "cursor-pointer hover:brightness-[0.98]" : ""}`}
                           style={{
@@ -489,7 +510,7 @@ const WeekSchedule = ({
                             left: `calc(${(col / colCount) * 100}% + 4px)`,
                             right: `calc(${((colCount - col - 1) / colCount) * 100}% + 4px)`,
                           }}
-                          title={`${b.course.course_id} ${b.meeting.component || ""} ${b.meeting.sectionId || ""}\n${b.start ?? b.meeting.start}–${b.end ?? b.meeting.end}${b.meeting.instructor ? `\n${b.meeting.instructor}` : ""}${b.location || b.meeting.location ? `\n${b.location || b.meeting.location}` : ""}\n${seatText(b.meeting)}${onOpenCourse ? "\nClick for details" : ""}`}
+                          title={`${b.course.course_id} ${b.meeting.component || ""} ${b.meeting.sectionId || ""}\n${b.start ?? b.meeting.start}–${b.end ?? b.meeting.end}${b.meeting.instructor ? `\n${b.meeting.instructor}` : ""}${b.location || b.meeting.location ? `\n${b.location || b.meeting.location}` : ""}\n${seatLine}${onOpenCourse ? "\nClick for details" : ""}`}
                         >
                           <div className="flex items-start justify-between gap-0.5">
                             <p className="text-[11px] font-semibold text-slate-800 leading-tight truncate min-w-0">
@@ -521,9 +542,25 @@ const WeekSchedule = ({
                           <p className="text-[10px] text-slate-500 leading-tight truncate">
                             {b.start ?? b.meeting.start}–{b.end ?? b.meeting.end}
                           </p>
-                          <p className={`text-[10px] font-medium leading-tight truncate ${style.chip}`}>
-                            {seatText(b.meeting)}
-                          </p>
+                          {/* The Enroll pill sits on the seat line, right on
+                              the calendar where the class is. Inline rather
+                              than on its own row so a 50-minute lecture
+                              (~47px) still has room for it; only slivers
+                              shorter than that go without. */}
+                          <div className="flex items-center gap-1 min-w-0">
+                            {onToggleEnrolled && height >= 40 && (
+                              <EnrollButton
+                                courseId={b.course.course_id}
+                                enrolled={enrolled}
+                                onToggle={() => onToggleEnrolled(b.course)}
+                                className="flex-shrink-0"
+                                size="xs"
+                              />
+                            )}
+                            <p className={`text-[10px] font-medium leading-tight truncate ${style.chip}`}>
+                              {seatLine}
+                            </p>
+                          </div>
                           {b.meeting.instructor && (
                             <p className="text-[10px] text-slate-400 leading-tight truncate">
                               {b.meeting.instructor}
@@ -567,13 +604,28 @@ const WeekSchedule = ({
                 .filter((id) => id !== course.course_id)
                 .map((id) => selectedFor(id))
                 .filter(Boolean);
+              const enrolled = isEnrolled(course);
               return (
                 <div key={course.course_id}>
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <p className="text-xs text-slate-500 min-w-0">
                       <span className="font-semibold text-slate-700">{course.course_id}</span>{" "}
                       · {packages.length} option{packages.length === 1 ? "" : "s"}
+                      {enrolled && (
+                        <span className="ml-1.5 px-1.5 py-px rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                          Enrolled
+                        </span>
+                      )}
                     </p>
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                    {onToggleEnrolled && (
+                      <EnrollButton
+                        courseId={course.course_id}
+                        enrolled={enrolled}
+                        onToggle={() => onToggleEnrolled(course)}
+                        className="mr-1"
+                      />
+                    )}
                     {onRemove && (
                       <button
                         type="button"
@@ -585,12 +637,17 @@ const WeekSchedule = ({
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {packages.map((pkg) => {
                       const active = pkg.id === current?.id;
                       const clashes = others.some((other) => packagesClash(pkg, other));
-                      const style = styleFor(pkg.status);
+                      // The held package reads "Enrolled"; the alternatives
+                      // keep their live seat counts in case the student wants
+                      // to switch sections.
+                      const heldHere = enrolled && active;
+                      const style = heldHere ? ENROLLED_STYLE : styleFor(pkg.status);
                       return (
                         <button
                           key={pkg.id}
@@ -631,7 +688,7 @@ const WeekSchedule = ({
                                   : undefined
                               }
                             >
-                              {packageSeatText(pkg) || style.label}
+                              {heldHere ? ENROLLED_STYLE.label : packageSeatText(pkg) || style.label}
                             </span>
                             {clashes && <span className="text-red-600"> · conflicts</span>}
                           </span>
@@ -662,17 +719,27 @@ const WeekSchedule = ({
                           : "No section times yet — the shared schedule hasn't published times for this course."}
                   </p>
                 </div>
-                {onRemove && (
-                  <button
-                    type="button"
-                    onClick={() => onRemove(course)}
-                    className="flex-shrink-0 p-1 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                    title={`Remove ${course.course_id}`}
-                    aria-label={`Remove ${course.course_id}`}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  {onToggleEnrolled && (
+                    <EnrollButton
+                      courseId={course.course_id}
+                      enrolled={isEnrolled(course)}
+                      onToggle={() => onToggleEnrolled(course)}
+                      className="mr-1"
+                    />
+                  )}
+                  {onRemove && (
+                    <button
+                      type="button"
+                      onClick={() => onRemove(course)}
+                      className="flex-shrink-0 p-1 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                      title={`Remove ${course.course_id}`}
+                      aria-label={`Remove ${course.course_id}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

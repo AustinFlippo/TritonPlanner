@@ -1,5 +1,14 @@
-import { useState, useEffect } from "react";
-import { CircleUserRound, Check, CirclePlay, CloudOff, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  CircleUserRound,
+  Check,
+  CirclePlay,
+  CloudOff,
+  Loader2,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { isAdmin } from "../utils/termSections";
 import TritonMark from "./TritonMark";
@@ -35,7 +44,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const SyncBadge = ({ status }) => {
+const SyncBadge = ({ status, compact = false }) => {
   if (!status || status === "idle") return null;
 
   const config = {
@@ -47,6 +56,22 @@ const SyncBadge = ({ status }) => {
 
   if (!config) return null;
   const Icon = config.icon;
+
+  // The phone header has no room for "Saved on this device" — the icon alone
+  // carries the state, with the words kept in the accessible label.
+  if (compact) {
+    return (
+      <span
+        className={`flex items-center ${
+          status === "error" ? "text-red-300" : "text-navy-200"
+        }`}
+        title={config.text}
+        aria-label={config.text}
+      >
+        <Icon size={15} className={config.spin ? "animate-spin" : undefined} />
+      </span>
+    );
+  }
 
   return (
     <span
@@ -65,7 +90,7 @@ const SyncBadge = ({ status }) => {
   );
 };
 
-const Header = ({ currentPage, onNavigate, syncStatus }) => {
+const Header = ({ currentPage, onNavigate, syncStatus, isCompact = false }) => {
   const { user, signInWithGoogle, logout } = useAuth();
   const { setOpen: openHowItWorks } = useHowItWorks();
   // Membership of `app_admins` is what actually gates publishing — row-level
@@ -73,6 +98,29 @@ const Header = ({ currentPage, onNavigate, syncStatus }) => {
   // of students never see a page that isn't theirs.
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close the phone overflow menu on outside tap / Escape
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onPointerDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
+    };
+    const onKeyDown = (e) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  // The tab bar owns Planner / Quarter View on a phone, so the menu only
+  // carries what has nowhere else to live.
+  useEffect(() => {
+    if (!isCompact) setMenuOpen(false);
+  }, [isCompact]);
 
   useEffect(() => {
     if (!user) {
@@ -93,6 +141,130 @@ const Header = ({ currentPage, onNavigate, syncStatus }) => {
       setAlertMessage(err.message || "Sign-in failed. Please try again.");
     }
   };
+
+  const menuItems = NAV_ITEMS.filter(
+    (item) => !item.adminOnly || isAdminUser
+  ).filter((item) => item.key !== "planner" && item.key !== "quarter");
+
+  if (isCompact) {
+    return (
+      <>
+        <header className="bg-navy-800 flex items-center gap-2 px-4 h-14 flex-shrink-0 pt-[env(safe-area-inset-top)] box-content">
+          <span className="flex items-center gap-2 select-none min-w-0">
+            <TritonMark size={18} className="text-gold-400 flex-shrink-0" title="TritonPlanner" />
+            <span className="font-serif text-[17px] font-semibold tracking-tight text-white truncate">
+              TritonPlanner<span className="text-gold-400">.</span>
+            </span>
+          </span>
+
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            <SyncBadge status={syncStatus} compact />
+
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                className="w-10 h-10 -mr-2 flex items-center justify-center rounded-lg text-navy-100 active:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+              >
+                {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full mt-2 w-60 z-50 rounded-xl bg-white border border-slate-200 shadow-panel py-1.5 overflow-hidden"
+                >
+                  {user && (
+                    <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2 min-w-0">
+                      <CircleUserRound size={18} className="text-navy-500 flex-shrink-0" />
+                      <span className="text-sm text-slate-600 truncate">
+                        {user.name || user.email}
+                      </span>
+                    </div>
+                  )}
+
+                  {menuItems.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onNavigate(item.key);
+                      }}
+                      className={`w-full px-3 py-2.5 text-left text-sm transition-colors active:bg-slate-100 ${
+                        currentPage === item.key
+                          ? "font-semibold text-navy-700 bg-navy-50/60"
+                          : "text-slate-700"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openHowItWorks(true);
+                    }}
+                    className="w-full px-3 py-2.5 flex items-center gap-2 text-left text-sm text-slate-700 transition-colors active:bg-slate-100"
+                  >
+                    <CirclePlay size={15} className="text-navy-500 flex-shrink-0" />
+                    Watch demo
+                  </button>
+
+                  <div className="my-1 border-t border-slate-100" />
+
+                  {user ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full px-3 py-2.5 flex items-center gap-2 text-left text-sm text-slate-700 transition-colors active:bg-slate-100"
+                    >
+                      <LogOut size={15} className="text-slate-400 flex-shrink-0" />
+                      Sign out
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleSignIn();
+                      }}
+                      className="w-full px-3 py-2.5 flex items-center gap-2 text-left text-sm font-medium text-slate-700 transition-colors active:bg-slate-100"
+                    >
+                      <GoogleIcon />
+                      Sign in with Google
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <ConfirmDialog
+          open={Boolean(alertMessage)}
+          variant="alert"
+          title="Sign-in failed"
+          message={alertMessage}
+          confirmLabel="OK"
+          onConfirm={() => setAlertMessage(null)}
+          onCancel={() => setAlertMessage(null)}
+        />
+      </>
+    );
+  }
 
   return (
     <>

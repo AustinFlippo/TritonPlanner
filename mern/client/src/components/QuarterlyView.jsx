@@ -5,11 +5,13 @@ import {
   Maximize2,
   Minimize2,
   TriangleAlert,
+  X,
 } from "lucide-react";
 import { API_URL } from "../utils/api";
 import {
   quarterHasCourse,
   removeCourseAt,
+  setCourseEnrolled,
   insertCourse,
   updateCourseInQuarter,
   enrollmentFromPackage,
@@ -82,11 +84,18 @@ const QuarterlyView = ({
   parsedCourseData = null,
   activeSavedPlan = null,
   onSavedPlanChange,
+  onLoadPlan,
+  onChatCarryOver,
   onNavigate,
   mainExpanded = false,
   onToggleMainExpand,
   onOpenCourse,
   buildFreshSchedule = null,
+  // Phones: the armed tap-to-place course, offered as an "add to this
+  // quarter" action since the week grid has no drop target under a thumb.
+  compact = false,
+  pendingPlacement = null,
+  onCancelPlacement = null,
 }) => {
   // Lens onto the upcoming enrollment quarter of the active plan's grid —
   // the only term with TSS / published section data.
@@ -451,6 +460,22 @@ const QuarterlyView = ({
 
   // Persist the section package (times + professors) on the course in the
   // planner grid so auto-save / Supabase keep the choice for the upcoming quarter.
+  // "I already registered for this on WebReg" — same mark the planner card
+  // toggles (scheduleOps.setCourseEnrolled); the week grid stops painting the
+  // course's sections red / Full while it is set.
+  const handleToggleEnrolled = (course) => {
+    if (!course?.course_id) return;
+    setSchedule((prev) =>
+      setCourseEnrolled(
+        prev,
+        selected.yearIndex,
+        selected.term,
+        course.course_id,
+        course.enrolled !== true
+      )
+    );
+  };
+
   const handleSelectPackage = (course, pkg) => {
     if (!course?.course_id || !pkg) return;
     const enrollment = enrollmentFromPackage(pkg);
@@ -470,24 +495,16 @@ const QuarterlyView = ({
     setWeekTarget(false);
   };
 
-  // Sidebar search results add into the enrollment quarter (the only quarter
-  // Quarter View edits).
-  const handleDropOnQuarter = (e) => {
-    e.preventDefault();
-    clearDragHighlights();
-
+  /**
+   * Add a course to the quarter this view is lensing onto — the only quarter
+   * it edits. Shared by the drag-and-drop path and the phone's tap-to-place,
+   * so both honour the same guards. `source` is null when the course came
+   * from search / chat rather than another slot on the grid.
+   */
+  const addCourseToQuarter = (course, source = null) => {
     const { yearIndex, term } = selected;
-    const raw = e.dataTransfer.getData("course");
-    if (!raw) return;
-    let course;
-    try {
-      course = JSON.parse(raw);
-    } catch {
-      return;
-    }
     if (!course?.course_id) return;
-
-    const fromSidebar = e.dataTransfer.getData("isFromSidebar") === "true";
+    const fromSidebar = !source;
 
     // Never duplicate a course within one quarter (also makes a same-quarter
     // move a clean no-op)
@@ -500,9 +517,7 @@ const QuarterlyView = ({
     if (fromSidebar && isTakenCourse(course.course_id, takenIds)) return;
 
     const fromEnrollmentQuarter =
-      !fromSidebar &&
-      parseInt(e.dataTransfer.getData("sourceYearIndex"), 10) === yearIndex &&
-      e.dataTransfer.getData("sourceTerm") === term;
+      source && source.yearIndex === yearIndex && source.term === term;
     if (!fromEnrollmentQuarter) {
       const block = enrollmentPlacementBlock(course, {
         offeringsReady: tssOfferings.status === "ready",
@@ -512,10 +527,8 @@ const QuarterlyView = ({
     }
 
     let next = schedule;
-    if (!fromSidebar) {
-      const sy = parseInt(e.dataTransfer.getData("sourceYearIndex"), 10);
-      const st = e.dataTransfer.getData("sourceTerm");
-      const si = parseInt(e.dataTransfer.getData("sourceCourseIndex"), 10);
+    if (source) {
+      const { yearIndex: sy, term: st, courseIndex: si } = source;
       if (Number.isNaN(sy) || !TERMS.includes(st) || Number.isNaN(si)) return;
       next = removeCourseAt(next, sy, st, si);
     }
@@ -531,6 +544,37 @@ const QuarterlyView = ({
       fromSidebar ? takenIds : null
     );
     setSchedule(next);
+  };
+
+  // Sidebar search results add into the enrollment quarter (the only quarter
+  // Quarter View edits).
+  const handleDropOnQuarter = (e) => {
+    e.preventDefault();
+    clearDragHighlights();
+
+    const raw = e.dataTransfer.getData("course");
+    if (!raw) return;
+    let course;
+    try {
+      course = JSON.parse(raw);
+    } catch {
+      return;
+    }
+    if (!course?.course_id) return;
+
+    const fromSidebar = e.dataTransfer.getData("isFromSidebar") === "true";
+    let source = null;
+    if (!fromSidebar) {
+      source = {
+        yearIndex: parseInt(e.dataTransfer.getData("sourceYearIndex"), 10),
+        term: e.dataTransfer.getData("sourceTerm"),
+        courseIndex: parseInt(
+          e.dataTransfer.getData("sourceCourseIndex"),
+          10
+        ),
+      };
+    }
+    addCourseToQuarter(course, source);
   };
 
   const lensBanner = activeSavedPlan?.name ? (
@@ -558,6 +602,8 @@ const QuarterlyView = ({
           schedule={schedule}
           activeSavedPlan={activeSavedPlan}
           onSavedPlanChange={onSavedPlanChange}
+          onLoadPlan={onLoadPlan}
+          onChatCarryOver={onChatCarryOver}
           onResetSchedule={setSchedule}
           buildFreshSchedule={buildFreshSchedule}
           onNavigate={onNavigate}
@@ -596,10 +642,48 @@ const QuarterlyView = ({
         schedule={schedule}
         activeSavedPlan={activeSavedPlan}
         onSavedPlanChange={onSavedPlanChange}
+        onLoadPlan={onLoadPlan}
+        onChatCarryOver={onChatCarryOver}
         onResetSchedule={setSchedule}
         buildFreshSchedule={buildFreshSchedule}
         onNavigate={onNavigate}
       />
+
+      {/* A course armed on the phone can land here directly — the week grid
+          is a read-only calendar with no thumb-sized drop target. */}
+      {compact && pendingPlacement?.course && (
+        <div className="sticky top-0 z-30 -mx-3 px-3 py-2.5 bg-navy-700 text-white flex items-center gap-3 shadow-panel">
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold truncate">
+              Placing {pendingPlacement.course.course_id}
+            </p>
+            <p className="text-[11px] text-navy-200 truncate">
+              Add it to {title}, or switch to Plan for another quarter
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              addCourseToQuarter(
+                pendingPlacement.course,
+                pendingPlacement.source || null
+              );
+              onCancelPlacement?.();
+            }}
+            className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-white text-navy-700 text-[13px] font-semibold active:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+          >
+            Add
+          </button>
+          <button
+            type="button"
+            onClick={onCancelPlacement}
+            className="flex-shrink-0 w-9 h-9 -mr-1 flex items-center justify-center rounded-lg text-navy-100 active:bg-white/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+            aria-label="Cancel placement"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-card px-4 py-2.5">
         <p className="text-xs text-slate-500">{lensBanner}</p>
@@ -665,7 +749,7 @@ const QuarterlyView = ({
           </span>
         )}
 
-        {onToggleMainExpand && (
+        {onToggleMainExpand && !compact && (
           <button
             type="button"
             onClick={onToggleMainExpand}
@@ -699,8 +783,10 @@ const QuarterlyView = ({
         year={academicYear}
         term={selected.term}
         termLabel={title}
+        compact={compact}
         liveFetch={liveFetch}
         onRemove={handleRemove}
+        onToggleEnrolled={handleToggleEnrolled}
         onSelectPackage={handleSelectPackage}
         onOpenCourse={onOpenCourse}
         dropActive={weekTarget}

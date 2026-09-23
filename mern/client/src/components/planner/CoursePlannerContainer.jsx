@@ -2,10 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { TriangleAlert } from "lucide-react";
 import CoursePlanner from "./CoursePlanner";
 import ConfirmDialog from "../ConfirmDialog";
-import {
-  outOfWindowAuditCourses,
-  processAuditForPlanner,
-} from "../../utils/auditCoursePlanner";
+import { outOfWindowAuditCourses } from "../../utils/auditCoursePlanner";
 import { API_URL } from "../../utils/api";
 import { hasUnknownCredits, parseCredits } from "../../utils/courseCredits";
 import {
@@ -13,6 +10,8 @@ import {
   normalizePlanGrid,
   placeCourseAt,
   removeCourseAt,
+  setCourseEnrolled,
+  withoutEnrolledMark,
 } from "../../utils/scheduleOps";
 import { extractCompletedCourses } from "../../utils/recommendations";
 import { isTakenCourse } from "../../utils/courseIds";
@@ -35,17 +34,24 @@ const CoursePlannerContainer = ({
   schedule,
   setSchedule,
   parsedCourseData = { sections: [], metadata: {} },
-  auditUploadKey = 0,
   planWindow = null,
   yearLabels = [],
   externalPlan = null,
   restoredPlan = null,
   activeSavedPlan = null,
   onSavedPlanChange,
+  onLoadPlan,
+  onChatCarryOver,
   onNavigate,
   onOpenCourse,
   buildFreshSchedule = null,
   enrollmentSlot = null,
+  // Phone layout: no drag-and-drop, so placement is arm-then-tap. The armed
+  // course lives in MainLayout because it can be armed from the right rail.
+  compact = false,
+  pendingPlacement = null,
+  onQueuePlacement = null,
+  onCancelPlacement = null,
 }) => {
   // yearLabels and the grid's length both come from the student's plan window
   // (MainLayout), derived from the audit's Catalog Year — never hardcoded.
@@ -197,6 +203,8 @@ const CoursePlannerContainer = ({
   const getCourseWarning = (course, termKey) => {
     if (!course?.course_id) return null;
     if (course.status === "completed" || course.status === "current") return null;
+    // Registered on WebReg: the offering is confirmed, whatever history says.
+    if (course.enrolled === true) return null;
     const info =
       offeringsMap[course.course_id] ??
       (Array.isArray(course.offerings) ? { known: true, offerings: course.offerings } : null);
@@ -248,31 +256,9 @@ const CoursePlannerContainer = ({
   };
   useEffect(() => () => clearTimeout(toastTimerRef.current), []);
 
-  // Effect to populate courses from audit data — only on a FRESH upload
-  // (auditUploadKey bump), never when a saved session is being restored
-  const lastAuditKeyRef = useRef(0);
-  useEffect(() => {
-    if (!auditUploadKey || auditUploadKey === lastAuditKeyRef.current) {
-      return;
-    }
-    lastAuditKeyRef.current = auditUploadKey;
-
-    if (!parsedCourseData.sections || parsedCourseData.sections.length === 0) {
-      return; // No audit data to process
-    }
-
-    // Create fresh schedule
-    const emptySchedule = Array(yearCount).fill().map(() => ({
-      fall: Array(3).fill(null),
-      winter: Array(3).fill(null),
-      spring: Array(3).fill(null),
-    }));
-
-    // Process audit sections and populate schedule
-    const updatedSchedule = processAuditForPlanner(
-      parsedCourseData.sections, emptySchedule, planWindow);
-    setSchedule(updatedSchedule);
-  }, [auditUploadKey, parsedCourseData, yearCount, planWindow, setSchedule]);
+  // Audit uploads no longer rebuild the grid here: MainLayout merges the new
+  // audit into the current schedule (mergeAuditIntoSchedule), so planned
+  // courses survive a re-upload and restores never race a rebuild.
 
   // Apply a saved schedule being restored (from localStorage or the account)
   useEffect(() => {
@@ -326,27 +312,30 @@ const CoursePlannerContainer = ({
     );
   };
 
+  // A course arriving from search / chat isn't on the grid yet, so the
+  // schedule effect hasn't fetched its prereq graph. Warm it as soon as the
+  // student picks it up, so the first placement can flag missing prereqs
+  // rather than only the re-render after it.
+  const prefetchGraph = (courseId) => {
+    if (!courseId || graphsRequestedRef.current.has(courseId)) return;
+    graphsRequestedRef.current.add(courseId);
+    fetch(`${API_URL}/search-courses/graphs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codes: [courseId] }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.graphs) setGraphsMap((prev) => ({ ...prev, ...data.graphs }));
+      })
+      .catch(() => {});
+  };
+
   const handleDragStart = (e, course, isFromSidebar = false, yearIndex = null, term = null, courseIndex = null) => {
     // dataTransfer can't be read during dragover, so keep the course in a ref
     // for live offering warnings while hovering terms
     draggedCourseRef.current = course;
-    // Sidebar drops aren't on the grid yet, so the schedule effect hasn't
-    // fetched their graph. Prefetch so the drop overlay / toast can flag
-    // missing prereqs on the first placement, not only after a re-render.
-    if (course?.course_id && !graphsRequestedRef.current.has(course.course_id)) {
-      const id = course.course_id;
-      graphsRequestedRef.current.add(id);
-      fetch(`${API_URL}/search-courses/graphs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codes: [id] }),
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data?.graphs) setGraphsMap((prev) => ({ ...prev, ...data.graphs }));
-        })
-        .catch(() => {});
-    }
+    prefetchGraph(course?.course_id);
     e.dataTransfer.setData("course", JSON.stringify(course));
     e.dataTransfer.setData("isFromSidebar", isFromSidebar.toString());
   
@@ -371,6 +360,81 @@ const CoursePlannerContainer = ({
       getPrereqWarning(draggedCourseRef.current, term, yearIndex) ||
       getCourseWarning(draggedCourseRef.current, term);
     setDropWarning((prev) => (prev?.message === warning?.message ? prev : warning));
+  };
+
+  /**
+   * Put `course` in a slot, whatever gesture asked for it. Drag-and-drop and
+   * the phone's tap-to-place both land here so the guards (already completed,
+   * not offered next quarter) and the follow-up warnings stay identical.
+   * `source` is null when the course comes from search / chat.
+   */
+  const commitPlacement = ({ course, source, yearIndex, term, courseIndex }) => {
+    if (!course?.course_id) return false;
+    const isFromSidebar = !source;
+
+    const takenIds = extractCompletedCourses(
+      parsedCourseData?.sections,
+      schedule
+    );
+    if (isFromSidebar && isTakenCourse(course.course_id, takenIds)) {
+      showToast(
+        `${course.course_id} is already completed (or in progress) — it won’t be added again.`,
+        null
+      );
+      return false;
+    }
+
+    const movingWithinEnrollment =
+      source &&
+      isEnrollmentTerm(source.yearIndex, source.term) &&
+      isEnrollmentTerm(yearIndex, term);
+    if (!movingWithinEnrollment) {
+      const block = getEnrollmentBlock(course, yearIndex, term);
+      if (block) {
+        showToast(block.message, "Based on the live Class Planner schedule.");
+        return false;
+      }
+    }
+
+    // The "I registered" mark describes a seat in the enrollment quarter. A
+    // card dragged to any other term is a plan again, so the mark comes off.
+    const placedCourse = isEnrollmentTerm(yearIndex, term)
+      ? course
+      : withoutEnrolledMark(course);
+    const next = placeCourseAt(
+      schedule,
+      yearIndex,
+      term,
+      courseIndex,
+      placedCourse,
+      source,
+      takenIds
+    );
+    if (next === schedule) return false;
+
+    setSchedule(next);
+    setPreviewState(null);
+
+    // Non-blocking heads-up: missing prereqs first, then seats, then history.
+    const prereq = getPrereqWarning(placedCourse, term, yearIndex, next);
+    const seats = getEnrollmentSeatWarning(placedCourse, yearIndex, term);
+    const offering = getCourseWarning(placedCourse, term);
+    if (prereq) {
+      showToast(
+        prereq.message,
+        "Prerequisites must sit in an earlier quarter."
+      );
+    } else if (seats) {
+      showToast(
+        seats.message,
+        "You can still plan it — seats open, and waitlisting is an option."
+      );
+    } else if (offering) {
+      showToast(offering.message);
+    } else {
+      dismissToast();
+    }
+    return true;
   };
 
   const handleDrop = (e, yearIndex, term, courseIndex) => {
@@ -413,63 +477,7 @@ const CoursePlannerContainer = ({
       };
     }
 
-    const takenIds = extractCompletedCourses(
-      parsedCourseData?.sections,
-      schedule
-    );
-    if (isFromSidebar && isTakenCourse(course.course_id, takenIds)) {
-      showToast(
-        `${course.course_id} is already completed (or in progress) — it won’t be added again.`,
-        null
-      );
-      return;
-    }
-
-    const movingWithinEnrollment =
-      source &&
-      isEnrollmentTerm(source.yearIndex, source.term) &&
-      isEnrollmentTerm(yearIndex, term);
-    if (!movingWithinEnrollment) {
-      const block = getEnrollmentBlock(course, yearIndex, term);
-      if (block) {
-        showToast(block.message, "Based on the live Class Planner schedule.");
-        return;
-      }
-    }
-
-    const next = placeCourseAt(
-      schedule,
-      yearIndex,
-      term,
-      courseIndex,
-      course,
-      source,
-      takenIds
-    );
-    if (next === schedule) return;
-
-    setSchedule(next);
-    setPreviewState(null);
-
-    // Non-blocking heads-up: missing prereqs first, then seats, then history.
-    const prereq = getPrereqWarning(course, term, yearIndex, next);
-    const seats = getEnrollmentSeatWarning(course, yearIndex, term);
-    const offering = getCourseWarning(course, term);
-    if (prereq) {
-      showToast(
-        prereq.message,
-        "Prerequisites must sit in an earlier quarter."
-      );
-    } else if (seats) {
-      showToast(
-        seats.message,
-        "You can still plan it — seats open, and waitlisting is an option."
-      );
-    } else if (offering) {
-      showToast(offering.message);
-    } else {
-      dismissToast();
-    }
+    commitPlacement({ course, source, yearIndex, term, courseIndex });
   };
 
   const handleDragEnd = () => {
@@ -477,6 +485,100 @@ const CoursePlannerContainer = ({
     setDropWarning(null);
     draggedCourseRef.current = null;
     setDragTarget({ yearIndex: null, term: null, courseIndex: null });
+  };
+
+  // ---- Tap-to-place (phones) -------------------------------------------
+  const placementCourse = compact ? pendingPlacement?.course || null : null;
+
+  // The collapse state to put back once the placement resolves, and the year
+  // that received the course (which stays open so the student lands on it).
+  const collapsedBeforePlacementRef = useRef(null);
+  const placedYearRef = useRef(null);
+
+  // Warm the armed course's prereq graph, and open every year: a target
+  // hidden inside a collapsed year would leave the student tapping at
+  // nothing with no way to tell why.
+  useEffect(() => {
+    if (!placementCourse) return;
+    prefetchGraph(placementCourse.course_id);
+    setCollapsedYears((prev) => {
+      collapsedBeforePlacementRef.current = prev;
+      return Array(yearCount).fill(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- arming is the signal
+  }, [pendingPlacement?.token]);
+
+  // Placement over (placed or cancelled): fold the grid back up so the
+  // student isn't left scrolling through years they never opened. The year
+  // the course landed in stays open — that's the one they want to see.
+  useEffect(() => {
+    if (placementCourse) return;
+    const saved = collapsedBeforePlacementRef.current;
+    if (!saved) return;
+    collapsedBeforePlacementRef.current = null;
+    const landedIn = placedYearRef.current;
+    placedYearRef.current = null;
+    setCollapsedYears(
+      saved.map((collapsed, index) => (index === landedIn ? false : collapsed))
+    );
+  }, [placementCourse]);
+
+  /**
+   * Drop the armed course into a term's first free slot. Phones target the
+   * quarter rather than an individual slot — three 44px slots stacked in a
+   * term are a coin toss under a thumb, and the slot order carries no
+   * meaning anyway.
+   */
+  const handlePlaceInTerm = (yearIndex, term) => {
+    if (!pendingPlacement?.course) return;
+    const slots = schedule[yearIndex]?.[term] || [];
+    let courseIndex = slots.findIndex((slot) => !slot);
+    if (courseIndex === -1) courseIndex = slots.length;
+    const placed = commitPlacement({
+      course: pendingPlacement.course,
+      source: pendingPlacement.source || null,
+      yearIndex,
+      term,
+      courseIndex,
+    });
+    if (placed) placedYearRef.current = yearIndex;
+    // Clear either way: a rejected placement already explains itself in a
+    // toast, and leaving the banner armed reads as "try again here".
+    onCancelPlacement?.();
+  };
+
+  // Phones open on the quarter the student is actually enrolling in; the
+  // other years are a long scroll past courses they can't act on yet.
+  useEffect(() => {
+    if (!compact) return;
+    setCollapsedYears(
+      Array(yearCount)
+        .fill(true)
+        .map((_, index) => index !== (enrollmentSlot?.yearIndex ?? 0))
+    );
+  }, [compact, yearCount, enrollmentSlot?.yearIndex]);
+
+  /**
+   * The enrolled toggle for a card, or null when the card can't carry one:
+   * only planned cards in the enrollment quarter — the one term with seat
+   * data worth silencing — and never transcript cards, which are already
+   * on the audit.
+   */
+  const enrolledToggleFor = (course, yearIndex, term) => {
+    if (!course?.course_id || !isEnrollmentTerm(yearIndex, term)) return null;
+    if (course.status === "completed" || course.status === "current") return null;
+    // No toast: the card flips to "Enrolled" under the cursor, and the toast
+    // is styled as a warning — which this is the opposite of.
+    return () =>
+      setSchedule((prev) =>
+        setCourseEnrolled(
+          prev,
+          yearIndex,
+          term,
+          course.course_id,
+          course.enrolled !== true
+        )
+      );
   };
 
   const handleRemoveCourse = (yearIndex, term, courseIndex) => {
@@ -573,12 +675,25 @@ const CoursePlannerContainer = ({
         onExportToSheets={handleExportToSheets}
         activeSavedPlan={activeSavedPlan}
         onSavedPlanChange={onSavedPlanChange}
+        onLoadPlan={onLoadPlan}
+        onChatCarryOver={onChatCarryOver}
         onResetSchedule={setSchedule}
         buildFreshSchedule={buildFreshSchedule}
         onNavigate={onNavigate}
         loading={loading}
         onOpenCourse={onOpenCourse}
         omittedCourses={omittedCourses}
+        compact={compact}
+        placementCourse={placementCourse}
+        onPlaceInTerm={handlePlaceInTerm}
+        onCancelPlacement={onCancelPlacement}
+        enrolledToggleFor={enrolledToggleFor}
+        onMoveCourse={
+          compact && onQueuePlacement
+            ? (course, yearIndex, term, courseIndex) =>
+                onQueuePlacement(course, { yearIndex, term, courseIndex })
+            : undefined
+        }
       />
 
       {/* Offering warning toast — non-blocking, auto-dismisses */}
@@ -586,7 +701,7 @@ const CoursePlannerContainer = ({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] flex items-start gap-2.5 px-4 py-3 rounded-xl bg-white border border-amber-300 shadow-panel"
+          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.75rem)] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)] flex items-start gap-2.5 px-4 py-3 rounded-xl bg-white border border-amber-300 shadow-panel"
         >
           <TriangleAlert className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <div className="text-[13px] text-slate-700 leading-snug">

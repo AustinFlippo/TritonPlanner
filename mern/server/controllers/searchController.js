@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 
 import { aliasesFor, sequenceMembers } from "../scripts/lib/course-ids.mjs";
+import { toV5Unrated } from "../scripts/lib/professor-names.mjs";
+import { liveCourseSummaries } from "../lib/upcomingTerm.js";
 
 // Load and parse course data JSON (v5 = v4 data + v3 credits)
 const courseDataPath = path.resolve("./controllers/v5.json");
@@ -69,8 +71,10 @@ const tidyCode = (code) =>
   String(code || "").trim().toUpperCase().replace(/\s+/g, " ");
 
 /**
- * An index entry for a course the student's degree audit names but the
- * catalog has never published.
+ * An index entry for a course the student's degree audit names but neither
+ * the catalog nor the live next-quarter schedule has heard of (a course on
+ * the live schedule resolves through the index like any catalog entry — see
+ * liveOnlyEntry — so it never reaches here).
  *
  * These are real: DSC 152 was taught in SP26 and is one of the two
  * alternatives in the Data Science major's Core requirement, while never
@@ -320,6 +324,65 @@ for (const e of indexed) {
     const key = normalizeCourseID(alias);
     if (key && !aliasIndex.has(key)) aliasIndex.set(key, e);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Courses UCSD is teaching next quarter that the General Catalog has never
+// published (DSC 152 in SP26). Before this they existed only as "unverified"
+// stubs, and only if the student's audit happened to name them. But the live
+// Class Planner schedule is evidence of a different grade from an audit
+// mention: it confirms the course exists, gives its title and its instructors,
+// and says it runs next quarter. So these join the index as real entries —
+// searchable by name, filterable by department and by the live quarter — with
+// the two things Class Planner does not publish left honestly unknown:
+// credits null (never 0) and prerequisites empty. `catalog_source` /
+// `live_term` let the UI say "on the FA26 schedule, not in the catalog"
+// instead of "unverified". Catalog entries always win: a live course whose
+// code resolves (via any alias) is skipped, so nothing here shadows real data.
+// ---------------------------------------------------------------------------
+function liveOnlyEntry({ course_id, course_name, instructors, termCode }) {
+  const id = tidyCode(course_id);
+  const course = {
+    course_id: id,
+    normalized_course_id: normalizeCourseID(id),
+    course_name: course_name || "",
+    credits: null,
+    prerequisites: "",
+    description: "",
+    // The live quarter is the only offering evidence there is.
+    offerings: [termCode.slice(0, 2)],
+    professors: (instructors || []).map(toV5Unrated),
+    professors_source: termCode,
+    catalog_source: "classplanner",
+    live_term: termCode,
+  };
+  return {
+    course,
+    id,
+    normId: course.normalized_course_id,
+    nameLower: course.course_name.toLowerCase(),
+    descLower: "",
+    dept: deptOf(id),
+    level: levelOf(id),
+  };
+}
+
+let liveOnlyCount = 0;
+for (const summary of liveCourseSummaries()) {
+  const id = tidyCode(summary.course_id);
+  if (!COURSE_CODE_RE.test(id) || resolveEntry(id)) continue;
+  const entry = liveOnlyEntry(summary);
+  indexed.push(entry);
+  for (const alias of aliasesFor(id)) {
+    const key = normalizeCourseID(alias);
+    if (key && !aliasIndex.has(key)) aliasIndex.set(key, entry);
+  }
+  liveOnlyCount += 1;
+}
+if (liveOnlyCount) {
+  console.log(
+    `📅 ${liveOnlyCount} live-schedule courses not in the General Catalog joined the search index.`,
+  );
 }
 
 // Audit lines, planner entries and prereq-graph members name a course the way
@@ -587,9 +650,13 @@ export function offeringsFor(codes = []) {
     // known:false here while searchCourses found them, and the planner grid
     // flagged a course the student can genuinely take as not in the catalog.
     const entry = resolveEntry(raw);
-    out[raw] = entry
-      ? { known: true, offerings: entry.course.offerings || [] }
-      : { known: false, offerings: [] };
+    // A live-schedule-only course has one quarter of evidence, not a two-year
+    // pattern; known:false keeps the planner from warning "in the last two
+    // years it ran in Fall only" about a course the catalog never listed.
+    out[raw] =
+      entry && entry.course.catalog_source !== "classplanner"
+        ? { known: true, offerings: entry.course.offerings || [] }
+        : { known: false, offerings: [] };
   }
   return out;
 }

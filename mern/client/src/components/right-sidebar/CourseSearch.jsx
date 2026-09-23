@@ -57,6 +57,9 @@ const CourseSearch = ({
   expandState,
   onToggleExpand,
   onMinimize,
+  compact = false,
+  // Phones place courses by tapping, not dragging — see CourseItem.
+  onAddToPlan,
   recommendations = [],
   hasAudit = false,
   requirementSearch = null,
@@ -151,22 +154,30 @@ const CourseSearch = ({
           </div>
         </div>
       )}
-      {/* Panel header */}
-      <div className="h-11 px-4 flex items-center justify-between border-b border-slate-200 flex-shrink-0">
+      {/* Panel header. The phone's own tab strip already says "Course
+          search", and with the expand / hide controls gone this row would be
+          44px of duplicated label. */}
+      <div
+        className={`h-11 px-4 items-center justify-between border-b border-slate-200 flex-shrink-0 ${
+          compact ? "hidden" : "flex"
+        }`}
+      >
         <h2 className="panel-heading">Course Search</h2>
         <div className="flex items-center gap-0.5">
-          <button
-            type="button"
-            className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
-            onClick={onToggleExpand}
-            title={expandState === "expanded" ? "Restore side panel (Esc)" : "Expand course search"}
-          >
-            {expandState === "expanded" ? (
-              <Minimize2 className="w-3.5 h-3.5" />
-            ) : (
-              <Maximize2 className="w-3.5 h-3.5" />
-            )}
-          </button>
+          {onToggleExpand && (
+            <button
+              type="button"
+              className="p-1 rounded text-slate-400 hover:text-navy-600 hover:bg-slate-100 transition-colors"
+              onClick={onToggleExpand}
+              title={expandState === "expanded" ? "Restore side panel (Esc)" : "Expand course search"}
+            >
+              {expandState === "expanded" ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
           {onMinimize && (
             <button
               type="button"
@@ -188,7 +199,7 @@ const CourseSearch = ({
           <input
             type="text"
             placeholder={activeDept ? `Search in ${activeDept}…` : "Search courses…"}
-            className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-navy-400 focus:ring-2 focus:ring-navy-100 transition-colors"
+            className="w-full pl-9 pr-3 py-2 text-base lg:text-sm bg-slate-50 border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-navy-400 focus:ring-2 focus:ring-navy-100 transition-colors"
             value={searchTerm}
             onChange={(e) => {
               const newQuery = e.target.value;
@@ -358,6 +369,8 @@ const CourseSearch = ({
                       }
                       onDragEnd={handleDragEnd}
                       onClick={onCourseClick}
+                      onAdd={onAddToPlan}
+                      compact={compact}
                     />
                   ))}
                 </div>
@@ -430,6 +443,8 @@ const CourseSearch = ({
                                   }
                                   onDragEnd={handleDragEnd}
                                   onClick={onCourseClick}
+                                  onAdd={onAddToPlan}
+                                  compact={compact}
                                 />
                               ))}
                             </div>
@@ -510,6 +525,8 @@ const CourseSearch = ({
                   onDragStart={(e) => handleDragStart(e, course, true)}
                   onDragEnd={handleDragEnd}
                   onClick={onCourseClick}
+                  onAdd={onAddToPlan}
+                  compact={compact}
                 />
               ))}
             </div>

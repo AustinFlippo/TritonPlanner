@@ -22,7 +22,7 @@ const formatDate = (iso) => {
 };
 
 const iconButtonClass =
-  "p-1.5 rounded-lg text-slate-400 hover:text-navy-600 hover:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:opacity-40 disabled:pointer-events-none";
+  "w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:p-1.5 rounded-lg text-slate-400 hover:text-navy-600 hover:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 disabled:opacity-40 disabled:pointer-events-none";
 
 const checkboxClass =
   "h-4 w-4 shrink-0 rounded border-slate-300 accent-navy-600 cursor-pointer disabled:opacity-40";
@@ -233,8 +233,8 @@ const CourseStorage = ({
           </h3>
           <p className="text-sm text-slate-500 max-w-sm mx-auto">
             {canSave
-              ? "Use “Save plan” at the top of the planner to keep a snapshot of your schedule and come back to it later."
-              : "Build a schedule in the planner, then use “Save plan” to keep a snapshot of it here."}
+              ? "Open the plan menu at the top of the planner and choose “Save this plan as…” to keep your schedule here and switch between plans."
+              : "Build a schedule in the planner, then use the plan menu at the top to save it here."}
           </p>
           <button
             onClick={() => onNavigate?.("planner")}
@@ -286,7 +286,7 @@ const CourseStorage = ({
               return (
                 <li
                   key={plan.id}
-                  className={`bg-white border rounded-xl shadow-card px-4 py-3 flex items-center gap-3 ${
+                  className={`bg-white border rounded-xl shadow-card px-4 py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 ${
                     isChecked
                       ? "border-navy-300 bg-navy-50/50"
                       : "border-slate-200"
@@ -344,6 +344,11 @@ const CourseStorage = ({
                       <>
                         <p className="text-sm font-medium text-slate-800 truncate">
                           {plan.name}
+                          {activeSavedPlan?.id === plan.id && (
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-navy-50 text-navy-600 align-middle">
+                              Open in planner
+                            </span>
+                          )}
                         </p>
                         {/* Courses whose units the catalog never published are
                             named, not folded into the total as zero. */}
@@ -367,7 +372,7 @@ const CourseStorage = ({
                   </div>
 
                   {!isRenaming && (
-                    <div className="flex-shrink-0 flex items-center gap-1">
+                    <div className="flex-shrink-0 flex items-center gap-1 ml-auto sm:ml-0">
                       <button
                         onClick={() => onLoadPlan?.(plan)}
                         disabled={busy}

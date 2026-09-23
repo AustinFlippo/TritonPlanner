@@ -266,6 +266,55 @@ export const updateCourseInQuarter = (
 };
 
 /**
+ * Mark (or unmark) a planned course as one the student has actually
+ * registered for on WebReg.
+ *
+ * Registration lands in the degree audit weeks after the fact, so until the
+ * next audit upload the planner only knows the card as "planned" — and keeps
+ * painting it Full / 0 seats, which is noise for a seat the student already
+ * holds. The flag lives on the course object so autosave / Supabase keep it,
+ * like the saved section choice. It is a display fact, not a status change:
+ * the card stays `planned` so degree progress, taken-course guards, and the
+ * audit merge (which replaces it with the real in-progress card) behave
+ * exactly as before. Unmarking deletes the fields rather than writing
+ * `enrolled: false`, so a dropped course looks like it was never marked.
+ */
+export const setCourseEnrolled = (
+  schedule,
+  yearIndex,
+  term,
+  courseId,
+  enrolled
+) => {
+  if (!courseId) return schedule;
+  const next = cloneSchedule(schedule);
+  const slots = next[yearIndex]?.[term];
+  if (!slots) return schedule;
+  const idx = slots.findIndex((c) => c && c.course_id === courseId);
+  if (idx === -1) return schedule;
+  const current = slots[idx];
+  if (current.status === "completed" || current.status === "current") {
+    return schedule;
+  }
+  if (enrolled) {
+    if (current.enrolled === true) return schedule;
+    slots[idx] = { ...current, enrolled: true, enrolledAt: Date.now() };
+  } else {
+    if (!current.enrolled) return schedule;
+    slots[idx] = withoutEnrolledMark(current);
+  }
+  return next;
+};
+
+/** The course with its "registered" mark removed (no-op when unmarked). */
+export const withoutEnrolledMark = (course) => {
+  if (!course || (!course.enrolled && course.enrolledAt == null)) return course;
+  // eslint-disable-next-line no-unused-vars
+  const { enrolled, enrolledAt, ...rest } = course;
+  return rest;
+};
+
+/**
  * Snapshot of a TSS section package the student picked for a planned course.
  * Stored on the course object so planner auto-save / Supabase keep it.
  */

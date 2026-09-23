@@ -81,6 +81,8 @@ const SidebarAuditTracker = ({
   expandState,
   onToggleExpand,
   onMinimize,
+  compact = false,
+  onRequirementSearch,
 }) => {
   const [auditSections, setAuditSections] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -620,8 +622,11 @@ const SidebarAuditTracker = ({
                   Upload degree audit
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  <span className="text-navy-500 font-medium">Choose a file</span>{' '}
-                  or drag &amp; drop your HTML audit here
+                  <span className="text-navy-500 font-medium">Choose a file</span>
+                  {/* There is nothing to drag from on a phone — tapping the
+                      dropzone opens the file picker, so only name that. */}
+                  {!compact && ' or drag & drop your HTML audit here'}
+                  {compact && ' with your saved HTML audit'}
                 </p>
               </div>
             ) : (
@@ -660,7 +665,9 @@ const SidebarAuditTracker = ({
           {auditSections.length === 0 && !loading && (
             <div className="mt-3 px-0.5 space-y-1.5">
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                In TritonLink, open <span className="font-medium text-slate-600">Degree Audit</span>, save the page as HTML, then drop it here.
+                In TritonLink, open{' '}
+                <span className="font-medium text-slate-600">Degree Audit</span>,
+                save the page as HTML, then {compact ? 'upload it here' : 'drop it here'}.
               </p>
               <WatchDemoLink />
             </div>
@@ -815,8 +822,8 @@ const SidebarAuditTracker = ({
                         Units not counted
                       </span>
                       <span className="text-xs font-medium tabular-nums text-amber-600">
-                        {progress.unknownUnitCourses} unverified course
-                        {progress.unknownUnitCourses === 1 ? '' : 's'}
+                        {progress.unknownUnitCourses} course
+                        {progress.unknownUnitCourses === 1 ? '' : 's'} with unknown units
                       </span>
                     </div>
                   )}
@@ -910,6 +917,8 @@ const SidebarAuditTracker = ({
                       projection={progress.sectionProgress[index]}
                       isExpanded={expandedSections.has(index)}
                       onToggle={() => toggleSection(index)}
+                      compact={compact}
+                      onRequirementSearch={onRequirementSearch}
                     />
                   );
                 })}

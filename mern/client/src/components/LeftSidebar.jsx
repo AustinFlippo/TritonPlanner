@@ -13,6 +13,8 @@ const LeftSidebar = ({
   expanded = false,
   onToggleExpand,
   onMinimize,
+  compact = false,
+  onRequirementSearch,
 }) => {
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
@@ -54,8 +56,12 @@ const LeftSidebar = ({
   return (
     <div
       ref={sidebarRef}
-      className="bg-white border-r border-gray-200 h-full flex flex-col overflow-hidden relative"
-      style={{ width: `${width}px` }}
+      className={`bg-white h-full flex flex-col overflow-hidden relative ${
+        compact ? "w-full" : "border-r border-gray-200"
+      }`}
+      // Phones give the panel the whole screen; the pixel width is a
+      // desktop-column concept and a fixed one here would overflow.
+      style={compact ? undefined : { width: `${width}px` }}
     >
       <SidebarAuditTracker
         auditData={auditData}
@@ -64,17 +70,23 @@ const LeftSidebar = ({
         expandState={expanded ? "expanded" : null}
         onToggleExpand={onToggleExpand}
         onMinimize={expanded ? undefined : onMinimize}
+        compact={compact}
+        onRequirementSearch={onRequirementSearch}
       />
 
-      {/* Resize handle — stays available in full-bleed so you can drag back */}
-      <div
-        className="absolute top-0 right-0 w-1.5 h-full hover:bg-navy-300 cursor-col-resize z-10 transition-colors"
-        onMouseDown={(e) => {
-          e.preventDefault();
-          setIsResizing(true);
-        }}
-        title="Drag to resize"
-      />
+      {/* Resize handle — stays available in full-bleed so you can drag back.
+          There is nothing to drag on a touch screen, and no second column to
+          make room for, so the phone layout leaves it out. */}
+      {!compact && (
+        <div
+          className="absolute top-0 right-0 w-1.5 h-full hover:bg-navy-300 cursor-col-resize z-10 transition-colors"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsResizing(true);
+          }}
+          title="Drag to resize"
+        />
+      )}
     </div>
   );
 };

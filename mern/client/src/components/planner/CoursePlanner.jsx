@@ -1,4 +1,10 @@
-import { CirclePlay, FileSpreadsheet, Loader2, UploadCloud } from "lucide-react";
+import {
+  CirclePlay,
+  FileSpreadsheet,
+  Loader2,
+  UploadCloud,
+  X,
+} from "lucide-react";
 import YearBlock from "./YearBlock";
 import SavePlanControl from "./SavePlanControl";
 import OmittedCreditsNote from "./OmittedCreditsNote";
@@ -26,12 +32,20 @@ const CoursePlanner = ({
   onExportToSheets,
   activeSavedPlan,
   onSavedPlanChange,
+  onLoadPlan,
+  onChatCarryOver,
   onResetSchedule,
   buildFreshSchedule,
   onNavigate,
   loading = false,
   onOpenCourse,
   omittedCourses = [],
+  compact = false,
+  placementCourse = null,
+  onPlaceInTerm,
+  onCancelPlacement,
+  onMoveCourse,
+  enrolledToggleFor,
 }) => {
   const scheduleIsEmpty = schedule.every((year) =>
     ["fall", "winter", "spring"].every((term) =>
@@ -41,8 +55,35 @@ const CoursePlanner = ({
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Tap-to-place: while a course is armed the grid becomes a target
+          picker, and this bar is the only way back out. Sticky rather than
+          fixed so it rides above the years without covering the tab bar. */}
+      {placementCourse && (
+        <div
+          role="status"
+          className="sticky top-0 z-30 -mx-3 mb-3 px-3 py-2.5 bg-navy-700 text-white flex items-center gap-3 shadow-panel"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-semibold truncate">
+              Placing {placementCourse.course_id}
+            </p>
+            <p className="text-[11px] text-navy-200">
+              Tap the quarter it belongs in
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancelPlacement}
+            className="flex-shrink-0 w-9 h-9 -mr-1 flex items-center justify-center rounded-lg text-navy-100 active:bg-white/15 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+            aria-label="Cancel placement"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {scheduleIsEmpty && (
-        <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="mb-4 bg-white border border-slate-200 rounded-xl shadow-card px-4 sm:px-5 py-4 flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-navy-50 flex-shrink-0">
               <UploadCloud className="w-5 h-5 text-navy-600" />
@@ -52,8 +93,9 @@ const CoursePlanner = ({
                 Start with your degree audit
               </div>
               <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                Upload the HTML file on the left to place completed courses and
-                track what's left. Prefer a walkthrough first?
+                Upload the HTML file {compact ? "under Progress" : "on the left"}{" "}
+                to place completed courses and track what&rsquo;s left. Prefer a
+                walkthrough first?
               </p>
             </div>
           </div>
@@ -68,6 +110,8 @@ const CoursePlanner = ({
         schedule={schedule}
         activeSavedPlan={activeSavedPlan}
         onSavedPlanChange={onSavedPlanChange}
+        onLoadPlan={onLoadPlan}
+        onChatCarryOver={onChatCarryOver}
         onResetSchedule={onResetSchedule}
         buildFreshSchedule={buildFreshSchedule}
         onNavigate={onNavigate}
@@ -96,13 +140,18 @@ const CoursePlanner = ({
           getPrereqWarning={getPrereqWarning}
           getSlotClassName={getSlotClassName}
           onOpenCourse={onOpenCourse}
+          compact={compact}
+          placementCourse={placementCourse}
+          onPlaceInTerm={onPlaceInTerm}
+          onMoveCourse={onMoveCourse}
+          enrolledToggleFor={enrolledToggleFor}
         />
       ))}
 
       <OmittedCreditsNote courses={omittedCourses} />
       
       {/* Export to Google Sheets */}
-      <div className="mt-6 mb-2 bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex items-center justify-between gap-4">
+      <div className="mt-6 mb-2 bg-white border border-slate-200 rounded-xl shadow-card px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 flex-shrink-0">
             <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
@@ -119,7 +168,7 @@ const CoursePlanner = ({
         <button
           onClick={onExportToSheets}
           disabled={loading}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2 ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2 ${
             loading
               ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
               : 'bg-navy-700 text-white hover:bg-navy-600'

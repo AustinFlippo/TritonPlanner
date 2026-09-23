@@ -171,6 +171,18 @@ assert.equal(isCourseOfferedNext(null, offered), false);
     "not-offered is a block, not a seat warning"
   );
   assert.equal(
+    enrollmentSeatWarning(
+      { ...course, enrolled: true },
+      {
+        offeringsReady: true,
+        isOffered: () => true,
+        seatChip: { kind: "full" },
+      }
+    ),
+    null,
+    "a course the student already registered for gets no seat warning"
+  );
+  assert.equal(
     enrollmentPlacementBlock(course, {
       offeringsReady: true,
       isOffered: () => true,

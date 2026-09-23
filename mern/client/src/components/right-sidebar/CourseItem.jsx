@@ -1,9 +1,11 @@
-import { GripVertical } from "lucide-react";
+import { GripVertical, Plus } from "lucide-react";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
 import {
   parseCredits,
   isUnverifiedCourse,
+  isLiveOnlyCourse,
   hasUnknownCredits,
+  unknownUnitsReason,
 } from "../../utils/courseCredits";
 
 // Which terms a course is offered in, rendered as compact chips
@@ -15,7 +17,17 @@ const TERM_CHIPS = [
 
 // prereqsMet (optional): true = prereqs satisfied by plan, false = missing,
 // null/undefined = unknown or not applicable — no badge shown
-const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => {
+// onAdd (phones): arms the course for tap-to-place. The drag handle is a
+// desktop gesture; touch gets an explicit button in its place.
+const CourseItem = ({
+  course,
+  onDragStart,
+  onDragEnd,
+  onClick,
+  prereqsMet,
+  onAdd,
+  compact = false,
+}) => {
   const { offeredNextChip, enrollmentQuarter, seatChipFor } =
     useNextQuarterOfferings();
   const nextChip = offeredNextChip(course?.course_id);
@@ -28,7 +40,13 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => 
   // real, so show the name, prereqs and quarters — just not a fabricated unit
   // count.
   const unknownUnits = hasUnknownCredits(course);
-  const prereqs = Array.isArray(course.prerequisites)
+  // On the live Class Planner schedule but never in the General Catalog: a
+  // real course with a real name and staff, whose units and prereqs UCSD
+  // simply hasn't published. Not unverified — just incompletely described.
+  const liveOnly = isLiveOnlyCourse(course);
+  const prereqs = liveOnly
+    ? "unknown (not in the General Catalog)"
+    : Array.isArray(course.prerequisites)
     ? course.prerequisites.length > 0
       ? course.prerequisites.join(", ")
       : "None"
@@ -99,11 +117,7 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => 
                 className={`text-[11px] tabular-nums ${
                   unknownUnits ? "text-amber-600" : "text-slate-500"
                 }`}
-                title={
-                  unknownUnits && !unverified
-                    ? `${course.course_id} is in the catalog, but UC San Diego doesn't publish a machine-readable unit count for it.`
-                    : undefined
-                }
+                title={unknownUnits && !unverified ? unknownUnitsReason(course) : undefined}
               >
                 {unknownUnits ? "?" : parseCredits(course.credits).toFixed(1)} u
               </span>
@@ -117,6 +131,11 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => 
             {unverified
               ? "Listed by your audit · not in the course catalog"
               : course.course_name}
+            {liveOnly && (
+              <span className="ml-1 text-slate-400 not-italic">
+                · on the {course.live_term || "live"} schedule, not in the catalog
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-1">
             {/* Greyed-out term chips mean "not offered". For an unverified
@@ -134,7 +153,15 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => 
                           ? "bg-navy-100 text-navy-600"
                           : "bg-slate-50 text-slate-300"
                       }`}
-                      title={offered ? `Offered ${label}` : `Not offered ${label}`}
+                      title={
+                        offered
+                          ? liveOnly
+                            ? `On the ${course.live_term || "live"} schedule`
+                            : `Offered ${label}`
+                          : liveOnly
+                            ? "Unknown — not in the General Catalog"
+                            : `Not offered ${label}`
+                      }
                     >
                       {label}
                     </span>
@@ -147,6 +174,21 @@ const CourseItem = ({ course, onDragStart, onDragEnd, onClick, prereqsMet }) => 
             </span>
           </div>
         </div>
+
+        {compact && onAdd && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(course);
+            }}
+            className="flex-shrink-0 w-9 h-9 -mr-1 flex items-center justify-center rounded-lg border border-navy-200 text-navy-600 active:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+            aria-label={`Add ${course.course_id} to your plan`}
+            title="Add to plan"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );

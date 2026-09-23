@@ -7,6 +7,8 @@ import CourseStorage from "./CourseStorage";
 import QuarterlyView from "./QuarterlyView";
 import AdminSectionData from "./AdminSectionData";
 import Header from "./Header";
+import MobileTabBar from "./MobileTabBar";
+import { useCompactLayout } from "../utils/useCompactLayout";
 import { useAuth } from "../context/AuthContext";
 import { useNextQuarterOfferings } from "../context/NextQuarterOfferingsContext";
 import { api } from "../utils/api";
@@ -17,7 +19,11 @@ import {
   keepTakenCourses,
   normalizePlanGrid,
 } from "../utils/scheduleOps";
-import { listSavedPlans, updateSavedPlan } from "../utils/savedPlans";
+import {
+  isPlanNotFound,
+  listSavedPlans,
+  updateSavedPlan,
+} from "../utils/savedPlans";
 import {
   SIGN_IN_MIGRATION_KEY,
   clearDeviceLocalPlanState,
@@ -28,6 +34,7 @@ import {
 } from "../utils/plannerStateStore";
 import {
   MIN_PLAN_YEARS,
+  mergeAuditIntoSchedule,
   parseCatalogYear,
   planWindow,
   processAuditForPlanner,
@@ -59,8 +66,16 @@ const emptySchedule = (yearCount = MIN_PLAN_YEARS) =>
 
 const emptyAuditData = () => ({ sections: [], metadata: {} });
 
+// How much of each chat transcript is persisted with the plan. Old turns
+// beyond this are dropped from storage (the on-screen thread keeps them for
+// the session) so the planner_states blob can't grow without bound.
+const MAX_PERSISTED_CHAT_MESSAGES = 60;
+
 const MainLayout = () => {
-  const { user, initializing } = useAuth();
+  const { user, initializing, sessionExpired } = useAuth();
+  // Narrow viewports get a single-pane shell with a bottom tab bar. The
+  // resizable three-column workspace needs ~1024px before it fits.
+  const isCompact = useCompactLayout();
   const {
     syncLiveSeats,
     sections: tssSections,
@@ -73,14 +88,15 @@ const MainLayout = () => {
   // State for parsed degree audit data
   const [parsedCourseData, setParsedCourseData] = useState(emptyAuditData);
 
-  // Bumped only on a fresh audit upload, so the planner knows to rebuild its
-  // grid from the audit. Restoring a saved session sets parsedCourseData
-  // WITHOUT bumping this, so the restored grid isn't clobbered.
-  const [auditUploadKey, setAuditUploadKey] = useState(0);
-
   // The planner grid — owned here so the Planner AND the Quarter View can
   // both read and edit it (and the chat assistant can send it as context)
   const [schedule, setSchedule] = useState(emptySchedule);
+
+  // Assistant transcripts, keyed by plan context ("saved-<id>" for named
+  // plans, "working-plan" for the unnamed live plan). Owned here so they
+  // persist with the plan: written into the same device blob / Supabase row
+  // as the schedule, restored on load, wiped on account switch.
+  const [chatThreads, setChatThreads] = useState({});
 
   // AI-proposed plan the user accepted in chat; keyed so re-applying works
   const [appliedPlan, setAppliedPlan] = useState(null);
@@ -102,6 +118,20 @@ const MainLayout = () => {
 
   // null | "requirements" | "search" | "chat" | "main" — near-fullscreen panel takeover
   const [expandedPanel, setExpandedPanel] = useState(null);
+
+  // Which of the three columns the phone is showing. Desktop ignores it.
+  // "main" covers every page (planner / quarter / storage / admin).
+  const [mobileView, setMobileView] = useState("main");
+
+  // Touch has no HTML5 drag-and-drop, so a phone places courses in two taps:
+  // arm a course here, then tap the quarter it belongs in. { course, source }
+  // — source is set when moving a card already on the grid, null from search.
+  const [pendingPlacement, setPendingPlacement] = useState(null);
+
+  // A requirement the student asked to see courses for, from the Progress
+  // panel. On desktop that is a drag into Course Search; on a phone it is a
+  // tap, which has to travel through here to reach the right rail.
+  const [requirementRequest, setRequirementRequest] = useState(null);
 
   // Docked sidebars can be tucked away to give the planner more room
   const [leftMinimized, setLeftMinimized] = useState(false);
@@ -131,6 +161,10 @@ const MainLayout = () => {
   // tell "hasn't loaded yet" (skip) from "the student cleared it" (save).
   const hasHadPlanContentRef = useRef(false);
   const workspaceRef = useRef(null);
+  // Read inside identity-stable callbacks (handleOpenCourse is an effect
+  // dependency elsewhere), so they can branch on layout without churning.
+  const compactRef = useRef(isCompact);
+  compactRef.current = isCompact;
   const leftWidthBeforeExpandRef = useRef(DEFAULT_LEFT_WIDTH);
   const rightWidthBeforeExpandRef = useRef(DEFAULT_RIGHT_WIDTH);
 
@@ -158,6 +192,15 @@ const MainLayout = () => {
   yearCountRef.current = planWindowValue.yearCount;
   const scheduleRef = useRef(schedule);
   scheduleRef.current = schedule;
+  const userRef = useRef(user);
+  userRef.current = user;
+  const activeSavedPlanRef = useRef(activeSavedPlan);
+  activeSavedPlanRef.current = activeSavedPlan;
+  // Last signed-in account. While a session has merely EXPIRED (not signed
+  // out), device writes stay stamped with this owner so the blob remains that
+  // student's — reconcilable on re-sign-in, inert to anyone else.
+  const lastOwnerIdRef = useRef(null);
+  if (user?.id) lastOwnerIdRef.current = user.id;
 
   // Calendar enrollment slot — Quarter View lenses onto this term of the
   // active plan's grid (not a shared global quarter across named plans).
@@ -194,6 +237,39 @@ const MainLayout = () => {
     () => workspaceRef.current?.clientWidth ?? window.innerWidth,
     []
   );
+
+  // Entering the phone layout: drop every desktop-only layout mode so the
+  // single-pane shell starts clean, and leaving it drops the phone-only ones.
+  useEffect(() => {
+    if (isCompact) {
+      setExpandedPanel(null);
+      setLeftMinimized(false);
+      setRightMinimized(false);
+    } else {
+      setPendingPlacement(null);
+      setMobileView("main");
+    }
+  }, [isCompact]);
+
+  // Arm a course for tap-to-place, and show the student the grid it lands on.
+  const handleQueuePlacement = useCallback((course, source = null) => {
+    if (!course?.course_id) return;
+    setPendingPlacement({ course, source, token: Date.now() });
+    setMobileView("main");
+    // Quarter View can take the placement itself; anything else means the
+    // planner grid, so leave a quarter lens alone and pull the rest back.
+    setCurrentPage((page) => (page === "quarter" ? page : "planner"));
+  }, []);
+
+  const cancelPlacement = useCallback(() => setPendingPlacement(null), []);
+
+  // Show courses that satisfy a requirement — a drag into Course Search on
+  // desktop, a tap in the Progress panel on a phone.
+  const handleRequirementSearch = useCallback((requirement) => {
+    if (!requirement?.codes?.length) return;
+    setRequirementRequest({ requirement, token: Date.now() });
+    setMobileView("assistant");
+  }, []);
 
   const leftOccupied = leftMinimized ? RAIL_WIDTH : leftWidth;
   const rightOccupied = rightMinimized ? RAIL_WIDTH : rightWidth;
@@ -450,9 +526,26 @@ const MainLayout = () => {
     [schedule, activeSavedPlan?.id]
   );
 
-  // A saved snapshot picked from the Storage page — full grid, including
-  // that plan's upcoming enrollment quarter.
-  const handleLoadSavedPlan = useCallback((plan) => {
+  // A saved snapshot picked from the Storage page or the plan menu — full
+  // grid, including that plan's upcoming enrollment quarter. The outgoing
+  // named plan's last edits are flushed first: the 1200ms debounced sync is
+  // cancelled by the switch, and without the flush the final drag before
+  // "Load" silently never reached the plan it was made on.
+  const handleLoadSavedPlan = useCallback(async (plan) => {
+    const outgoing = activeSavedPlanRef.current;
+    if (outgoing?.id && outgoing.id !== plan.id) {
+      clearTimeout(activePlanSyncTimerRef.current);
+      try {
+        await updateSavedPlan(userRef.current, outgoing.id, {
+          schedule: scheduleRef.current,
+        });
+      } catch (err) {
+        // A ghost pointer (snapshot deleted elsewhere) must not block loading.
+        if (!isPlanNotFound(err)) {
+          console.error("Failed to flush the previous plan before loading:", err);
+        }
+      }
+    }
     const grid = plan.schedule;
     // Baseline to the loaded snapshot (not the previous live grid).
     lastSyncedActivePlanFpRef.current = JSON.stringify(
@@ -472,13 +565,52 @@ const MainLayout = () => {
       }
       return current;
     });
+    // A deleted plan's conversation goes with it.
+    setChatThreads((current) => {
+      const next = { ...current };
+      let changed = false;
+      for (const id of gone) {
+        if (`saved-${id}` in next) {
+          delete next[`saved-${id}`];
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
   };
 
-  // Fresh audit upload from the left sidebar
+  // A new named plan was created from the grid on screen ("Save this plan
+  // as…" / "Save a copy as…"). The conversation belongs to that work, so it
+  // follows the plan: naming the untitled plan MOVES its thread onto the new
+  // plan; copying an already-named plan copies its thread, and the original
+  // keeps its own.
+  const handleChatCarryOver = useCallback((newPlanId) => {
+    if (!newPlanId) return;
+    setChatThreads((current) => {
+      const fromKey = activeSavedPlanRef.current?.id
+        ? `saved-${activeSavedPlanRef.current.id}`
+        : "working-plan";
+      const msgs = current[fromKey];
+      if (!Array.isArray(msgs) || !msgs.length) return current;
+      const next = { ...current, [`saved-${newPlanId}`]: msgs };
+      if (fromKey === "working-plan") delete next[fromKey];
+      return next;
+    });
+  }, []);
+
+  // Audit upload from the left sidebar. A re-upload REFRESHES the audit inside
+  // the current plan: transcript cards (completed / in-progress / failed) are
+  // rebuilt from the new audit, the student's planned courses stay where they
+  // are, and the active named plan stays open. It used to detach the plan and
+  // rebuild the grid from scratch — re-uploading deleted everything planned.
+  // The first upload is the empty-plan case of the same merge.
   const handleParsedDataUpdate = (data) => {
-    setActiveSavedPlan(null);
+    const sections = Array.isArray(data?.sections) ? data.sections : [];
+    const nextWindow = planWindow(parseCatalogYear(data?.metadata?.catalogYear));
     setParsedCourseData(data);
-    setAuditUploadKey((k) => k + 1);
+    if (sections.length) {
+      setSchedule((prev) => mergeAuditIntoSchedule(sections, prev, nextWindow));
+    }
   };
 
   // Drop the active named-plan pointer only when the signed-in account
@@ -494,6 +626,13 @@ const MainLayout = () => {
     prevUserIdRef.current = nextId;
     if (prevId === undefined || prevId === nextId) return;
 
+    // The session dropped on its own (expired/rotated refresh token, a
+    // multi-tab refresh race) — the student did NOT leave. Wiping here is what
+    // silently deleted their audit and plan "after a while" and forced a
+    // re-upload. Keep everything; autosave falls back to device-local writes
+    // stamped with the same owner, and re-signing-in reconciles them.
+    if (!nextId && sessionExpired) return;
+
     setActiveSavedPlan(null);
     lastSyncedActivePlanFpRef.current = null;
     activePlanBootstrappedRef.current = false;
@@ -505,16 +644,15 @@ const MainLayout = () => {
     // The next session starts fresh: an empty grid after this point means
     // "nothing loaded yet" again, not "the student cleared their plan".
     hasHadPlanContentRef.current = false;
+    lastOwnerIdRef.current = null;
     clearDeviceLocalPlanState();
     setSchedule(emptySchedule());
     setParsedCourseData(emptyAuditData());
+    setChatThreads({});
     setRestoredPlan(null);
     setAppliedPlan(null);
     setSyncStatus("idle");
-    // auditUploadKey is deliberately left alone: it only ever counts up, and
-    // resetting it could make the next real upload collide with the key the
-    // planner already consumed, which would skip rebuilding the grid.
-  }, [user?.id]);
+  }, [user?.id, sessionExpired]);
 
   const applySavedState = useCallback((saved) => {
     if (!saved) return;
@@ -525,6 +663,10 @@ const MainLayout = () => {
       // Keep the parent schedule in step with restored audit data. Deferring
       // this through the child can briefly expose an empty grid to auto-save.
       setSchedule(normalizePlanGrid(saved.schedule, yearCountRef.current));
+    }
+    // Per-plan assistant transcripts saved with the blob.
+    if (saved.chatThreads && typeof saved.chatThreads === "object") {
+      setChatThreads(saved.chatThreads);
     }
     // Re-open the named plan the student was editing last session.
     if (saved.activeSavedPlan?.id) {
@@ -620,8 +762,13 @@ const MainLayout = () => {
   //    latest edit. Account saves remain debounced.
   useEffect(() => {
     if (!hydratedRef.current) return;
+    const hasChats = Object.values(chatThreads).some(
+      (msgs) => Array.isArray(msgs) && msgs.length
+    );
     const isEmpty =
-      !scheduleHasCourses(schedule) && !(parsedCourseData.sections || []).length;
+      !scheduleHasCourses(schedule) &&
+      !(parsedCourseData.sections || []).length &&
+      !hasChats;
 
     // A sign-out asked for a blank slate. This effect still sees the departing
     // account's grid in the same commit, so hold the write until the reset has
@@ -646,9 +793,18 @@ const MainLayout = () => {
     // grid's "Year 4" would silently be reread as a future year — resurrecting
     // past placements as plannable. Nothing consumes it yet; it exists so the
     // migration that will need it has something to read.
+    // Persist each thread's recent tail; empty threads are dropped.
+    const persistedChatThreads = {};
+    for (const [key, msgs] of Object.entries(chatThreads)) {
+      if (Array.isArray(msgs) && msgs.length) {
+        persistedChatThreads[key] = msgs.slice(-MAX_PERSISTED_CHAT_MESSAGES);
+      }
+    }
+
     const state = {
       schedule,
       parsedCourseData,
+      chatThreads: persistedChatThreads,
       // Remember which named plan is open so the next visit resumes it.
       activeSavedPlan: activeSavedPlan
         ? { id: activeSavedPlan.id, name: activeSavedPlan.name }
@@ -658,7 +814,11 @@ const MainLayout = () => {
       // localStorage is a property of the browser, not of the student, so
       // without this stamp the next person to sign in on a shared machine
       // inherits — and uploads over their own account — this degree audit.
-      ownerId: user?.id ?? null,
+      // While the session has merely EXPIRED, writes keep the last owner's
+      // stamp: it is still that student's work, and stamping it null would
+      // anonymize their audit on a shared machine.
+      ownerId:
+        user?.id ?? (sessionExpired ? lastOwnerIdRef.current : null) ?? null,
       savedAt: Date.now(),
     };
     writeLocalPlannerState(state);
@@ -688,7 +848,7 @@ const MainLayout = () => {
     // stamps the payload, and depending on it would re-run this save when the
     // window shifts rather than when the plan actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schedule, parsedCourseData, activeSavedPlan, user, accountReady]);
+  }, [schedule, parsedCourseData, chatThreads, activeSavedPlan, user, accountReady]);
 
   // 4) On open: resume the named plan from last session, or fall back to the
   //    most recently updated saved plan so the app never starts on a blank
@@ -761,6 +921,9 @@ const MainLayout = () => {
   useEffect(() => {
     if (!hydratedRef.current || !activeSavedPlan?.id) return;
     if (user && !accountReady) return;
+    // An expired session can't reach the account's saved_plans rows — the
+    // live blob keeps accumulating locally and reconciles on re-sign-in.
+    if (!user && sessionExpired) return;
 
     const fp = JSON.stringify(schedule);
     if (fp === lastSyncedActivePlanFpRef.current) return;
@@ -776,7 +939,7 @@ const MainLayout = () => {
     }, ACTIVE_PLAN_SYNC_DEBOUNCE_MS);
 
     return () => clearTimeout(activePlanSyncTimerRef.current);
-  }, [schedule, user, activeSavedPlan, accountReady]);
+  }, [schedule, user, activeSavedPlan, accountReady, sessionExpired]);
 
   // Pull live TSS seats for courses on the enrollment quarter as soon as the
   // plan hydrates — no need to open Quarter View or click the Next filter.
@@ -799,6 +962,17 @@ const MainLayout = () => {
         ? courseOrId
         : courseOrId?.course_id || courseOrId?.courseId;
     if (!courseId) return;
+    // On a phone the details pane IS the assistant tab — bring it forward
+    // instead of juggling column widths that don't exist here.
+    if (compactRef.current) {
+      setMobileView("assistant");
+      setCourseOpenRequest({
+        courseId,
+        course: typeof courseOrId === "object" && courseOrId ? courseOrId : null,
+        token: Date.now(),
+      });
+      return;
+    }
     setRightMinimized(false);
     setExpandedPanel((current) => {
       // Details live in the search column — leave fullscreen main/requirements
@@ -873,17 +1047,22 @@ const MainLayout = () => {
           schedule={schedule}
           setSchedule={setSchedule}
           parsedCourseData={parsedCourseData}
-          auditUploadKey={auditUploadKey}
           planWindow={planWindowValue}
           yearLabels={yearLabels}
           externalPlan={appliedPlan}
           restoredPlan={restoredPlan}
           activeSavedPlan={activeSavedPlan}
           onSavedPlanChange={handleSavedPlanChange}
+          onLoadPlan={handleLoadSavedPlan}
+          onChatCarryOver={handleChatCarryOver}
           onNavigate={setCurrentPage}
           onOpenCourse={handleOpenCourse}
           buildFreshSchedule={buildFreshSchedule}
           enrollmentSlot={enrollmentSlot}
+          compact={isCompact}
+          pendingPlacement={pendingPlacement}
+          onQueuePlacement={handleQueuePlacement}
+          onCancelPlacement={cancelPlacement}
         />
       </div>
       {currentPage === "storage" && (
@@ -906,28 +1085,91 @@ const MainLayout = () => {
           parsedCourseData={parsedCourseData}
           activeSavedPlan={activeSavedPlan}
           onSavedPlanChange={handleSavedPlanChange}
+          onLoadPlan={handleLoadSavedPlan}
+          onChatCarryOver={handleChatCarryOver}
           onNavigate={setCurrentPage}
           mainExpanded={expandedPanel === "main"}
           onToggleMainExpand={handleToggleMainExpand}
           onOpenCourse={handleOpenCourse}
           buildFreshSchedule={buildFreshSchedule}
+          compact={isCompact}
+          pendingPlacement={pendingPlacement}
+          onCancelPlacement={cancelPlacement}
         />
       )}
     </>
   );
 
+  // Which bottom tab reads as current. Storage / Admin are plan management,
+  // so they keep the Plan tab lit rather than leaving nothing selected.
+  const mobileTab =
+    mobileView === "requirements"
+      ? "progress"
+      : mobileView === "assistant"
+        ? "assistant"
+        : currentPage === "quarter"
+          ? "quarter"
+          : "plan";
+
+  const handleMobileTab = (tab) => {
+    if (tab === "progress") {
+      setMobileView("requirements");
+      return;
+    }
+    if (tab === "assistant") {
+      setMobileView("assistant");
+      return;
+    }
+    setMobileView("main");
+    setCurrentPage(tab === "quarter" ? "quarter" : "planner");
+  };
+
+  // On a phone exactly one column is on screen; the other two stay mounted
+  // (hidden) so search results, a half-typed chat and the parsed audit all
+  // survive tab switches.
+  const leftPaneClass = isCompact
+    ? mobileView === "requirements"
+      ? "flex-1 min-w-0 h-full"
+      : "hidden"
+    : expandedPanel === "requirements"
+      ? "flex-shrink-0 h-full min-w-0"
+      : expandedPanel || leftMinimized
+        ? "hidden"
+        : "flex-shrink-0 h-full";
+
+  const mainPaneClass = isCompact
+    ? mobileView === "main"
+      ? "flex-1 min-w-0 p-3 overflow-y-auto bg-slate-100"
+      : "hidden"
+    : expandedPanel && expandedPanel !== "main"
+      ? "hidden"
+      : "flex-grow min-w-0 p-6 overflow-y-auto bg-slate-100";
+
+  const rightPaneClass = isCompact
+    ? mobileView === "assistant"
+      ? "flex-1 min-w-0 h-full"
+      : "hidden"
+    : expandedPanel === "search" || expandedPanel === "chat"
+      ? "flex-shrink-0 h-full min-w-0 ml-auto"
+      : expandedPanel || rightMinimized
+        ? "hidden"
+        : "flex-shrink-0 h-full";
+
   return (
-    <div className="flex flex-col h-screen">
+    // 100dvh, not 100vh: mobile browser chrome otherwise pushes the tab bar
+    // below the fold.
+    <div className="flex flex-col h-[100dvh]">
       {/* Full-width app bar with brand + navigation */}
       <Header
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         syncStatus={syncStatus}
+        isCompact={isCompact}
       />
 
       <div ref={workspaceRef} className="flex flex-1 overflow-hidden">
         {/* Thin restore rail when the left panel is tucked away */}
-        {leftMinimized && !expandedPanel && (
+        {!isCompact && leftMinimized && !expandedPanel && (
           <button
             type="button"
             className="flex-shrink-0 w-9 h-full border-r border-slate-200 bg-white text-slate-400 hover:text-navy-600 hover:bg-slate-50 flex items-center justify-center transition-colors"
@@ -940,15 +1182,7 @@ const MainLayout = () => {
         )}
 
         {/* Keep sidebars mounted when hidden so upload/chat/search state survives */}
-        <div
-          className={
-            expandedPanel === "requirements"
-              ? "flex-shrink-0 h-full min-w-0"
-              : expandedPanel || leftMinimized
-                ? "hidden"
-                : "flex-shrink-0 h-full"
-          }
-        >
+        <div className={leftPaneClass}>
           <LeftSidebar
             auditData={parsedCourseData}
             schedule={schedule}
@@ -956,24 +1190,18 @@ const MainLayout = () => {
             width={leftWidth}
             onWidthChange={handleLeftWidthChange}
             expanded={expandedPanel === "requirements"}
-            onToggleExpand={handleToggleLeftExpand}
-            onMinimize={() => setLeftMinimized(true)}
+            onToggleExpand={isCompact ? undefined : handleToggleLeftExpand}
+            onMinimize={isCompact ? undefined : () => setLeftMinimized(true)}
+            compact={isCompact}
+            onRequirementSearch={isCompact ? handleRequirementSearch : undefined}
           />
         </div>
 
         {/* Main content area — stays visible when expandedPanel is "main" */}
-        <div
-          className={
-            expandedPanel && expandedPanel !== "main"
-              ? "hidden"
-              : "flex-grow min-w-0 p-6 overflow-y-auto bg-slate-100"
-          }
-        >
-          {renderPage()}
-        </div>
+        <div className={mainPaneClass}>{renderPage()}</div>
 
         {/* Thin restore rail when the right panel is tucked away */}
-        {rightMinimized && !expandedPanel && (
+        {!isCompact && rightMinimized && !expandedPanel && (
           <button
             type="button"
             className="flex-shrink-0 w-9 h-full border-l border-slate-200 bg-white text-slate-400 hover:text-navy-600 hover:bg-slate-50 flex items-center justify-center transition-colors"
@@ -987,24 +1215,16 @@ const MainLayout = () => {
 
         {/* Right sidebar with course search & assistant.
             ml-auto keeps it edge-anchored while full-bleed (other columns hidden). */}
-        <div
-          className={
-            expandedPanel === "search" || expandedPanel === "chat"
-              ? "flex-shrink-0 h-full min-w-0 ml-auto"
-              : expandedPanel || rightMinimized
-                ? "hidden"
-                : "flex-shrink-0 h-full"
-          }
-        >
+        <div className={rightPaneClass}>
           <RightSidebar
             parsedCourseData={parsedCourseData}
             schedule={schedule}
             baseYear={planWindowValue.baseYear}
             planContextId={
-              activeSavedPlan?.id
-                ? `saved-${activeSavedPlan.id}`
-                : `working-plan-${auditUploadKey}`
+              activeSavedPlan?.id ? `saved-${activeSavedPlan.id}` : "working-plan"
             }
+            chatThreads={chatThreads}
+            onChatThreadsChange={setChatThreads}
             onApplyPlan={handleApplyPlan}
             onApplySectionProposal={handleApplySectionProposal}
             width={rightWidth}
@@ -1018,12 +1238,19 @@ const MainLayout = () => {
             layoutExpanded={
               expandedPanel === "search" || expandedPanel === "chat"
             }
-            onMinimize={() => setRightMinimized(true)}
+            onMinimize={isCompact ? undefined : () => setRightMinimized(true)}
             courseOpenRequest={courseOpenRequest}
             currentPage={currentPage}
+            compact={isCompact}
+            requirementRequest={requirementRequest}
+            onQueuePlacement={handleQueuePlacement}
           />
         </div>
       </div>
+
+      {isCompact && (
+        <MobileTabBar active={mobileTab} onSelect={handleMobileTab} />
+      )}
     </div>
   );
 };

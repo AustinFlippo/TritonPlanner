@@ -4,6 +4,8 @@ import {
   keepTakenCourses,
   normalizePlanGrid,
   placeCourseAt,
+  setCourseEnrolled,
+  withoutEnrolledMark,
 } from "./scheduleOps.js";
 
 const course = (id, status) => ({
@@ -220,5 +222,47 @@ describe("placeCourseAt — already taken courses", () => {
     assert.equal(next[1].fall[0].course_id, "CSE 21");
     assert.equal(next[1].fall[0].status, "planned");
     assert.equal(next[0].fall[0].status, "failed");
+  });
+});
+
+describe("setCourseEnrolled — 'I already registered' mark", () => {
+  it("marks a planned course and unmarking removes the fields entirely", () => {
+    const schedule = gridWith([course("CSE 100", "planned"), null, null]);
+    const marked = setCourseEnrolled(schedule, 0, "fall", "CSE 100", true);
+    assert.notEqual(marked, schedule, "returns a new grid");
+    assert.equal(marked[0].fall[0].enrolled, true);
+    assert.equal(typeof marked[0].fall[0].enrolledAt, "number");
+    assert.equal(marked[0].fall[0].status, "planned", "status is untouched");
+    assert.equal(schedule[0].fall[0].enrolled, undefined, "input not mutated");
+
+    const unmarked = setCourseEnrolled(marked, 0, "fall", "CSE 100", false);
+    assert.equal("enrolled" in unmarked[0].fall[0], false);
+    assert.equal("enrolledAt" in unmarked[0].fall[0], false);
+    assert.equal(unmarked[0].fall[0].course_id, "CSE 100");
+  });
+
+  it("is a no-op for missing courses, redundant toggles, and transcript cards", () => {
+    const schedule = gridWith([
+      course("CSE 100", "planned"),
+      course("CSE 12", "completed"),
+      null,
+    ]);
+    assert.equal(setCourseEnrolled(schedule, 0, "fall", "MATH 20A", true), schedule);
+    assert.equal(setCourseEnrolled(schedule, 0, "winter", "CSE 100", true), schedule);
+    assert.equal(setCourseEnrolled(schedule, 0, "fall", "CSE 100", false), schedule);
+    assert.equal(
+      setCourseEnrolled(schedule, 0, "fall", "CSE 12", true),
+      schedule,
+      "a completed card is already on the transcript"
+    );
+    const marked = setCourseEnrolled(schedule, 0, "fall", "CSE 100", true);
+    assert.equal(setCourseEnrolled(marked, 0, "fall", "CSE 100", true), marked);
+  });
+
+  it("withoutEnrolledMark strips the mark and leaves unmarked cards alone", () => {
+    const plain = course("CSE 100", "planned");
+    assert.equal(withoutEnrolledMark(plain), plain);
+    const stripped = withoutEnrolledMark({ ...plain, enrolled: true, enrolledAt: 1 });
+    assert.deepEqual(stripped, plain);
   });
 });

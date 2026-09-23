@@ -99,6 +99,9 @@ export function enrollmentSeatWarning(
 ) {
   if (!course?.course_id) return null;
   if (course.status === "completed" || course.status === "current") return null;
+  // The student says they already hold a seat (scheduleOps.setCourseEnrolled);
+  // a Full / waitlist heads-up about that seat is noise, not information.
+  if (course.enrolled === true) return null;
   if (!offeringsReady) return null;
   const id = course.course_id;
   if (typeof isOffered === "function" ? !isOffered(id) : isOffered === false) {

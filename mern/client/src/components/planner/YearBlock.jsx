@@ -25,6 +25,11 @@ const YearBlock = ({
   getCourseWarning,
   getPrereqWarning,
   onOpenCourse,
+  compact = false,
+  placementCourse = null,
+  onPlaceInTerm,
+  onMoveCourse,
+  enrolledToggleFor,
 }) => {
   const annualUnits = calculateAnnualUnits(yearIndex);
   // Mirrors TermBlock: courses with no published unit count are left out of the
@@ -32,6 +37,10 @@ const YearBlock = ({
   const unknownUnitCourses = ["fall", "winter", "spring"].reduce(
     (n, term) =>
       n + (year?.[term] || []).filter((c) => c && hasUnknownCredits(c)).length,
+    0
+  );
+  const courseCount = ["fall", "winter", "spring"].reduce(
+    (n, term) => n + (year?.[term] || []).filter(Boolean).length,
     0
   );
   const canClear =
@@ -87,6 +96,11 @@ const YearBlock = ({
             Year {yearIndex + 1}
           </span>
           <span className="text-sm text-slate-400 truncate">{yearLabel}</span>
+          {collapsed && courseCount > 0 && (
+            <span className="flex-shrink-0 text-xs text-slate-400">
+              · {courseCount}
+            </span>
+          )}
         </button>
 
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -141,7 +155,7 @@ const YearBlock = ({
 
       {/* Terms */}
       {!collapsed && (
-        <div className="flex flex-col md:flex-row md:divide-x divide-slate-100">
+        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
           {['fall', 'winter', 'spring'].map((term) => (
             <TermBlock
               key={term}
@@ -162,6 +176,11 @@ const YearBlock = ({
               getCourseWarning={getCourseWarning}
               getPrereqWarning={getPrereqWarning}
               onOpenCourse={onOpenCourse}
+              compact={compact}
+              placementCourse={placementCourse}
+              onPlaceInTerm={onPlaceInTerm}
+              onMoveCourse={onMoveCourse}
+              enrolledToggleFor={enrolledToggleFor}
             />
           ))}
         </div>

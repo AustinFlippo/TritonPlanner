@@ -12,12 +12,31 @@
   body {
     @apply bg-slate-100 text-slate-900 antialiased;
   }
+
+  /* iOS Safari zooms the whole page when a focused field is under 16px, and
+     the page never zooms back. Panel inputs opt into text-base at the
+     single-pane breakpoint; this catches the rest. Kept in step with
+     COMPACT_MAX_WIDTH in utils/useCompactLayout.js. */
+  @media (max-width: 1023px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
 }
 
 @layer components {
   /* Consistent panel section header used across sidebars */
   .panel-heading {
     @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500;
+  }
+}
+
+/* No rubber-band on the shell itself while a pane scrolls inside it */
+@media (max-width: 1023px) {
+  body {
+    overscroll-behavior-y: none;
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { parseCredits } from "./courseCredits.js";
 import { isWipGrade, isPassingGrade } from "./courseGrades.js";
+import { isTakenCourse } from "./courseIds.js";
 
 // Verbose tracing for the audit -> planner conversion. Off by default: these
 // logs fired on every upload (they were gated on `isInProgressSection`, which
@@ -567,6 +568,57 @@ export function populatePlannerWithAuditCourses(existingSchedule, auditCourses) 
   });
   
   return newSchedule;
+}
+
+/**
+ * Merge a (re-)uploaded audit into the schedule the student is editing.
+ *
+ * A re-upload is a data refresh, not a new plan: the transcript portion of the
+ * grid (completed / in-progress / failed cards, which all come from the audit)
+ * is rebuilt from the NEW audit, while the student's own planned placements
+ * stay exactly where they are. A planned course the new audit now shows as
+ * completed or in progress is dropped from the plan — it graduated into the
+ * transcript, and the new audit places it on its real term.
+ *
+ * The first upload is just the empty-plan case of the same rule, so callers
+ * don't need to distinguish "fresh" from "replace".
+ */
+export function mergeAuditIntoSchedule(auditSections, currentSchedule, window = null) {
+  const { yearCount } = window || planWindow(null);
+  const auditCourses = convertAuditToPlanner(auditSections, window);
+  const takenIds = auditCourses
+    .filter((c) => c.status === "completed" || c.status === "current")
+    .map((c) => c.course_id);
+
+  const years = Math.max(
+    yearCount,
+    Array.isArray(currentSchedule) ? currentSchedule.length : 0
+  );
+  const plannedOnly = Array(years)
+    .fill()
+    .map((_, yearIndex) => {
+      const source = (currentSchedule && currentSchedule[yearIndex]) || {};
+      const year = {};
+      for (const term of ["fall", "winter", "spring"]) {
+        const kept = (source[term] || []).filter(
+          (c) =>
+            c &&
+            c.course_id &&
+            // Audit-derived cards are rebuilt from the new audit below.
+            c.status !== "completed" &&
+            c.status !== "current" &&
+            c.status !== "failed" &&
+            // A planned course the student has since taken leaves the plan.
+            !isTakenCourse(c.course_id, takenIds)
+        );
+        while (kept.length < 2) kept.push(null);
+        kept.push(null);
+        year[term] = kept;
+      }
+      return year;
+    });
+
+  return populatePlannerWithAuditCourses(plannedOnly, auditCourses);
 }
 
 /**

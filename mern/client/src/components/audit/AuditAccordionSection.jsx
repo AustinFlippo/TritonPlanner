@@ -4,6 +4,7 @@ import {
   Check,
   CheckCircle2,
   GripVertical,
+  Search,
 } from 'lucide-react';
 import { AUDIT_REQUIREMENT_DRAG_TYPE } from '../../utils/recommendations';
 import { hideGradeInDisplay } from '../../utils/courseGrades';
@@ -17,6 +18,10 @@ const AuditAccordionSection = ({
   projection,
   isExpanded,
   onToggle,
+  // Phones can't drag a requirement into Course Search, so the same payload
+  // is offered as a tap.
+  compact = false,
+  onRequirementSearch,
 }) => {
 
   // Helper function to determine if a course item is completed based on grade
@@ -156,7 +161,9 @@ const AuditAccordionSection = ({
     );
   };
 
-  const handleCategoryDragStart = (event) => {
+  // One payload shape, two ways to send it: dragged into Course Search on a
+  // desktop, tapped through onRequirementSearch on a phone.
+  const categoryPayload = () => {
     const remaining = searchableRequirements.reduce(
       (total, requirement) => total + remainingFor(requirement),
       0
@@ -165,7 +172,7 @@ const AuditAccordionSection = ({
       searchableRequirements.length === 1
         ? searchableRequirements[0].needType
         : 'requirements';
-    setRequirementDragData(event, {
+    return {
       title,
       codes: [
         ...new Set(
@@ -180,18 +187,26 @@ const AuditAccordionSection = ({
           : remaining > 0
             ? `${remaining} ${needType === 'units' ? 'units' : 'courses'}`
             : null,
-    });
+    };
+  };
+
+  const subrequirementPayload = (requirement) => {
+    const remaining = remainingFor(requirement);
+    const unit = requirement.needType === 'units' ? 'units' : 'courses';
+    return {
+      title: displayTitleFor(requirement),
+      codes: [...(requirement.availableCodes || [])],
+      needs: remaining > 0 ? `${remaining} ${unit}` : null,
+    };
+  };
+
+  const handleCategoryDragStart = (event) => {
+    setRequirementDragData(event, categoryPayload());
   };
 
   const handleSubrequirementDragStart = (event, requirement) => {
     event.stopPropagation();
-    const remaining = remainingFor(requirement);
-    const unit = requirement.needType === 'units' ? 'units' : 'courses';
-    setRequirementDragData(event, {
-      title: displayTitleFor(requirement),
-      codes: [...(requirement.availableCodes || [])],
-      needs: remaining > 0 ? `${remaining} ${unit}` : null,
-    });
+    setRequirementDragData(event, subrequirementPayload(requirement));
   };
 
   // Green only when the subcategory is fully done (audit) or the plan covers
@@ -368,6 +383,16 @@ const AuditAccordionSection = ({
       {/* Expandable Content */}
       {isExpanded && (
         <div className="px-3 pb-3 bg-slate-50 border-t border-slate-200">
+          {compact && canSearchByDrag && onRequirementSearch && (
+            <button
+              type="button"
+              onClick={() => onRequirementSearch(categoryPayload())}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-navy-200 bg-white text-xs font-medium text-navy-700 active:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+            >
+              <Search className="w-3.5 h-3.5" />
+              Find courses for this category
+            </button>
+          )}
           <div className="space-y-1.5 pt-3">
             {requirementResults.map((requirement, index) => {
               const canDragRow = requirement.availableCodes?.length > 0;
@@ -502,6 +527,18 @@ const AuditAccordionSection = ({
                         </p>
                       </details>
                     )
+                  )}
+                  {compact && canDragRow && onRequirementSearch && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onRequirementSearch(subrequirementPayload(requirement))
+                      }
+                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/90 border border-navy-200 text-[11px] font-medium text-navy-700 active:bg-navy-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+                    >
+                      <Search className="w-3 h-3" />
+                      Find courses
+                    </button>
                   )}
                 </div>
               );

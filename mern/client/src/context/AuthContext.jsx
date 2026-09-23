@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { supabase, supabaseConfigured } from "../utils/supabase";
 import { oauthRedirectTo } from "../utils/authRedirect";
 import {
@@ -21,6 +21,12 @@ const mapUser = (u) =>
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
+  // True when the session dropped WITHOUT the user asking to sign out — an
+  // expired/rotated refresh token, or a multi-tab refresh race. MainLayout
+  // reads this to keep the plan and audit on screen (and on disk) instead of
+  // treating the drop as an account departure and wiping them.
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const explicitSignOutRef = useRef(false);
 
   useEffect(() => {
     // Leftover token from the pre-Supabase auth implementation
@@ -39,7 +45,17 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(mapUser(session?.user));
+      const next = mapUser(session?.user);
+      setUser((prev) => {
+        if (!next && prev && !explicitSignOutRef.current) {
+          setSessionExpired(true);
+        }
+        if (next) {
+          setSessionExpired(false);
+          explicitSignOutRef.current = false;
+        }
+        return next;
+      });
     });
 
     return () => subscription.unsubscribe();
@@ -69,6 +85,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    // Mark this drop as intentional BEFORE signOut fires the auth event, so
+    // the listener doesn't misread it as an expired session.
+    explicitSignOutRef.current = true;
+    setSessionExpired(false);
     if (supabase) await supabase.auth.signOut();
     // The device copies of the plan and the saved-plan library are anonymous
     // browser state, not account state — the account's own copies are safe in
@@ -81,7 +101,14 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, initializing, signInWithGoogle, logout, supabaseConfigured }}
+      value={{
+        user,
+        initializing,
+        sessionExpired,
+        signInWithGoogle,
+        logout,
+        supabaseConfigured,
+      }}
     >
       {children}
     </AuthContext.Provider>

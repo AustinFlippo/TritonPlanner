@@ -296,13 +296,16 @@ def load_upcoming_term() -> Optional[dict]:
             and term_code):
         norms = set()
         seat_by_norm = {}
+        course_info_by_norm = {}
         for cid, sections in courses.items():
             status = seat_status_from_sections(sections)
+            info = _live_course_info(str(cid), sections)
             for alias in aliases_for(str(cid)):
                 key = _normalize(alias)
                 norms.add(key)
                 if status:
                     seat_by_norm[key] = status
+                course_info_by_norm.setdefault(key, info)
         data = {
             "term_code": str(term_code).upper(),
             "term": term,
@@ -311,9 +314,86 @@ def load_upcoming_term() -> Optional[dict]:
             "course_count": len(courses),
             "course_norms": norms,
             "seat_by_norm": seat_by_norm,
+            # What Class Planner itself says about each course — enough to
+            # treat a course the General Catalog never published as real.
+            "course_info_by_norm": course_info_by_norm,
         }
     _upcoming_cache = {"mtime": mtime, "data": data}
     return data
+
+
+def _live_course_info(course_id: str, sections) -> dict:
+    """Name and staff for one live course, straight from its section rows."""
+    name = ""
+    instructors = []
+    for s in sections or []:
+        if not isinstance(s, dict):
+            continue
+        if not name and s.get("courseName"):
+            name = " ".join(str(s["courseName"]).split())
+        who = " ".join(str(s.get("instructor") or "").split())
+        if (who and who.lower() not in {"staff", "tba", "to be announced"}
+                and who not in instructors):
+            instructors.append(who)
+    return {
+        "course_id": " ".join(course_id.split()).upper(),
+        "course_name": name,
+        "instructors": instructors,
+    }
+
+
+def upcoming_course_info(course_id: str) -> Optional[dict]:
+    """Class Planner's own record of a course on the live schedule, or None.
+
+    {course_id, course_name, instructors} — None when there is no usable
+    snapshot or the course is not on it. Tolerates a snapshot built without
+    course_info_by_norm (older callers' fakes) by answering None.
+    """
+    snap = load_upcoming_term()
+    if not snap:
+        return None
+    info = snap.get("course_info_by_norm") or {}
+    if not info:
+        return None
+    for alias in aliases_for(" ".join(str(course_id or "").split())):
+        hit = info.get(_normalize(alias))
+        if hit:
+            return hit
+    return None
+
+
+def live_course_stub(course_id: str) -> Optional[dict]:
+    """A catalog-shaped entry for a course the General Catalog has never
+    published but the live Class Planner schedule is teaching (DSC 152).
+
+    Being on the live schedule settles that the course exists, what it is
+    called and who teaches it — so it is not "unverified". What Class Planner
+    does not publish stays honestly unknown: credits are None (never 0),
+    prerequisites are empty, and `offerings` is left empty rather than
+    asserting a pattern from a single quarter's evidence. Callers tell the
+    two cases apart by `catalog_source == "classplanner"` + `live_term`.
+    """
+    info = upcoming_course_info(course_id)
+    if not info:
+        return None
+    snap = load_upcoming_term() or {}
+    return {
+        "course_id": info["course_id"],
+        "course_name": info.get("course_name") or "",
+        "credits": None,
+        "prerequisites": "",
+        "description": "",
+        "offerings": [],
+        "professors": [
+            {"name": n, "quality_rating": "N/A", "num_ratings": "No ratings",
+             "would_take_again": "N/A", "difficulty": "N/A",
+             "profile_link": None, "department": ""}
+            for n in info.get("instructors") or []
+        ],
+        "professors_source": snap.get("term_code"),
+        "catalog_source": "classplanner",
+        "live_term": snap.get("term_code"),
+    }
 
 
 def is_offered_in_upcoming_term(course_id: str) -> Optional[bool]:

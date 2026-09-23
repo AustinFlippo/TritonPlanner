@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   convertAuditToPlanner,
+  mergeAuditIntoSchedule,
   gridBaseYear,
   outOfWindowAuditCourses,
   parseCatalogYear,
@@ -252,4 +253,121 @@ test("outOfWindowAuditCourses dedupes the same course across sections", () => {
     },
   ];
   assert.equal(outOfWindowAuditCourses(sections, window, AUG_2026).length, 1);
+});
+
+// --- mergeAuditIntoSchedule: a re-upload refreshes the audit inside the plan ---
+
+const flatCourses = (grid) => {
+  const out = [];
+  (grid || []).forEach((year, yearIndex) => {
+    for (const term of ["fall", "winter", "spring"]) {
+      for (const c of year?.[term] || []) {
+        if (c) out.push({ id: c.course_id, status: c.status, yearIndex, term });
+      }
+    }
+  });
+  return out;
+};
+
+const emptyGrid = (years = 4) =>
+  Array(years)
+    .fill()
+    .map(() => ({
+      fall: [null, null, null],
+      winter: [null, null, null],
+      spring: [null, null, null],
+    }));
+
+test("mergeAuditIntoSchedule on an empty grid behaves like a fresh upload", () => {
+  const window = planWindow(24, AUG_2026);
+  const sections = [
+    {
+      title: "Major",
+      status: "fulfilled",
+      items: ["MATH 20A - Calculus I (FA24, A)"],
+    },
+  ];
+  const merged = mergeAuditIntoSchedule(sections, emptyGrid(), window);
+  assert.deepEqual(flatCourses(merged), [
+    { id: "MATH 20A", status: "completed", yearIndex: 0, term: "fall" },
+  ]);
+});
+
+test("mergeAuditIntoSchedule keeps planned courses where the student put them", () => {
+  const window = planWindow(24, AUG_2026);
+  const grid = emptyGrid();
+  grid[2].winter[0] = { course_id: "CSE 100", status: "planned", credits: 4 };
+  const sections = [
+    {
+      title: "Major",
+      status: "fulfilled",
+      items: ["MATH 20A - Calculus I (FA24, A)"],
+    },
+  ];
+  const merged = mergeAuditIntoSchedule(sections, grid, window);
+  const flat = flatCourses(merged);
+  assert.deepEqual(flat.sort((a, b) => a.id.localeCompare(b.id)), [
+    { id: "CSE 100", status: "planned", yearIndex: 2, term: "winter" },
+    { id: "MATH 20A", status: "completed", yearIndex: 0, term: "fall" },
+  ]);
+});
+
+test("mergeAuditIntoSchedule rebuilds transcript cards from the NEW audit", () => {
+  const window = planWindow(24, AUG_2026);
+  // Last quarter's audit said MATH 20A was in progress; the student's grid
+  // still holds that card. The new audit posts the grade.
+  const grid = emptyGrid();
+  grid[0].fall[0] = { course_id: "MATH 20A", status: "current", credits: 4 };
+  const sections = [
+    {
+      title: "Major",
+      status: "fulfilled",
+      items: ["MATH 20A - Calculus I (FA24, A)"],
+    },
+  ];
+  const merged = mergeAuditIntoSchedule(sections, grid, window);
+  assert.deepEqual(flatCourses(merged), [
+    { id: "MATH 20A", status: "completed", yearIndex: 0, term: "fall" },
+  ]);
+});
+
+test("mergeAuditIntoSchedule drops a planned course the new audit shows as taken", () => {
+  const window = planWindow(24, AUG_2026);
+  // Student had planned DSC 80 for winter of year 2 — the new audit says
+  // they're now enrolled in it (WIP), so the planned card yields to the
+  // transcript's placement.
+  const grid = emptyGrid();
+  grid[1].winter[0] = { course_id: "DSC 80", status: "planned", credits: 4 };
+  const sections = [
+    {
+      title: "WORK IN PROGRESS",
+      status: "in_progress",
+      items: ["DSC 80 - Data Science Practicum (WI26, NR)"],
+    },
+  ];
+  const merged = mergeAuditIntoSchedule(sections, grid, window);
+  assert.deepEqual(flatCourses(merged), [
+    { id: "DSC 80", status: "current", yearIndex: 1, term: "winter" },
+  ]);
+});
+
+test("mergeAuditIntoSchedule grows the grid to the new plan window", () => {
+  // Fifth-year audit: 5-year window, planned courses on a 4-year grid survive.
+  const window = planWindow(22, AUG_2026);
+  const grid = emptyGrid(4);
+  grid[3].spring[0] = { course_id: "CSE 190", status: "planned", credits: 4 };
+  const sections = [
+    {
+      title: "Major",
+      status: "fulfilled",
+      items: ["MATH 20A - Calculus I (FA22, A)"],
+    },
+  ];
+  const merged = mergeAuditIntoSchedule(sections, grid, window);
+  assert.equal(merged.length, 5);
+  const flat = flatCourses(merged);
+  assert.deepEqual(flat.sort((a, b) => a.id.localeCompare(b.id)), [
+    { id: "CSE 190", status: "planned", yearIndex: 3, term: "spring" },
+    { id: "MATH 20A", status: "completed", yearIndex: 0, term: "fall" },
+  ]);
 });
