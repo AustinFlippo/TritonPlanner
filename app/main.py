@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query
-from pydantic import BaseModel
+from typing import Any
+from pydantic import BaseModel, field_validator
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ from pathlib import Path
 
 # Import the new RAG system
 from rag_pipeline import create_rag_system
-from planner_agent import plan_chat
+from planner_agent import _text_of, plan_chat
 from planner_metrics import summarize_metrics
 
 # Load environment variables from root .env file
@@ -52,7 +53,17 @@ def get_rag_system():
 
 class ChatTurn(BaseModel):
     role: str
-    content: str
+    # Any shape, flattened to text: a reply that once came back as a list of
+    # content blocks gets persisted in the browser's chat thread and is sent
+    # back as history on every later turn. Typed `str`, that made every
+    # message in the thread a 422 ("Failed to process chat request") until
+    # the student started a new chat.
+    content: Any = ""
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def _flatten_content(cls, value):
+        return _text_of(value)
 
 
 class ChatRequest(BaseModel):

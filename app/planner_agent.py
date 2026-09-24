@@ -869,6 +869,36 @@ def _format_live_upcoming(today: Optional[date] = None,
 # Tool execution
 # ---------------------------------------------------------------------------
 
+def _text_of(content) -> str:
+    """The plain text of a model reply, whatever shape langchain hands back.
+
+    Chat-completions replies are a str, but newer OpenAI models (and any
+    langchain-openai output_version that exposes content blocks) return a
+    LIST of blocks — [{"type": "text", "text": "..."}, ...]. The FastAPI
+    payload passed that list straight through as `content`, and the React
+    client fed it to react-markdown, which asserts on a non-string and took
+    down the whole app with "Unexpected value [object Object] for children".
+    Every reply the student sees goes through here, so a block list, a bare
+    dict, or None all become text.
+    """
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict):
+                if block.get("type") in (None, "text", "output_text") and block.get("text"):
+                    parts.append(str(block["text"]))
+        return "\n".join(p for p in parts if p).strip()
+    if isinstance(content, dict):
+        return str(content.get("text") or content.get("content") or "")
+    return str(content)
+
+
 def _run_lookup(codes: List[str], today: Optional[date] = None,
                 base_year: Optional[int] = None) -> str:
     live_upcoming = live_upcoming_for_enrollment(today, base_year)
@@ -1310,14 +1340,16 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                     last_section_proposal, section_options,
                     student_allows_conflicts)
                 if not accepted.get("rejected"):
-                    if isinstance(response.content, str) and response.content:
-                        accepted["content"] = response.content
+                    text = _text_of(response.content)
+                    if text:
+                        accepted["content"] = text
                     return _finish(accepted, "propose_sections")
             if last_proposal is not None:
                 # The model gave up in text after a rejected proposal. Ship the
                 # proposal's valid subset anyway — its text explains the gaps.
-                if isinstance(response.content, str) and response.content:
-                    last_proposal.explanation = response.content
+                text = _text_of(response.content)
+                if text:
+                    last_proposal.explanation = text
                 return _finish(
                     _accept(last_proposal, schedule, completed_ids, today,
                             satisfied_ids, extra_warnings=fallback_warnings,
@@ -1328,7 +1360,7 @@ async def plan_chat(message: str, audit_sections: list, schedule: list,
                     "propose_after_text",
                 )
             return _finish(
-                {"content": response.content or
+                {"content": _text_of(response.content) or
                  "Sorry, I couldn't come up with a response."},
                 "text",
             )

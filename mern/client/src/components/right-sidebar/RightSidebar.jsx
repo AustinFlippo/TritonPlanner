@@ -24,6 +24,8 @@ import { courseIdVariants } from "../../utils/courseIds";
 import { normalizeCourseCredits } from "../../utils/courseCredits";
 import { codesNamedByAudit } from "../../utils/auditProgress";
 import { coursesInQuarter } from "../../utils/quarterPlans";
+import { chatContentText } from "../../utils/chatContentText";
+import { isTakenCourse } from "../../utils/courseIds";
 import { API_URL } from "../../utils/api";
 
 const EMPTY_MESSAGES = [];
@@ -785,9 +787,12 @@ const RightSidebar = ({
 
     const messageText = currentMessage;
     const userMessage = { role: "user", content: messageText };
+    // Text only: a reply persisted as content blocks would fail the backend's
+    // string validation on every later turn of the thread (422 → "Failed to
+    // process chat request" for each message until a new chat).
     const requestHistory = chatMessages.map(({ role, content }) => ({
       role,
-      content,
+      content: chatContentText(content),
     }));
     const abortController = new AbortController();
     const { signal } = abortController;
@@ -1065,11 +1070,11 @@ const RightSidebar = ({
       } else if (data.messages?.length > 0) {
         // Find the last AI message
         aiMessage = data.messages.filter((msg) => msg.type === "ai").pop();
-        assistantContent = aiMessage?.content || "No response";
+        assistantContent = chatContentText(aiMessage?.content) || "No response";
       } else if (data.content) {
-        assistantContent = data.content;
+        assistantContent = chatContentText(data.content);
       } else if (data.response) {
-        assistantContent = data.response;
+        assistantContent = chatContentText(data.response);
       } else {
         assistantContent = "No response received";
       }
@@ -1136,9 +1141,24 @@ const RightSidebar = ({
 
   // The search column's two faces: a course's details when one is open,
   // otherwise the search / browse / recommendations view.
+  // The planner card for the open course in the enrollment quarter, if any.
+  // The details pane usually shows the CATALOG entry (openCourseById swaps
+  // the grid stub for it), which knows nothing about the student — so the
+  // Enrolled mark and the held section package come from the grid directly.
+  const enrollmentCard = useMemo(() => {
+    const id = selectedCourse?.course_id;
+    if (!id || !enrollmentSlot) return null;
+    return (
+      coursesInQuarter(schedule, enrollmentSlot.yearIndex, enrollmentSlot.term)
+        .find((c) => isTakenCourse(id, [c.course_id]) || c.course_id === id) ||
+      null
+    );
+  }, [selectedCourse?.course_id, schedule, enrollmentSlot]);
+
   const searchPane = selectedCourse ? (
     <CourseDetails
       course={selectedCourse}
+      enrollmentCard={enrollmentCard}
       onBack={() => setSelectedCourse(null)}
       onSelectCourseId={openCourseById}
       apiUrl={API_URL}

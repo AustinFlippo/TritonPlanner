@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useNextQuarterOfferings } from "../../context/NextQuarterOfferingsContext";
 import {
+  packageMatchesId,
   packagesFor,
   sectionsForCourse,
   whenLabel,
@@ -62,6 +63,9 @@ const CourseDetails = ({
   compact = false,
   // Phones: arms this course for tap-to-place on the grid.
   onAddToPlan,
+  // This course's planner card in the enrollment quarter (null when it isn't
+  // planned there). Carries the student's Enrolled mark and held package.
+  enrollmentCard = null,
 }) => {
   const [graph, setGraph] = useState(null);
   const {
@@ -82,6 +86,14 @@ const CourseDetails = ({
   // catalog publishes (units, prerequisites).
   const liveOnly = isLiveOnlyCourse(course);
   const unknownUnits = hasUnknownCredits(course);
+  // "I'm registered for this" (scheduleOps.setCourseEnrolled) plus the
+  // section package chosen in Quarter View, so the list below can point at
+  // the one the student actually holds instead of five equal-looking cards.
+  const enrolled =
+    enrollmentCard?.enrolled === true &&
+    enrollmentCard.status !== "completed" &&
+    enrollmentCard.status !== "current";
+  const heldPackageId = enrollmentCard?.enrollment?.packageId || null;
 
   useEffect(() => {
     if (!course?.course_id || !apiUrl) return;
@@ -318,21 +330,40 @@ const CourseDetails = ({
         {/* Next-enrollment-quarter packages (times, instructors, seats) */}
         {offeredNext && (
           <div className="pt-1">
-            <h3 className="font-semibold text-sm text-slate-800 mb-1.5">
+            <h3 className="font-semibold text-sm text-slate-800 mb-1.5 flex items-center gap-2 flex-wrap">
               {sectionHeading}
+              {enrolled && (
+                <span className="px-1.5 py-px rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                  {heldPackageId
+                    ? "You're enrolled"
+                    : "You're enrolled · pick your section in Quarter View"}
+                </span>
+              )}
             </h3>
             {tssOfferings.status === "loading" && packages.length === 0 ? (
               <p className="text-[12px] text-slate-400">Loading sections…</p>
             ) : packages.length > 0 ? (
               <ul className="space-y-2">
                 {packages.map((pkg) => {
-                  const chip = statusChip(pkg.status);
                   const seats = seatsLabel(pkg);
                   const primaryId = pkg.primary?.sectionId || pkg.id;
+                  // The package the student holds reads "Enrolled" in place of
+                  // its seat status: a Full lecture you are already in is not
+                  // a warning. Other packages keep their live status.
+                  const held =
+                    enrolled && heldPackageId && packageMatchesId(pkg, heldPackageId);
+                  const chip = held
+                    ? { className: "bg-emerald-100 text-emerald-800", label: "Enrolled" }
+                    : statusChip(pkg.status);
                   return (
                     <li
                       key={pkg.id}
-                      className="border border-slate-200 rounded-lg px-2.5 py-2"
+                      className={`rounded-lg px-2.5 py-2 border ${
+                        held
+                          ? "border-emerald-400 bg-emerald-50/60 ring-1 ring-emerald-200"
+                          : "border-slate-200"
+                      }`}
+                      aria-current={held ? "true" : undefined}
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-[13px] font-semibold text-slate-800">

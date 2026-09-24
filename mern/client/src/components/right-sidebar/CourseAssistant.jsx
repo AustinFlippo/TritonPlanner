@@ -7,6 +7,7 @@ import React, {
   cloneElement,
 } from "react";
 import ReactMarkdown from "react-markdown";
+import { chatContentText } from "../../utils/chatContentText";
 import {
   SendHorizonal,
   Square,
@@ -392,7 +393,7 @@ const CourseAssistant = ({
                 ) : (
                   <div className="chat-markdown">
                     <ReactMarkdown components={markdownComponents}>
-                      {msg.content}
+                      {chatContentText(msg.content)}
                     </ReactMarkdown>
                   </div>
                 )}

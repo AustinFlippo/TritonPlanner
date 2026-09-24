@@ -797,6 +797,30 @@ async def test_plain_answer_passthrough():
 
 
 @pytest.mark.asyncio
+async def test_content_block_replies_are_flattened_to_text():
+    # Newer OpenAI models can answer as a list of content blocks. Passing that
+    # list through as `content` crashed the React client (react-markdown
+    # asserts on a non-string child) — the student saw a blank error page.
+    llm = FakeToolLLM([AIMessage(content=[
+        {"type": "text", "text": "CSE 100 is offered fall and winter."},
+        {"type": "reasoning", "summary": []},
+        {"type": "text", "text": "Seats are open."},
+    ])])
+    out = await plan_chat("when is CSE 100 offered?", [], [], llm=llm, today=TODAY)
+    assert without_loop(out) == {
+        "content": "CSE 100 is offered fall and winter.\nSeats are open."}
+    assert isinstance(out["content"], str)
+
+
+def test_text_of_never_returns_a_non_string():
+    assert planner_agent._text_of(None) == ""
+    assert planner_agent._text_of("x") == "x"
+    assert planner_agent._text_of([{"type": "text", "text": "a"}, "b"]) == "a\nb"
+    assert planner_agent._text_of({"text": "only"}) == "only"
+    assert isinstance(planner_agent._text_of({"foo": 1}), str)
+
+
+@pytest.mark.asyncio
 async def test_seat_availability_reaches_system_prompt():
     llm = FakeToolLLM([AIMessage(content="CSE 100 has 3 seats open.")])
     seats = {

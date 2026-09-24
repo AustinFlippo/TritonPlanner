@@ -539,20 +539,34 @@ const WeekSchedule = ({
                           {/* This block's own clock, not the section's first
                               meeting — they differ whenever a section meets at
                               more than one time in the week. */}
-                          {/* Room on the time line, right on the calendar.
-                              The time is fixed-width and the room is what
-                              truncates, so a narrow column never eats the
-                              start time to make space for "RWAC 0115". */}
-                          <p className="flex items-baseline gap-1 text-[10px] text-slate-500 leading-tight min-w-0">
-                            <span className="flex-shrink-0 whitespace-nowrap">
-                              {b.start ?? b.meeting.start}–{b.end ?? b.meeting.end}
-                            </span>
-                            {(b.location || b.meeting.location) && (
-                              <span className="truncate text-slate-400">
-                                · {b.location || b.meeting.location}
-                              </span>
-                            )}
-                          </p>
+                          {/* The room gets its own line under the time, so
+                              "OTRSN 0102" is never cut to "OT…". A block
+                              under an hour (~45px) only has room for three
+                              lines — title, time, and the Enroll/seat row —
+                              so there the room rides the time line instead,
+                              with the time fixed-width and only the room
+                              truncating (the tooltip always has it whole). */}
+                          {(() => {
+                            const room = b.location || b.meeting.location;
+                            const roomOnOwnLine = room && height >= 58;
+                            return (
+                              <>
+                                <p className="flex items-baseline gap-1 text-[10px] text-slate-500 leading-tight min-w-0">
+                                  <span className="flex-shrink-0 whitespace-nowrap">
+                                    {b.start ?? b.meeting.start}–{b.end ?? b.meeting.end}
+                                  </span>
+                                  {room && !roomOnOwnLine && (
+                                    <span className="truncate text-slate-400">· {room}</span>
+                                  )}
+                                </p>
+                                {roomOnOwnLine && (
+                                  <p className="text-[10px] text-slate-400 leading-tight truncate">
+                                    {room}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                           {/* The Enroll pill sits on the seat line, right on
                               the calendar where the class is. Inline rather
                               than on its own row so a 50-minute lecture
