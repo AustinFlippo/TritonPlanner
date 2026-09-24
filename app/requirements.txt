@@ -7,7 +7,9 @@ langchain-pinecone
 pypdf
 langchain-text-splitters
 langchain-core
-fastapi
+# >=0.128: the `mcp` package pulls in Starlette 1.x, which dropped Router(on_startup=...);
+# FastAPI 0.115 and earlier still pass it and crash at `FastAPI()` (chat went dark).
+fastapi>=0.128
 pydantic
 uvicorn
 anthropic

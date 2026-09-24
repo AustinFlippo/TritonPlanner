@@ -539,8 +539,19 @@ const WeekSchedule = ({
                           {/* This block's own clock, not the section's first
                               meeting — they differ whenever a section meets at
                               more than one time in the week. */}
-                          <p className="text-[10px] text-slate-500 leading-tight truncate">
-                            {b.start ?? b.meeting.start}–{b.end ?? b.meeting.end}
+                          {/* Room on the time line, right on the calendar.
+                              The time is fixed-width and the room is what
+                              truncates, so a narrow column never eats the
+                              start time to make space for "RWAC 0115". */}
+                          <p className="flex items-baseline gap-1 text-[10px] text-slate-500 leading-tight min-w-0">
+                            <span className="flex-shrink-0 whitespace-nowrap">
+                              {b.start ?? b.meeting.start}–{b.end ?? b.meeting.end}
+                            </span>
+                            {(b.location || b.meeting.location) && (
+                              <span className="truncate text-slate-400">
+                                · {b.location || b.meeting.location}
+                              </span>
+                            )}
                           </p>
                           {/* The Enroll pill sits on the seat line, right on
                               the calendar where the class is. Inline rather
